@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "mssql2": {
+      "secretStore": "LocalSecretsFile",
+      "type": "mssql.local",
+      "connectionId": "Crit"
+    }
+  }
+}

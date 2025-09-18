@@ -1,0 +1,218 @@
+﻿@page "/Dashboard"
+@using Crit.Client.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject QuejaService QuejaService
+@inject ProductoService ProductoService
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+<PageTitle>Dashboard - CRIT</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </h1>
+        </div>
+    </div>
+
+    <AuthorizeView Roles="Administrador">
+        <Authorized>
+            <div class="row">
+                <!-- Card de Productos -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Productos
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        @totalProductos
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de Quejas -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        @(esAdmin ? "Total Quejas" : "Mis Quejas")
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        @totalQuejas
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de Quejas Pendientes -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-danger shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                        Quejas Pendientes
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        @quejasPendientes
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de Inventario Bajo -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Productos Bajo Stock
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        @productosBajoStock
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Accesos Rápidos -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-rocket"></i> Accesos Rápidos
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <a href="/productos" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-boxes me-2"></i> Gestionar Productos
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <a href="/quejas" class="btn btn-outline-warning w-100">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Ver Quejas
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos Recientes -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-list"></i> Productos Recientes
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            @if (productosRecientes.Any())
+                            {
+                                @foreach (var producto in productosRecientes.Take(5))
+                                {
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <strong>@producto.Nombre</strong><br>
+                                            <small class="text-muted">@producto.Categoria</small>
+                                        </div>
+                                        <span class="badge badge-info">@producto.Cantidad</span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted">No hay productos registrados.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </Authorized>
+        <NotAuthorized>
+            <div class="text-center">
+                <h2>Bienvenido a CRIT</h2>
+                <p class="lead">Sistema de Gestión de Productos y Quejas</p>
+                <p>Inicia sesión para acceder al sistema.</p>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    private int totalProductos = 0;
+    private int totalQuejas = 0;
+    private int quejasPendientes = 0;
+    private int productosBajoStock = 0;
+    private bool esAdmin = false;
+    private List<Producto> productosRecientes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            esAdmin = authState.User.IsInRole("Administrador");
+            await CargarDashboard();
+        }
+    }
+
+    private async Task CargarDashboard()
+    {
+        // Cargar productos
+        var productos = await ProductoService.GetProductosAsync();
+        totalProductos = productos.Count;
+        productosBajoStock = productos.Count(p => p.Cantidad < 10);
+        productosRecientes = productos.OrderByDescending(p => p.FechaIngreso).ToList();
+
+        // Cargar quejas
+        List<Queja> quejas;
+        if (esAdmin)
+        {
+            quejas = await QuejaService.GetQuejasAsync();
+        }
+        else
+        {
+            quejas = await QuejaService.GetMisQuejasAsync();
+        }
+
+        totalQuejas = quejas.Count;
+        quejasPendientes = quejas.Count(q => q.Estatus == EstatusQueja.Pendiente);
+    }
+}

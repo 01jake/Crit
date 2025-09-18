@@ -1,0 +1,334 @@
+﻿@page "/quejas"
+@using Crit.Client.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject QuejaService QuejaService
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+
+<PageTitle>Gestión de Quejas</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        @(esAdmin ? "Gestión de Quejas" : "Mis Quejas")
+                    </h3>
+                    <button class="btn btn-primary" @onclick="MostrarModalCrear">
+                        <i class="fas fa-plus"></i> Nueva Queja
+                    </button>
+                </div>
+                <div class="card-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="sr-only">Cargando...</span>
+                            </div>
+                        </div>
+                    }
+                    else if (quejas.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Cliente</th>
+                                        <th>Correo</th>
+                                        <th>Descripción</th>
+                                        <th>Fecha</th>
+                                        <th>Estatus</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var queja in quejas)
+                                    {
+                                        <tr>
+                                            <td>@queja.Id</td>
+                                            <td>@queja.NombreCliente</td>
+                                            <td>@queja.Correo</td>
+                                            <td>@(queja.DescripcionQueja.Length > 50 ? queja.DescripcionQueja.Substring(0, 50) + "..." : queja.DescripcionQueja)</td>
+                                            <td>@queja.Fecha.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <span class="badge @GetEstatusBadgeClass(queja.Estatus)">
+                                                    @GetEstatusText(queja.Estatus)
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-info me-1" @onclick="() => VerDetalle(queja)">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <AuthorizeView Roles="Administrador">
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-sm btn-warning dropdown-toggle" data-bs-toggle="dropdown">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a class="dropdown-item" @onclick="() => CambiarEstatus(queja.Id, EstatusQueja.Pendiente)">Pendiente</a></li>
+                                                            <li><a class="dropdown-item" @onclick="() => CambiarEstatus(queja.Id, EstatusQueja.Atendida)">Atendida</a></li>
+                                                            <li><a class="dropdown-item" @onclick="() => CambiarEstatus(queja.Id, EstatusQueja.Cerrada)">Cerrada</a></li>
+                                                        </ul>
+                                                    </div>
+                                                    <button class="btn btn-sm btn-danger ms-1" @onclick="() => EliminarQueja(queja.Id)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </AuthorizeView>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No hay quejas registradas.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear Queja -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Queja</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="quejaEditando" OnValidSubmit="GuardarQueja">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre del Cliente:</label>
+                                <InputText class="form-control" @bind-Value="quejaEditando.NombreCliente" />
+                                <ValidationMessage For="@(() => quejaEditando.NombreCliente)" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Número de Afiliación:</label>
+                                <InputText class="form-control" @bind-Value="quejaEditando.NumeroAfiliacion" />
+                                <ValidationMessage For="@(() => quejaEditando.NumeroAfiliacion)" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Correo Electrónico:</label>
+                            <InputText class="form-control" @bind-Value="quejaEditando.Correo" type="email" />
+                            <ValidationMessage For="@(() => quejaEditando.Correo)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción de la Queja:</label>
+                            <InputTextArea class="form-control" rows="4" @bind-Value="quejaEditando.DescripcionQueja" />
+                            <ValidationMessage For="@(() => quejaEditando.DescripcionQueja)" />
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" disabled="@guardando">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Enviar Queja
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal para Ver Detalle -->
+@if (mostrarDetalle && quejaDetalle != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalle de Queja #@quejaDetalle.Id</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarDetalle"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Cliente:</strong> @quejaDetalle.NombreCliente<br>
+                            <strong>Correo:</strong> @quejaDetalle.Correo<br>
+                            <strong>Afiliación:</strong> @quejaDetalle.NumeroAfiliacion
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Fecha:</strong> @quejaDetalle.Fecha.ToString("dd/MM/yyyy HH:mm")<br>
+                            <strong>Estatus:</strong>
+                            <span class="badge @GetEstatusBadgeClass(quejaDetalle.Estatus)">
+                                @GetEstatusText(quejaDetalle.Estatus)
+                            </span><br>
+                            <strong>Registrada por:</strong> @quejaDetalle.ClienteUserName
+                        </div>
+                    </div>
+                    <hr>
+                    <div>
+                        <strong>Descripción:</strong><br>
+                        <div class="border p-3 rounded bg-light">
+                            @quejaDetalle.DescripcionQueja
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarDetalle">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Queja> quejas = new();
+    private bool isLoading = true;
+    private bool mostrarModal = false;
+    private bool mostrarDetalle = false;
+    private bool guardando = false;
+    private bool esAdmin = false;
+    private Queja quejaEditando = new();
+    private Queja? quejaDetalle = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await DeterminarRolUsuario();
+        await CargarQuejas();
+    }
+
+    private async Task DeterminarRolUsuario()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        esAdmin = authState.User.IsInRole("Administrador");
+    }
+
+    private async Task CargarQuejas()
+    {
+        isLoading = true;
+        if (esAdmin)
+        {
+            quejas = await QuejaService.GetQuejasAsync();
+        }
+        else
+        {
+            quejas = await QuejaService.GetMisQuejasAsync();
+        }
+        isLoading = false;
+    }
+
+    private void MostrarModalCrear()
+    {
+        quejaEditando = new Queja();
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        quejaEditando = new();
+    }
+
+    private void VerDetalle(Queja queja)
+    {
+        quejaDetalle = queja;
+        mostrarDetalle = true;
+    }
+
+    private void CerrarDetalle()
+    {
+        mostrarDetalle = false;
+        quejaDetalle = null;
+    }
+
+    private async Task GuardarQueja()
+    {
+        guardando = true;
+        bool exito = await QuejaService.CreateQuejaAsync(quejaEditando);
+
+        if (exito)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Queja enviada exitosamente.");
+            await CargarQuejas();
+            CerrarModal();
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Error al enviar la queja.");
+        }
+
+        guardando = false;
+    }
+
+    private async Task CambiarEstatus(int id, EstatusQueja nuevoEstatus)
+    {
+        bool exito = await QuejaService.UpdateQuejaStatusAsync(id, nuevoEstatus);
+        if (exito)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Estatus actualizado a {GetEstatusText(nuevoEstatus)}.");
+            await CargarQuejas();
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Error al actualizar el estatus.");
+        }
+    }
+
+    private async Task EliminarQueja(int id)
+    {
+        bool confirmar = await JSRuntime.InvokeAsync<bool>("confirm", "¿Estás seguro de eliminar esta queja?");
+        if (confirmar)
+        {
+            bool exito = await QuejaService.DeleteQuejaAsync(id);
+            if (exito)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Queja eliminada exitosamente.");
+                await CargarQuejas();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Error al eliminar la queja.");
+            }
+        }
+    }
+
+    private string GetEstatusBadgeClass(EstatusQueja estatus)
+    {
+        return estatus switch
+        {
+            EstatusQueja.Pendiente => "badge-warning",
+            EstatusQueja.Atendida => "badge-info",
+            EstatusQueja.Cerrada => "badge-success",
+            _ => "badge-secondary"
+        };
+    }
+
+    private string GetEstatusText(EstatusQueja estatus)
+    {
+        return estatus switch
+        {
+            EstatusQueja.Pendiente => "Pendiente",
+            EstatusQueja.Atendida => "Atendida",
+            EstatusQueja.Cerrada => "Cerrada",
+            _ => "Desconocido"
+        };
+    }
+}

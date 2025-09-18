@@ -1,0 +1,32 @@
+﻿@page "/auth"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+@attribute [Authorize]
+
+<PageTitle>Authentication</PageTitle>
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow-lg p-4" style="max-width: 400px; width: 100%;">
+        <div class="card-body text-center">
+            <h2 class="card-title mb-3">✅ Autenticación Exitosa</h2>
+            <p class="text-muted">Bienvenido, estás autenticado en el sistema</p>
+
+            <AuthorizeView>
+                <Authorized>
+                    <div class="alert alert-success">
+                        <strong>Hola @context.User.Identity?.Name!</strong>
+                    </div>
+                    <p>Tu sesión ha sido validada correctamente.</p>
+                    <a href="/logout" class="btn btn-danger btn-sm mt-3">Cerrar Sesión</a>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="alert alert-warning">
+                        No estás autenticado.
+                    </div>
+                    <a href="/login" class="btn btn-primary btn-sm">Iniciar Sesión</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</div>

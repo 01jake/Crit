@@ -1,0 +1,225 @@
+﻿@page "/Account/Login"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using Crit.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Iniciar Sesión - CRIT</PageTitle>
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center p-4">
+    <div class="w-100" style="max-width: 400px;">
+        <!-- Botón para volver -->
+        <div class="mb-4">
+            <a href="/" class="d-inline-flex align-items-center text-decoration-none text-muted" 
+               style="transition: color 0.3s;">
+                <i class="bi bi-arrow-left me-2"></i>
+                Volver al inicio
+            </a>
+        </div>
+
+        <!-- Card principal -->
+        <div class="card shadow-lg border-0">
+            <!-- Header del card -->
+            <div class="card-header text-center border-0 pb-0 bg-transparent">
+                <div class="icon-container mx-auto mb-3">
+                    <i class="bi bi-box-arrow-in-right fs-3 text-primary"></i>
+                </div>
+                <h2 class="card-title fw-bold mb-2">Iniciar Sesión</h2>
+                <p class="text-muted">Ingresa tus credenciales para acceder al sistema</p>
+            </div>
+
+            <!-- Body del card -->
+            <div class="card-body">
+                <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+                    <DataAnnotationsValidator />
+                    
+                    <!-- Mensaje de error -->
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            @errorMessage
+                        </div>
+                    }
+
+                    <!-- Campo de Email -->
+                    <div class="mb-3">
+                        <label for="Input.Email" class="form-label fw-medium">
+                            Correo Electrónico
+                        </label>
+                        <InputText @bind-Value="Input.Email" 
+                                   id="Input.Email" 
+                                   class="form-control form-control-lg" 
+                                   autocomplete="username" 
+                                   aria-required="true" 
+                                   placeholder="usuario@empresa.com" />
+                        <ValidationMessage For="() => Input.Email" class="text-danger small mt-1" />
+                    </div>
+
+                    <!-- Campo de Contraseña -->
+                    <div class="mb-3">
+                        <label for="Input.Password" class="form-label fw-medium">
+                            Contraseña
+                        </label>
+                        <div class="position-relative">
+                            <InputText type="@(showPassword ? "text" : "password")" 
+                                       @bind-Value="Input.Password" 
+                                       id="Input.Password" 
+                                       class="form-control form-control-lg pe-5" 
+                                       autocomplete="current-password" 
+                                       aria-required="true" 
+                                       placeholder="••••••••" />
+                            <button type="button" 
+                                    @onclick="TogglePasswordVisibility"
+                                    class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted border-0"
+                                    style="background: none; z-index: 10;">
+                                <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                            </button>
+                        </div>
+                        <ValidationMessage For="() => Input.Password" class="text-danger small mt-1" />
+                    </div>
+
+                    <!-- Recordar sesión -->
+                    <div class="form-check mb-4">
+                        <InputCheckbox @bind-Value="Input.RememberMe" 
+                                       class="form-check-input" 
+                                       id="rememberMe" />
+                        <label class="form-check-label" for="rememberMe">
+                            Recordar mi sesión
+                        </label>
+                    </div>
+
+                    <!-- Botón de login -->
+                    <button type="submit" 
+                            class="btn btn-primary btn-lg w-100 mb-3"
+                            disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Iniciando sesión...</span>
+                        }
+                        else
+                        {
+                            <span>Iniciar Sesión</span>
+                        }
+                    </button>
+
+                </EditForm>
+
+                <!-- Enlaces adicionales -->
+                <div class="text-center">
+                    <div class="mb-2">
+                        <a href="Account/ForgotPassword" class="text-primary text-decoration-none small">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <a href="Account/ResendEmailConfirmation" class="text-primary text-decoration-none small">
+                            Reenviar confirmación de correo
+                        </a>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <p class="text-muted mb-0">
+                        ¿No tienes una cuenta?
+                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" 
+                           class="text-primary text-decoration-none fw-medium">
+                            Regístrate aquí
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="text-center mt-4">
+            <small class="text-muted">
+                <i class="bi bi-shield-check me-1"></i>
+                Tu información está protegida y segura
+            </small>
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+    private string? errorMessage;
+    private bool showPassword = false;
+    private bool isLoading = false;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        showPassword = !showPassword;
+    }
+
+    public async Task LoginUser()
+    {
+        // This doesn't count login failures towards account lockout
+        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User logged in.");
+
+            // ÚNICO CAMBIO: Pequeña pausa para que se procese la autenticación
+            await Task.Delay(50);
+
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+        else if (result.RequiresTwoFactor)
+        {
+            RedirectManager.RedirectTo(
+                "Account/LoginWith2fa",
+                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+        }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
+        else
+        {
+            errorMessage = "Error: Invalid login attempt.";
+        }
+    }
+    private sealed class InputModel
+    {
+        [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
+        [EmailAddress(ErrorMessage = "Por favor ingresa un correo electrónico válido.")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "La contraseña es obligatoria.")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Recordar mi sesión")]
+        public bool RememberMe { get; set; }
+    }
+}
