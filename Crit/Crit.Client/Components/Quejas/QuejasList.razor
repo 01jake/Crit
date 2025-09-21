@@ -1,0 +1,142 @@
+﻿@if (Quejas?.Any() == true)
+{
+    <div class="row g-3">
+        @foreach (var queja in Quejas)
+        {
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-2">@queja.Titulo</h6>
+                                <p class="text-muted mb-3" style="line-height: 1.5;">
+                                    @(queja.DescripcionQueja.Length > 150 ?
+                                                                queja.DescripcionQueja.Substring(0, 150) + "..." :
+                                                                queja.DescripcionQueja)
+                        </p>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="badge @GetEstatusBadgeClass(queja.Estatus) d-flex align-items-center gap-1">
+                                @GetEstatusIcon(queja.Estatus)
+                                @GetEstatusText(queja.Estatus)
+                            </span>
+                            <span class="badge @GetPrioridadBadgeClass(queja.Prioridad)">
+                                Prioridad @GetPrioridadText(queja.Prioridad)
+                            </span>
+                            <span class="badge bg-light text-dark border">@queja.Categoria</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center text-small text-muted">
+                            <span>
+                                <i class="bi bi-person me-1"></i>
+                                @queja.ClienteUserName
+                            </span>
+                            <span>
+                                <i class="bi bi-calendar me-1"></i>
+                                @queja.Fecha.ToString("dd/MM/yyyy")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <button class="btn btn-outline-primary btn-sm me-1"
+                                @onclick="() => OnViewDetail.InvokeAsync(queja)"
+                                title="Ver detalle">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        @if (ShowAdminActions)
+                                {
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline-warning btn-sm dropdown-toggle"
+                                                data-bs-toggle="dropdown"
+                                                title="Cambiar estado">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" @onclick="() => OnChangeStatus.InvokeAsync((queja.Id, EstatusQueja.Pendiente))">
+                                                    <i class="bi bi-clock text-warning me-2"></i>Pendiente
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" @onclick="() => OnChangeStatus.InvokeAsync((queja.Id, EstatusQueja.Atendida))">
+                                                    <i class="bi bi-arrow-repeat text-primary me-2"></i>En Proceso
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" @onclick="() => OnChangeStatus.InvokeAsync((queja.Id, EstatusQueja.Cerrada))">
+                                                    <i class="bi bi-check-circle text-success me-2"></i>Resuelto
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <button class="btn btn-outline-danger btn-sm ms-1"
+                                            @onclick="() => OnDelete.InvokeAsync(queja.Id)"
+                                            title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="bi bi-chat-square-text display-1 text-muted mb-3"></i>
+        <h5 class="fw-semibold text-dark mb-2">@EmptyTitle</h5>
+        <p class="text-muted">@EmptyMessage</p>
+    </div>
+}
+
+@code {
+    [Parameter] public List<Queja> Quejas { get; set; } = new();
+    [Parameter] public bool ShowAdminActions { get; set; }
+    [Parameter] public string EmptyTitle { get; set; } = "No se encontraron quejas";
+    [Parameter] public string EmptyMessage { get; set; } = "No hay quejas registradas aún";
+    [Parameter] public EventCallback<Queja> OnViewDetail { get; set; }
+    [Parameter] public EventCallback<(int Id, EstatusQueja Status)> OnChangeStatus { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+
+    // Métodos de utilidad (iguales que antes)
+    private string GetEstatusBadgeClass(EstatusQueja estatus) => estatus switch
+    {
+        EstatusQueja.Pendiente => "bg-warning text-dark",
+        EstatusQueja.Atendida => "bg-primary text-white",
+        EstatusQueja.Cerrada => "bg-success text-white",
+        _ => "bg-secondary text-white"
+    };
+
+    private string GetPrioridadBadgeClass(PrioridadQueja prioridad) => prioridad switch
+    {
+        PrioridadQueja.Alta => "bg-danger text-white",
+        PrioridadQueja.Media => "bg-warning text-dark",
+        PrioridadQueja.Baja => "bg-success text-white",
+        _ => "bg-secondary text-white"
+    };
+
+    private string GetEstatusText(EstatusQueja estatus) => estatus switch
+    {
+        EstatusQueja.Pendiente => "Pendiente",
+        EstatusQueja.Atendida => "En Proceso",
+        EstatusQueja.Cerrada => "Resuelto",
+        _ => "Desconocido"
+    };
+
+    private string GetPrioridadText(PrioridadQueja prioridad) => prioridad switch
+    {
+        PrioridadQueja.Alta => "Alta",
+        PrioridadQueja.Media => "Media",
+        PrioridadQueja.Baja => "Baja",
+        _ => "Media"
+    };
+
+    private MarkupString GetEstatusIcon(EstatusQueja estatus) => new(estatus switch
+    {
+        EstatusQueja.Pendiente => "<i class=\"bi bi-clock\"></i>",
+        EstatusQueja.Atendida => "<i class=\"bi bi-arrow-repeat\"></i>",
+        EstatusQueja.Cerrada => "<i class=\"bi bi-check-circle\"></i>",
+        _ => "<i class=\"bi bi-question-circle\"></i>"
+    });
+}

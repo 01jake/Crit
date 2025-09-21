@@ -357,5 +357,6 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\ref\Crit.dll
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\scopedcss\Components\Account\Pages\Login.razor.rz.scp.css
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\scopedcss\projectbundle\Crit.bundle.scp.css
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\scopedcss\Components\Account\Pages\Register.razor.rz.scp.css
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-ryj9ccwkgh.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\k5ck305ath-hm3riwcmp7.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.sourcelink.json
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-x1ueivts31.gz

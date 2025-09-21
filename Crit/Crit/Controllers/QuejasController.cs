@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Crit.Data;
 using Crit.Server.Data;
+using Crit.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ namespace Crit.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Requerido para todos los endpoints
+    [Authorize]
     public class QuejasController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -40,9 +41,12 @@ namespace Crit.Controllers
                         NombreCliente = q.NombreCliente,
                         NumeroAfiliacion = q.NumeroAfiliacion,
                         Correo = q.Correo,
+                        Titulo = q.Titulo,
                         DescripcionQueja = q.DescripcionQueja,
+                        Categoria = q.Categoria,
                         Fecha = q.Fecha,
                         Estatus = (EstatusQueja)q.Estatus,
+                        Prioridad = (PrioridadQueja)q.Prioridad,
                         ClienteId = q.ClienteId,
                         ClienteUserName = q.Cliente!.UserName
                     })
@@ -57,7 +61,7 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/Quejas/5 (Administrador ve cualquiera, usuario solo las suyas)
+        // GET: api/Quejas/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Queja>> GetQueja(int id)
         {
@@ -78,7 +82,6 @@ namespace Crit.Controllers
                     return NotFound($"Queja con ID {id} no encontrada.");
                 }
 
-                // Solo el cliente que creó la queja o un admin pueden verla
                 var isAdmin = await _userManager.IsInRoleAsync(user, "Administrador");
                 if (!isAdmin && quejaEntity.ClienteId != user.Id)
                 {
@@ -91,9 +94,12 @@ namespace Crit.Controllers
                     NombreCliente = quejaEntity.NombreCliente,
                     NumeroAfiliacion = quejaEntity.NumeroAfiliacion,
                     Correo = quejaEntity.Correo,
+                    Titulo = quejaEntity.Titulo,
                     DescripcionQueja = quejaEntity.DescripcionQueja,
+                    Categoria = quejaEntity.Categoria,
                     Fecha = quejaEntity.Fecha,
                     Estatus = (EstatusQueja)quejaEntity.Estatus,
+                    Prioridad = (PrioridadQueja)quejaEntity.Prioridad,
                     ClienteId = quejaEntity.ClienteId,
                     ClienteUserName = quejaEntity.Cliente?.UserName
                 };
@@ -106,7 +112,7 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/Quejas/mis-quejas (Usuario ve solo sus quejas)
+        // GET: api/Quejas/mis-quejas
         [HttpGet("mis-quejas")]
         public async Task<ActionResult<IEnumerable<Queja>>> GetMisQuejas()
         {
@@ -127,9 +133,12 @@ namespace Crit.Controllers
                         NombreCliente = q.NombreCliente,
                         NumeroAfiliacion = q.NumeroAfiliacion,
                         Correo = q.Correo,
+                        Titulo = q.Titulo,
                         DescripcionQueja = q.DescripcionQueja,
+                        Categoria = q.Categoria,
                         Fecha = q.Fecha,
                         Estatus = (EstatusQueja)q.Estatus,
+                        Prioridad = (PrioridadQueja)q.Prioridad,
                         ClienteId = q.ClienteId,
                         ClienteUserName = q.Cliente!.UserName
                     })
@@ -143,8 +152,38 @@ namespace Crit.Controllers
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
         }
+        // Post: api/Quejas (Solo para quejas para clientes)
+        [HttpPost("publica")]
+        [AllowAnonymous] // Permite acceso sin autenticación
+        public async Task<IActionResult> PostQuejaPublica([FromBody] QuejaPublica queja)
+        {
+            try
+            {
+                var quejaEntity = new QuejaEntity
+                {
+                    NombreCliente = queja.NombreCliente,
+                    Correo = queja.Correo,
+                    NumeroAfiliacion = queja.NumeroAfiliacion ?? string.Empty,
+                    Titulo = queja.Titulo,
+                    DescripcionQueja = queja.DescripcionQueja,
+                    Categoria = queja.Categoria,
+                    Fecha = DateTime.Now,
+                    Estatus = Server.Data.EstatusQueja.Pendiente,
+                    Prioridad = Server.Data.PrioridadQueja.Media,
+                    ClienteId = "PUBLICO"
+                };
 
-        // POST: api/Quejas (Crear nueva queja)
+                _context.Quejas.Add(quejaEntity);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Queja enviada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+        // POST: api/Quejas
         [HttpPost]
         public async Task<ActionResult<Queja>> PostQueja(Queja queja)
         {
@@ -161,9 +200,12 @@ namespace Crit.Controllers
                     NombreCliente = queja.NombreCliente,
                     NumeroAfiliacion = queja.NumeroAfiliacion ?? string.Empty,
                     Correo = queja.Correo,
+                    Titulo = queja.Titulo,
                     DescripcionQueja = queja.DescripcionQueja,
+                    Categoria = queja.Categoria,
                     Fecha = DateTime.Now,
                     Estatus = (Server.Data.EstatusQueja)EstatusQueja.Pendiente,
+                    Prioridad = (Server.Data.PrioridadQueja)queja.Prioridad,
                     ClienteId = user.Id
                 };
 
@@ -176,9 +218,12 @@ namespace Crit.Controllers
                     NombreCliente = quejaEntity.NombreCliente,
                     NumeroAfiliacion = quejaEntity.NumeroAfiliacion,
                     Correo = quejaEntity.Correo,
+                    Titulo = quejaEntity.Titulo,
                     DescripcionQueja = quejaEntity.DescripcionQueja,
+                    Categoria = quejaEntity.Categoria,
                     Fecha = quejaEntity.Fecha,
                     Estatus = (EstatusQueja)quejaEntity.Estatus,
+                    Prioridad = (PrioridadQueja)quejaEntity.Prioridad,
                     ClienteId = quejaEntity.ClienteId,
                     ClienteUserName = user.UserName
                 };
@@ -191,7 +236,7 @@ namespace Crit.Controllers
             }
         }
 
-        // PUT: api/Quejas/5/status (Solo administradores pueden cambiar estatus)
+        // PUT: api/Quejas/5/status
         [HttpPut("{id}/status")]
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> UpdateQuejaStatus(int id, [FromBody] EstatusQueja nuevoEstatus)
@@ -215,7 +260,7 @@ namespace Crit.Controllers
             }
         }
 
-        // DELETE: api/Quejas/5 (Solo administradores)
+        // DELETE: api/Quejas/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteQueja(int id)
@@ -237,11 +282,6 @@ namespace Crit.Controllers
             {
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
-        }
-
-        private bool QuejaExists(int id)
-        {
-            return _context.Quejas.Any(e => e.Id == id);
         }
     }
 }

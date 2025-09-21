@@ -12,31 +12,48 @@ namespace Crit.Server.Data
         Cerrada = 2
     }
 
+    public enum PrioridadQueja
+    {
+        Baja = 0,
+        Media = 1,
+        Alta = 2
+    }
+
     [Table("Quejas")]
     public class QuejaEntity
     {
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "El nombre del cliente es obligatorio.")]
-        [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres.")]
+        [Required]
+        [StringLength(100)]
         public string NombreCliente { get; set; } = string.Empty;
 
-        [StringLength(50, ErrorMessage = "El número de afiliación no puede exceder los 50 caracteres.")]
+        [StringLength(50)]
         public string NumeroAfiliacion { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "El correo es obligatorio.")]
-        [EmailAddress(ErrorMessage = "Formato de correo inválido.")]
+        [Required]
+        [StringLength(256)]
         public string Correo { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "La descripción de la queja es obligatoria.")]
-        [StringLength(500, ErrorMessage = "La descripción no puede exceder los 500 caracteres.")]
+        [Required]
+        [StringLength(200)]
+        public string Titulo { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(1000)]
         public string DescripcionQueja { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
+        public string Categoria { get; set; } = string.Empty;
 
         [DataType(DataType.Date)]
         public DateTime Fecha { get; set; } = DateTime.Now;
 
         public EstatusQueja Estatus { get; set; } = EstatusQueja.Pendiente;
+
+        public PrioridadQueja Prioridad { get; set; } = PrioridadQueja.Media;
 
         // Relación con ApplicationUser (Cliente que reporta)
         [Required]

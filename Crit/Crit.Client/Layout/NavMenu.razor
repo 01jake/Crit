@@ -1,99 +1,128 @@
 ﻿@implements IDisposable
-
 @inject NavigationManager NavigationManager
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Crit</a>
+<div class="sidebar-container @(isExpanded ? "expanded" : "collapsed")"
+     @onmouseenter="Expand"
+     @onmouseleave="Collapse">
+
+    <div class="sidebar-header">
+        <div class="brand @(isExpanded ? "show-text" : "hide-text")">
+            <span class="bi bi-house-door-fill-nav-menu brand-icon"></span>
+            <span class="brand-text">CRIT System</span>
+        </div>
     </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
+        <div class="nav-items">
+            <div class="nav-item">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="Dashboard">
+                    <span class="bi bi-house-door-fill-nav-menu nav-icon"></span>
+                    <span class="nav-text">Dashboard</span>
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="productos" title="Inventario">
+                    <span class="bi bi-plus-square-fill-nav-menu nav-icon"></span>
+                    <span class="nav-text">Inventario</span>
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="quejas" title="Quejas">
+                    <span class="bi bi-list-nested-nav-menu nav-icon"></span>
+                    <span class="nav-text">Quejas</span>
+                </NavLink>
+            </div>
+
+            <AuthorizeView>
+                <Authorized>
+                    <div class="nav-divider"></div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="Account/Manage" title="Mi Cuenta">
+                            <span class="bi bi-person-fill-nav-menu nav-icon"></span>
+                            <span class="nav-text">@GetUserName(context.User)</span>
+                        </NavLink>
+                    </div>
+                    <div class="nav-item">
+                        <form action="Account/Logout" method="post">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                            <button type="submit" class="nav-link logout-btn" title="Cerrar Sesión">
+                                <span class="bi bi-arrow-bar-left-nav-menu nav-icon"></span>
+                                <span class="nav-text">Cerrar Sesión</span>
+                            </button>
+                        </form>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="nav-divider"></div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="Account/Register" title="Registro">
+                            <span class="bi bi-person-nav-menu nav-icon"></span>
+                            <span class="nav-text">Registro</span>
+                        </NavLink>
+                    </div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="Account/Login" title="Iniciar Sesión">
+                            <span class="bi bi-person-badge-nav-menu nav-icon"></span>
+                            <span class="nav-text">Iniciar Sesión</span>
+                        </NavLink>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="productos">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Inventario
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Quejas">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Quejas
-            </NavLink>
-        </div>
-
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
-            </NavLink>
-        </div>
-
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
-                    </form>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
     </nav>
 </div>
 
 @code {
+    [Parameter] public EventCallback<bool> OnSidebarToggle { get; set; }
+
     private string? currentUrl;
+    private bool isExpanded = false;
 
     protected override void OnInitialized()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.LocationChanged += OnLocationChanged;
+        NavigationManager.LocationChanged += OnLocationChangedHandler;
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    private void OnLocationChangedHandler(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Expand()
+    {
+        if (!isExpanded)
+        {
+            isExpanded = true;
+            await OnSidebarToggle.InvokeAsync(true);
+        }
+    }
+
+    private async Task Collapse()
+    {
+        if (isExpanded)
+        {
+            isExpanded = false;
+            await OnSidebarToggle.InvokeAsync(false);
+        }
+    }
+
+    private string GetUserName(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var name = user?.Identity?.Name ?? "Usuario";
+        return name.Length > 12 ? name.Substring(0, 12) + "..." : name;
     }
 
     public void Dispose()
     {
-        NavigationManager.LocationChanged -= OnLocationChanged;
+        NavigationManager.LocationChanged -= OnLocationChangedHandler;
     }
 }
-

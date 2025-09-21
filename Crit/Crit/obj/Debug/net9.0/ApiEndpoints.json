@@ -323,5 +323,21 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "Crit.Controllers.QuejasController",
+    "Method": "PostQuejaPublica",
+    "RelativePath": "api/Quejas/publica",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "queja",
+        "Type": "Crit.Shared.Models.QuejaPublica",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

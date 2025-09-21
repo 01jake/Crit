@@ -1,4 +1,4 @@
-using Crit.Data;
+﻿using Crit.Data;
 using Crit.Server.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -47,6 +47,7 @@ namespace Crit.Server.Data
             });
 
             // Configuraci?n para QuejaEntity
+            // Configuración para QuejaEntity (actualizar la existente)
             builder.Entity<QuejaEntity>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -54,7 +55,7 @@ namespace Crit.Server.Data
                 entity.HasOne(q => q.Cliente)
                       .WithMany()
                       .HasForeignKey(q => q.ClienteId)
-                      .OnDelete(DeleteBehavior.Restrict); // No borrar usuario si tiene quejas
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 entity.Property(q => q.NombreCliente)
                       .IsRequired()
@@ -67,15 +68,27 @@ namespace Crit.Server.Data
                       .IsRequired()
                       .HasMaxLength(256);
 
+                // ✅ NUEVOS CAMPOS
+                entity.Property(q => q.Titulo)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
                 entity.Property(q => q.DescripcionQueja)
                       .IsRequired()
-                      .HasMaxLength(500);
+                      .HasMaxLength(1000);
+
+                entity.Property(q => q.Categoria)
+                      .IsRequired()
+                      .HasMaxLength(100);
 
                 entity.Property(q => q.Fecha)
                       .HasDefaultValueSql("GETDATE()");
 
                 entity.Property(q => q.Estatus)
                       .HasDefaultValue(EstatusQueja.Pendiente);
+
+                entity.Property(q => q.Prioridad)
+                      .HasDefaultValue(PrioridadQueja.Media);
             });
         }
         public DbSet<Producto> Producto { get; set; } = default!;

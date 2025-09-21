@@ -1,218 +1,219 @@
-﻿@page "/Dashboard"
+﻿
+@page "/Dashboard"
 @using Crit.Client.Services
 @using Microsoft.AspNetCore.Authorization
-@attribute [StreamRendering(true)]
-@rendermode @(new InteractiveWebAssemblyRenderMode(false))
-@inject QuejaService QuejaService
+@attribute [StreamRendering(false)]
+@rendermode InteractiveWebAssembly
 @inject ProductoService ProductoService
-@inject IJSRuntime JSRuntime
+@inject QuejaService QuejaService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
+
 <PageTitle>Dashboard - CRIT</PageTitle>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">
-                <i class="fas fa-tachometer-alt"></i> Dashboard
-            </h1>
+<div class="min-vh-100 bg-light">
+    <div class="container-fluid px-4 py-4">
+        <div class="mb-4">
+            <h1 class="h3 fw-bold text-dark mb-1">Dashboard de Inventario</h1>
+            <p class="text-muted">Gestiona tu inventario de manera eficiente</p>
         </div>
-    </div>
 
-    <AuthorizeView Roles="Administrador">
-        <Authorized>
-            <div class="row">
-                <!-- Card de Productos -->
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-primary shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                        Total Productos
-                                    </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                        @totalProductos
-                                    </div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-boxes fa-2x text-gray-300"></i>
-                                </div>
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-0 small">Total Productos</p>
+                                <h4 class="fw-bold text-primary mb-0">@totalProductos</h4>
+                                <small class="text-muted">Productos registrados</small>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card de Quejas -->
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-warning shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                        @(esAdmin ? "Total Quejas" : "Mis Quejas")
-                                    </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                        @totalQuejas
-                                    </div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card de Quejas Pendientes -->
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-danger shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                        Quejas Pendientes
-                                    </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                        @quejasPendientes
-                                    </div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card de Inventario Bajo -->
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-info shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                        Productos Bajo Stock
-                                    </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                        @productosBajoStock
-                                    </div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
-                                </div>
+                            <div class="bg-primary bg-opacity-10 rounded p-3">
+                                <i class="bi bi-box-seam text-primary fs-4"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="row">
-                <!-- Accesos Rápidos -->
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">
-                                <i class="fas fa-rocket"></i> Accesos Rápidos
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <a href="/productos" class="btn btn-outline-primary w-100">
-                                        <i class="fas fa-boxes me-2"></i> Gestionar Productos
-                                    </a>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <a href="/quejas" class="btn btn-outline-warning w-100">
-                                        <i class="fas fa-exclamation-triangle me-2"></i> Ver Quejas
-                                    </a>
-                                </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-0 small">Valor Total</p>
+                                <h4 class="fw-bold text-primary mb-0">$@valorTotal.ToString("N0")</h4>
+                                <small class="text-muted">Valor del inventario</small>
+                            </div>
+                            <div class="bg-success bg-opacity-10 rounded p-3">
+                                <i class="bi bi-graph-up text-success fs-4"></i>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Productos Recientes -->
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">
-                                <i class="fas fa-list"></i> Productos Recientes
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            @if (productosRecientes.Any())
-                            {
-                                @foreach (var producto in productosRecientes.Take(5))
-                                {
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <div>
-                                            <strong>@producto.Nombre</strong><br>
-                                            <small class="text-muted">@producto.Categoria</small>
-                                        </div>
-                                        <span class="badge badge-info">@producto.Cantidad</span>
-                                    </div>
-                                }
-                            }
-                            else
-                            {
-                                <p class="text-muted">No hay productos registrados.</p>
-                            }
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-0 small">Alertas</p>
+                                <h4 class="fw-bold text-warning mb-0">@productosBajoStock</h4>
+                                <small class="text-muted">Productos con stock bajo</small>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 rounded p-3">
+                                <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-        </Authorized>
-        <NotAuthorized>
-            <div class="text-center">
-                <h2>Bienvenido a CRIT</h2>
-                <p class="lead">Sistema de Gestión de Productos y Quejas</p>
-                <p>Inicia sesión para acceder al sistema.</p>
+        <!-- Search and Add Button -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-8">
+                <div class="position-relative">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    <input type="text" class="form-control ps-5" placeholder="Buscar productos..."
+                           @bind="searchTerm" @oninput="OnSearchInput" />
+                </div>
             </div>
-        </NotAuthorized>
-    </AuthorizeView>
-</div>
+            <div class="col-md-4">
+                <a href="/productos" class="btn btn-primary w-100">
+                    <i class="bi bi-plus-lg me-2"></i>Agregar Producto
+                </a>
+            </div>
+        </div>
 
-@code {
-    private int totalProductos = 0;
-    private int totalQuejas = 0;
-    private int quejasPendientes = 0;
-    private int productosBajoStock = 0;
-    private bool esAdmin = false;
-    private List<Producto> productosRecientes = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (authState.User.Identity?.IsAuthenticated == true)
+        <!-- Products Grid -->
+        @if (isLoading)
         {
-            esAdmin = authState.User.IsInRole("Administrador");
-            await CargarDashboard();
+            <div class="text-center py-5">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
         }
-    }
-
-    private async Task CargarDashboard()
-    {
-        // Cargar productos
-        var productos = await ProductoService.GetProductosAsync();
-        totalProductos = productos.Count;
-        productosBajoStock = productos.Count(p => p.Cantidad < 10);
-        productosRecientes = productos.OrderByDescending(p => p.FechaIngreso).ToList();
-
-        // Cargar quejas
-        List<Queja> quejas;
-        if (esAdmin)
+        else if (productosFiltrados.Any())
         {
-            quejas = await QuejaService.GetQuejasAsync();
+            <div class="row g-4">
+                @foreach (var producto in productosFiltrados)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-bottom">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">@producto.Nombre</h6>
+                                        <small class="text-muted">@producto.Categoria</small>
+                                    </div>
+                                    <span class="badge @GetStockBadgeClass(producto.Cantidad)">
+                                        @GetStockStatus(producto.Cantidad)
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted small">Stock:</span>
+                                        <span class="fw-semibold">@producto.Cantidad unidades</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted small">Registrado por:</span>
+                                        <span class="small">@producto.UsuarioQueRegistroUserName</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted small">Actualizado:</span>
+                                        <span class="small">@producto.FechaIngreso.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 pt-3 border-top">
+                                    <a href="/productos" class="btn btn-outline-primary btn-sm flex-fill">
+                                        <i class="bi bi-pencil me-1"></i>Editar
+                                    </a>
+                                    <button class="btn btn-outline-danger btn-sm flex-fill">
+                                        <i class="bi bi-trash me-1"></i>Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         }
         else
         {
-            quejas = await QuejaService.GetMisQuejasAsync();
+            <div class="text-center py-5">
+                <i class="bi bi-box-seam display-1 text-muted mb-3"></i>
+                <h5 class="fw-semibold text-dark mb-2">No se encontraron productos</h5>
+                <p class="text-muted">
+                    @(searchTerm != string.Empty ? "Intenta con otros términos de búsqueda" : "Agrega tu primer producto para comenzar")
+                </p>
+            </div>
         }
+    </div>
+</div>
 
-        totalQuejas = quejas.Count;
-        quejasPendientes = quejas.Count(q => q.Estatus == EstatusQueja.Pendiente);
+@code {
+    private List<Producto> productos = new();
+    private List<Producto> productosFiltrados = new();
+    private bool isLoading = true;
+    private string searchTerm = string.Empty;
+
+    // Stats
+    private int totalProductos => productos.Count;
+    private decimal valorTotal => productos.Sum(p => p.Cantidad * 100); // Asumiendo precio base
+    private int productosBajoStock => productos.Count(p => p.Cantidad < 10);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarProductos();
+        FiltrarProductos();
+    }
+
+    private async Task CargarProductos()
+    {
+        isLoading = true;
+        productos = await ProductoService.GetProductosAsync();
+        isLoading = false;
+        FiltrarProductos();
+    }
+
+    private void FiltrarProductos()
+    {
+        productosFiltrados = productos.Where(p =>
+            string.IsNullOrEmpty(searchTerm) ||
+            p.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            p.Categoria.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        FiltrarProductos();
+    }
+
+    private string GetStockBadgeClass(int stock)
+    {
+        return stock switch
+        {
+            > 10 => "bg-success text-white",
+            > 0 => "bg-warning text-dark",
+            _ => "bg-danger text-white"
+        };
+    }
+
+    private string GetStockStatus(int stock)
+    {
+        return stock switch
+        {
+            > 10 => "En Stock",
+            > 0 => "Stock Bajo",
+            _ => "Sin Stock"
+        };
     }
 }

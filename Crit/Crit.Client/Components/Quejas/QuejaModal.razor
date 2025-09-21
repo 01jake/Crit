@@ -1,0 +1,118 @@
+﻿@if (IsVisible)
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">@Title</h5>
+                    <small class="text-muted">@Description</small>
+                </div>
+                <button type="button" class="btn-close" @onclick="OnClose"></button>
+            </div>
+        </div>
+        <div class="card-body">
+            <EditForm Model="Queja" OnValidSubmit="OnSubmit">
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>@ErrorMessage
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(SuccessMessage))
+                {
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>@SuccessMessage
+                    </div>
+                }
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Título *</label>
+                        <InputText class="form-control" @bind-Value="Queja.Titulo"
+                                   placeholder="Describe brevemente el problema" />
+                        <ValidationMessage For="@(() => Queja.Titulo)" class="text-danger small" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Categoría *</label>
+                        <InputSelect class="form-select" @bind-Value="Queja.Categoria">
+                            <option value="">Selecciona una categoría</option>
+                            @foreach (var categoria in Categorias)
+                            {
+                                <option value="@categoria">@categoria</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => Queja.Categoria)" class="text-danger small" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Nombre del Cliente *</label>
+                        <InputText class="form-control" @bind-Value="Queja.NombreCliente"
+                                   placeholder="Tu nombre completo" />
+                        <ValidationMessage For="@(() => Queja.NombreCliente)" class="text-danger small" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Correo Electrónico *</label>
+                        <InputText class="form-control" @bind-Value="Queja.Correo"
+                                   type="email" placeholder="tu@correo.com" />
+                        <ValidationMessage For="@(() => Queja.Correo)" class="text-danger small" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Número de Afiliación</label>
+                        <InputText class="form-control" @bind-Value="Queja.NumeroAfiliacion"
+                                   placeholder="Opcional" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Prioridad</label>
+                        <InputSelect class="form-select" @bind-Value="Queja.Prioridad">
+                            <option value="@PrioridadQueja.Baja">Baja</option>
+                            <option value="@PrioridadQueja.Media">Media</option>
+                            <option value="@PrioridadQueja.Alta">Alta</option>
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Descripción *</label>
+                    <InputTextArea class="form-control" rows="4" @bind-Value="Queja.DescripcionQueja"
+                                   placeholder="Describe detalladamente el problema o sugerencia" />
+                    <ValidationMessage For="@(() => Queja.DescripcionQueja)" class="text-danger small" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@IsLoading">
+                        @if (IsLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        @SubmitButtonText
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="OnClose">
+                        Cancelar
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Queja Queja { get; set; } = new();
+    [Parameter] public string[] Categorias { get; set; } = Array.Empty<string>();
+    [Parameter] public string Title { get; set; } = "Nueva Queja";
+    [Parameter] public string Description { get; set; } = "Describe tu problema o sugerencia";
+    [Parameter] public string SubmitButtonText { get; set; } = "Enviar Queja";
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public string ErrorMessage { get; set; } = string.Empty;
+    [Parameter] public string SuccessMessage { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnSubmit { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+}

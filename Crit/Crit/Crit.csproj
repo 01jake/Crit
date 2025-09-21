@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\Crit.Client\Pages\Component.razor" Link="Component.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Crit.Shared\Crit.Shared.csproj" />
     <ProjectReference Include="..\Crit.Client\Crit.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.6" />

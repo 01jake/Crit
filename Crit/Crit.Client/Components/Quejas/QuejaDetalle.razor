@@ -1,0 +1,126 @@
+﻿@if (IsVisible && Queja != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Queja.Titulo</h5>
+                    <button type="button" class="btn-close" @onclick="OnClose"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <strong class="text-muted">Cliente:</strong>
+                                <div>@Queja.NombreCliente</div>
+                            </div>
+                            <div class="mb-2">
+                                <strong class="text-muted">Correo:</strong>
+                                <div>@Queja.Correo</div>
+                            </div>
+                            <div class="mb-2">
+                                <strong class="text-muted">Afiliación:</strong>
+                                <div>@Queja.NumeroAfiliacion</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <strong class="text-muted">Fecha:</strong>
+                                <div>@Queja.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                            <div class="mb-2">
+                                <strong class="text-muted">Categoría:</strong>
+                                <div>@Queja.Categoria</div>
+                            </div>
+                            <div class="mb-2">
+                                <strong class="text-muted">Prioridad:</strong>
+                                <div>
+                                    <span class="badge @GetPrioridadBadgeClass(Queja.Prioridad)">
+                                        @GetPrioridadText(Queja.Prioridad)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong class="text-muted">Estado:</strong>
+                        <div class="mt-1">
+                            <span class="badge @GetEstatusBadgeClass(Queja.Estatus)">
+                                @GetEstatusText(Queja.Estatus)
+                            </span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <strong class="text-muted">Descripción:</strong>
+                        <div class="border p-3 rounded bg-light mt-2" style="white-space: pre-wrap;">@Queja.DescripcionQueja</div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Queja.ClienteUserName))
+                    {
+                        <div class="mt-3 pt-3 border-top">
+                            <small class="text-muted">
+                                <i class="bi bi-person me-1"></i>
+                                Registrada por: @Queja.ClienteUserName
+                            </small>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="OnClose">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Queja? Queja { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string GetEstatusBadgeClass(EstatusQueja estatus)
+    {
+        return estatus switch
+        {
+            EstatusQueja.Pendiente => "bg-warning text-dark",
+            EstatusQueja.Atendida => "bg-primary text-white",
+            EstatusQueja.Cerrada => "bg-success text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+
+    private string GetPrioridadBadgeClass(PrioridadQueja prioridad)
+    {
+        return prioridad switch
+        {
+            PrioridadQueja.Alta => "bg-danger text-white",
+            PrioridadQueja.Media => "bg-warning text-dark",
+            PrioridadQueja.Baja => "bg-success text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+
+    private string GetEstatusText(EstatusQueja estatus)
+    {
+        return estatus switch
+        {
+            EstatusQueja.Pendiente => "Pendiente",
+            EstatusQueja.Atendida => "En Proceso",
+            EstatusQueja.Cerrada => "Resuelto",
+            _ => "Desconocido"
+        };
+    }
+
+    private string GetPrioridadText(PrioridadQueja prioridad)
+    {
+        return prioridad switch
+        {
+            PrioridadQueja.Alta => "Alta",
+            PrioridadQueja.Media => "Media",
+            PrioridadQueja.Baja => "Baja",
+            _ => "Media"
+        };
+    }
+}

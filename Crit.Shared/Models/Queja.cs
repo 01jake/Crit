@@ -8,6 +8,13 @@ public enum EstatusQueja
     Cerrada = 2
 }
 
+public enum PrioridadQueja
+{
+    Baja = 0,
+    Media = 1,
+    Alta = 2
+}
+
 public class Queja
 {
     public int Id { get; set; }
@@ -23,14 +30,24 @@ public class Queja
     [EmailAddress(ErrorMessage = "Formato de correo inválido.")]
     public string Correo { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "El título es obligatorio.")]
+    [StringLength(200, ErrorMessage = "El título no puede exceder los 200 caracteres.")]
+    public string Titulo { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "La descripción de la queja es obligatoria.")]
-    [StringLength(500, ErrorMessage = "La descripción no puede exceder los 500 caracteres.")]
+    [StringLength(1000, ErrorMessage = "La descripción no puede exceder los 1000 caracteres.")]
     public string DescripcionQueja { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "La categoría es obligatoria.")]
+    [StringLength(100, ErrorMessage = "La categoría no puede exceder los 100 caracteres.")]
+    public string Categoria { get; set; } = string.Empty;
 
     [DataType(DataType.Date)]
     public DateTime Fecha { get; set; } = DateTime.Now;
 
     public EstatusQueja Estatus { get; set; } = EstatusQueja.Pendiente;
+
+    public PrioridadQueja Prioridad { get; set; } = PrioridadQueja.Media;
 
     // Propiedades para el DTO (lo que envías al cliente)
     public string? ClienteId { get; set; }

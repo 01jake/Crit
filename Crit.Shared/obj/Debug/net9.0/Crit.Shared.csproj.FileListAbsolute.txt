@@ -9,3 +9,4 @@ C:\Users\ang31\source\repos\Crit\Crit.Shared\obj\Debug\net9.0\Crit.Shared.dll
 C:\Users\ang31\source\repos\Crit\Crit.Shared\obj\Debug\net9.0\refint\Crit.Shared.dll
 C:\Users\ang31\source\repos\Crit\Crit.Shared\obj\Debug\net9.0\Crit.Shared.pdb
 C:\Users\ang31\source\repos\Crit\Crit.Shared\obj\Debug\net9.0\ref\Crit.Shared.dll
+C:\Users\ang31\source\repos\Crit\Crit.Shared\obj\Debug\net9.0\Crit.Shared.sourcelink.json
