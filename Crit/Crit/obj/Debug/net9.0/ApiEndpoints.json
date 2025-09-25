@@ -87,16 +87,16 @@
     ]
   },
   {
-    "ContainingType": "Crit.Controllers.ProductosController",
-    "Method": "GetProductos",
-    "RelativePath": "api/Productos",
+    "ContainingType": "Crit.Controllers.ArticulosController",
+    "Method": "GetArticulos",
+    "RelativePath": "api/Articulos",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
     "ReturnTypes": [
       {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[Producto, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Articulo, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -107,22 +107,22 @@
     ]
   },
   {
-    "ContainingType": "Crit.Controllers.ProductosController",
-    "Method": "PostProducto",
-    "RelativePath": "api/Productos",
+    "ContainingType": "Crit.Controllers.ArticulosController",
+    "Method": "PostArticulo",
+    "RelativePath": "api/Articulos",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "producto",
-        "Type": "Producto",
+        "Name": "articulo",
+        "Type": "Articulo",
         "IsRequired": true
       }
     ],
     "ReturnTypes": [
       {
-        "Type": "Producto",
+        "Type": "Articulo",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -133,9 +133,9 @@
     ]
   },
   {
-    "ContainingType": "Crit.Controllers.ProductosController",
-    "Method": "GetProducto",
-    "RelativePath": "api/Productos/{id}",
+    "ContainingType": "Crit.Controllers.ArticulosController",
+    "Method": "GetArticulo",
+    "RelativePath": "api/Articulos/{id}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -148,7 +148,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "Producto",
+        "Type": "Articulo",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -159,9 +159,9 @@
     ]
   },
   {
-    "ContainingType": "Crit.Controllers.ProductosController",
-    "Method": "PutProducto",
-    "RelativePath": "api/Productos/{id}",
+    "ContainingType": "Crit.Controllers.ArticulosController",
+    "Method": "PutArticulo",
+    "RelativePath": "api/Articulos/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
@@ -172,17 +172,17 @@
         "IsRequired": true
       },
       {
-        "Name": "producto",
-        "Type": "Producto",
+        "Name": "articulo",
+        "Type": "Articulo",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "Crit.Controllers.ProductosController",
-    "Method": "DeleteProducto",
-    "RelativePath": "api/Productos/{id}",
+    "ContainingType": "Crit.Controllers.ArticulosController",
+    "Method": "DeleteArticulo",
+    "RelativePath": "api/Articulos/{id}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,

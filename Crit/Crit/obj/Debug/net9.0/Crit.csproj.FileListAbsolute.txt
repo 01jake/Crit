@@ -359,4 +359,15 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\scopedcss\projectbun
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\scopedcss\Components\Account\Pages\Register.razor.rz.scp.css
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\k5ck305ath-hm3riwcmp7.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.sourcelink.json
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-x1ueivts31.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Microsoft.AspNetCore.Connections.Abstractions.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Microsoft.AspNetCore.Http.Connections.Client.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Microsoft.AspNetCore.Http.Connections.Common.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Microsoft.AspNetCore.SignalR.Client.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Microsoft.AspNetCore.SignalR.Client.Core.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Microsoft.AspNetCore.SignalR.Common.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Microsoft.AspNetCore.SignalR.Protocols.Json.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Microsoft.Extensions.Features.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\System.Net.ServerSentEvents.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\System.Threading.Channels.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-s4gs2sf0zs.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\2d3bpynw52-7vhap2rrw2.gz

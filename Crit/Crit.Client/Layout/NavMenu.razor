@@ -1,83 +1,126 @@
-﻿@implements IDisposable
+﻿@using Crit.Client.Components
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
-<div class="sidebar-container @(isExpanded ? "expanded" : "collapsed")"
-     @onmouseenter="Expand"
-     @onmouseleave="Collapse">
+<nav class="navbar navbar-expand-lg bg-gradient-primary sticky-top shadow-sm">
+    <div class="container-fluid px-3">
+        <!-- Brand -->
+        <a class="navbar-brand fw-bold" href="/">
+            <i class="bi bi-shield-check me-2" href="/">CRIT System</i>
+        </a>
 
-    <div class="sidebar-header">
-        <div class="brand @(isExpanded ? "show-text" : "hide-text")">
-            <span class="bi bi-house-door-fill-nav-menu brand-icon"></span>
-            <span class="brand-text">CRIT System</span>
+        <!-- Mobile toggle button -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#critNavbar" aria-controls="critNavbar" 
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Collapsible content -->
+        <div class="collapse navbar-collapse" id="critNavbar">
+            <!-- Main navigation -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <NavLink class="nav-link px-3 rounded-pill mx-1" href="" Match="NavLinkMatch.All">
+                        <i class="bi bi-house-door-fill me-2"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link px-3 rounded-pill mx-1" href="articulos">
+                        <i class="bi bi-box-seam-fill me-2"></i>
+                        <span class="nav-text">Inventario</span>
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link px-3 rounded-pill mx-1" href="quejas">
+                        <i class="bi bi-chat-square-text-fill me-2"></i>
+                        <span class="nav-text">Quejas</span>
+                    </NavLink>
+                </li>
+               
+            </ul>
+
+            <!-- Right side items -->
+            <div class="d-flex align-items-center">
+                <!-- Notification Bell -->
+                <AuthorizeView Roles="Administrador">
+                    <Authorized>
+                        <div class="me-3">
+                            <NotificationComponent />
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+
+                <!-- User menu -->
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light dropdown-toggle border-0 rounded-pill px-3" 
+                                    type="button" id="userDropdown" data-bs-toggle="dropdown" 
+                                    aria-expanded="false">
+                                <i class="bi bi-person-circle me-2"></i>
+                                <span class="d-none d-md-inline">@GetDisplayName(context.User.Identity?.Name)</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="bi bi-person-fill me-2"></i>
+                                        @context.User.Identity?.Name
+                                    </h6>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <NavLink class="dropdown-item" href="Account/Manage">
+                                        <i class="bi bi-gear-fill me-2"></i>Mi Perfil
+                                    </NavLink>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="Account/Logout" method="post" class="m-0">
+                                        <AntiforgeryToken />
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                                        </button>
+                                    </form>
+                                </li>
+
+                            </ul>
+
+                        </div>
+                        <!-- por mientras -->
+
+                        <div class="nav-item"> 
+                            <form action="Account/Logout" method="post"> 
+                                <AntiforgeryToken /> 
+                                <input type="hidden" name="ReturnUrl" value="@currentUrl" /> 
+                                <button type="submit" class="nav-link logout-btn" title="Cerrar Sesión"> 
+                                    <span class="bi bi-arrow-bar-left-nav-menu nav-icon"></span> 
+                                    <span class="nav-text">Cerrar Sesión</span>
+                                </button> 
+                                </form> 
+                                </div>
+                    </Authorized>
+                    <NotAuthorized>
+                        <div class="d-flex gap-2">
+                            <NavLink class="btn btn-outline-light rounded-pill px-3" href="Account/Login">
+                                <i class="bi bi-person-badge me-1"></i>
+                                <span class="d-none d-sm-inline">Iniciar Sesión</span>
+                            </NavLink>
+                            <NavLink class="btn btn-light rounded-pill px-3" href="Account/Register">
+                                <i class="bi bi-person-plus me-1"></i>
+                                <span class="d-none d-sm-inline">Registro</span>
+                            </NavLink>
+                        </div>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
         </div>
     </div>
-
-    <nav class="nav flex-column">
-        <div class="nav-items">
-            <div class="nav-item">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="Dashboard">
-                    <span class="bi bi-house-door-fill-nav-menu nav-icon"></span>
-                    <span class="nav-text">Dashboard</span>
-                </NavLink>
-            </div>
-            <div class="nav-item">
-                <NavLink class="nav-link" href="productos" title="Inventario">
-                    <span class="bi bi-plus-square-fill-nav-menu nav-icon"></span>
-                    <span class="nav-text">Inventario</span>
-                </NavLink>
-            </div>
-            <div class="nav-item">
-                <NavLink class="nav-link" href="quejas" title="Quejas">
-                    <span class="bi bi-list-nested-nav-menu nav-icon"></span>
-                    <span class="nav-text">Quejas</span>
-                </NavLink>
-            </div>
-
-            <AuthorizeView>
-                <Authorized>
-                    <div class="nav-divider"></div>
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="Account/Manage" title="Mi Cuenta">
-                            <span class="bi bi-person-fill-nav-menu nav-icon"></span>
-                            <span class="nav-text">@GetUserName(context.User)</span>
-                        </NavLink>
-                    </div>
-                    <div class="nav-item">
-                        <form action="Account/Logout" method="post">
-                            <AntiforgeryToken />
-                            <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                            <button type="submit" class="nav-link logout-btn" title="Cerrar Sesión">
-                                <span class="bi bi-arrow-bar-left-nav-menu nav-icon"></span>
-                                <span class="nav-text">Cerrar Sesión</span>
-                            </button>
-                        </form>
-                    </div>
-                </Authorized>
-                <NotAuthorized>
-                    <div class="nav-divider"></div>
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="Account/Register" title="Registro">
-                            <span class="bi bi-person-nav-menu nav-icon"></span>
-                            <span class="nav-text">Registro</span>
-                        </NavLink>
-                    </div>
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="Account/Login" title="Iniciar Sesión">
-                            <span class="bi bi-person-badge-nav-menu nav-icon"></span>
-                            <span class="nav-text">Iniciar Sesión</span>
-                        </NavLink>
-                    </div>
-                </NotAuthorized>
-            </AuthorizeView>
-        </div>
-    </nav>
-</div>
+</nav>
 
 @code {
-    [Parameter] public EventCallback<bool> OnSidebarToggle { get; set; }
-
     private string? currentUrl;
-    private bool isExpanded = false;
 
     protected override void OnInitialized()
     {
@@ -91,34 +134,13 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private async Task OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    private string GetDisplayName(string? fullName)
     {
-        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task Expand()
-    {
-        if (!isExpanded)
-        {
-            isExpanded = true;
-            await OnSidebarToggle.InvokeAsync(true);
-        }
-    }
-
-    private async Task Collapse()
-    {
-        if (isExpanded)
-        {
-            isExpanded = false;
-            await OnSidebarToggle.InvokeAsync(false);
-        }
-    }
-
-    private string GetUserName(System.Security.Claims.ClaimsPrincipal user)
-    {
-        var name = user?.Identity?.Name ?? "Usuario";
-        return name.Length > 12 ? name.Substring(0, 12) + "..." : name;
+        if (string.IsNullOrEmpty(fullName)) return "Usuario";
+        
+        // Extraer solo el primer nombre si es un email o nombre completo
+        var parts = fullName.Split('@', ' ');
+        return parts[0];
     }
 
     public void Dispose()

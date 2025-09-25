@@ -14,7 +14,7 @@ namespace Crit.Server.Data
         }
 
         // DbSets para las entidades
-        public DbSet<ProductoEntity> Productos { get; set; }
+        public DbSet<ArticuloEntity> Articulos { get; set; }
         public DbSet<QuejaEntity> Quejas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -22,28 +22,33 @@ namespace Crit.Server.Data
             base.OnModelCreating(builder);
 
             // Configuraci?n para ProductoEntity
-            builder.Entity<ProductoEntity>(entity =>
+            builder.Entity<ArticuloEntity>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
-                entity.HasOne(p => p.UsuarioQueRegistro)
+                entity.HasOne(a => a.UsuarioQueRegistro)
                       .WithMany()
-                      .HasForeignKey(p => p.UsuarioQueRegistroId)
-                      .OnDelete(DeleteBehavior.Restrict); // No borrar usuario si tiene productos
+                      .HasForeignKey(a => a.UsuarioQueRegistroId)
+                      .OnDelete(DeleteBehavior.Restrict);
 
-                entity.Property(p => p.Nombre)
-                      .IsRequired()
-                      .HasMaxLength(100);
+                entity.Property(q => q.Nombre)
+                   .IsRequired()
+                   .HasMaxLength(100);
 
-                entity.Property(p => p.Categoria)
+                entity.Property(a => a.Codigo)
                       .IsRequired()
                       .HasMaxLength(50);
 
-                entity.Property(p => p.FechaIngreso)
+                entity.Property(a => a.Descripcion)
+                      .IsRequired()
+                      .HasMaxLength(500);
+
+                entity.Property(a => a.FechaRegistro)
                       .HasDefaultValueSql("GETDATE()");
 
-                entity.Property(p => p.Cantidad)
-                      .IsRequired();
+                // Índice único para el código
+                entity.HasIndex(a => a.Codigo)
+                      .IsUnique();
             });
 
             // Configuraci?n para QuejaEntity
@@ -89,9 +94,18 @@ namespace Crit.Server.Data
 
                 entity.Property(q => q.Prioridad)
                       .HasDefaultValue(PrioridadQueja.Media);
+                entity.Property(q => q.ClienteId)
+                      .IsRequired(false); // Permitir null
+
+                entity.HasOne(q => q.Cliente)
+                      .WithMany()
+                      .HasForeignKey(q => q.ClienteId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
             });
         }
-        public DbSet<Producto> Producto { get; set; } = default!;
+        //public DbSet<Producto> Producto { get; set; } = default!;
         public DbSet<Queja> Queja { get; set; } = default!;
+        public DbSet<Articulo> Articulo { get; set; } = default!;
     }
 }

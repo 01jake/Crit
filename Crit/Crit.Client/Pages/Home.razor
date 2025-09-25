@@ -1,14 +1,39 @@
 ﻿@page "/"
-<PageTitle>Inicio - CRIT</PageTitle>
-<div class="text-center py-5">
-    <h1>Bienvenido a CRIT</h1>
-    <p class="lead">Sistema de Gestión de Productos y Quejas</p>
-    <AuthorizeView>
-        <Authorized>
-            <a href="/Dashboard" class="btn btn-primary">Ir al Dashboard</a>
-        </Authorized>
-        <NotAuthorized>
-            <a href="/Account/Login" class="btn btn-primary">Iniciar Sesión</a>
-        </NotAuthorized>
-    </AuthorizeView>
+<div class="min-vh-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-transparent">
+       
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center text-white mb-5">
+                    <h1 class="display-4 fw-bold mb-3">Centro de Quejas y Sugerencias</h1>
+                    <p class="lead">Tu opinión es importante para nosotros. Comparte tus comentarios.</p>
+                </div>
+                <div class="text-center text-white mb-4">
+                  
+                    <a href="/QuejasPublicas" class="btn btn-light btn-lg"> Haz tu Queja</a>
+                </div>
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="text-center text-white mb-4">
+                            <h3>Bienvenido, @context.User.Identity?.Name</h3>
+                            <a href="/dashboard" class="btn btn-light btn-lg">Ir al Dashboard</a>
+                        </div>
+                    </Authorized>
+                    <NotAuthorized>
+@*                         <QuejaPublicaForm />
+ *@                    </NotAuthorized>
+                </AuthorizeView>
+
+                <div class="text-center text-white mt-4">
+                    <p class="mb-0">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Tu información está protegida y será tratada de forma confidencial
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

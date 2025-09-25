@@ -1,0 +1,240 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.AspNetCore.Components.Authorization
+@implements IAsyncDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+
+<div class="notification-bell">
+    <button class="btn btn-link position-relative p-2" @onclick="ToggleDropdown">
+        <i class="fas fa-bell fs-5 text-secondary"></i>
+        @if (unreadCount > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @(unreadCount > 99 ? "99+" : unreadCount.ToString())
+                <span class="visually-hidden">notificaciones no leídas</span>
+            </span>
+        }
+    </button>
+
+    @if (showDropdown)
+    {
+        <div class="notification-dropdown position-absolute">
+            <div class="card shadow-lg" style="width: 350px; max-height: 400px;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Notificaciones</h6>
+                    @if (notifications.Any())
+                    {
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="MarkAllAsRead">
+                            Marcar todas como leídas
+                        </button>
+                    }
+                </div>
+
+                <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
+                    @if (notifications.Any())
+                    {
+                        @foreach (var notification in notifications.Take(10))
+                        {
+                            <div class="notification-item p-3 border-bottom @(notification.IsRead ? "" : "bg-light")"
+                                 @onclick="() => MarkAsRead(notification)">
+                                <div class="d-flex justify-content-between">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-exclamation-triangle text-warning me-2 mt-1"></i>
+                                            <div>
+                                                <strong class="text-primary">@notification.Type</strong>
+                                                <p class="mb-1 small">
+                                                    <strong>Cliente:</strong> @notification.ClientName
+                                                </p>
+                                                <p class="mb-1 small">
+                                                    <strong>Título:</strong> @notification.Title
+                                                </p>
+                                                <small class="text-muted">
+                                                    @notification.Time.ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if (!notification.IsRead)
+                                    {
+                                        <span class="badge bg-primary rounded-pill">Nuevo</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-bell-slash fs-1 mb-2"></i>
+                            <p>No hay notificaciones</p>
+                        </div>
+                    }
+                </div>
+
+                @if (notifications.Count > 10)
+                {
+                    <div class="card-footer text-center">
+                        <small class="text-muted">
+                            Mostrando 10 de @notifications.Count notificaciones
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private HubConnection? hubConnection;
+    private List<NotificationItem> notifications = new();
+    private bool showDropdown = false;
+    private int unreadCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        if (authState.User?.IsInRole("Administrador") == true)
+        {
+            await InitializeSignalRConnection();
+        }
+    }
+
+    private async Task InitializeSignalRConnection()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl("/notificationHub")
+                .Build();
+
+            hubConnection.On<object>("NewComplaint", (data) =>
+            {
+                InvokeAsync(() => HandleNewComplaint(data));
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.SendAsync("JoinAdminGroup");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error connecting to SignalR: {ex.Message}");
+        }
+    }
+
+    private async Task HandleNewComplaint(object data)
+    {
+        try
+        {
+            // Convertir el objeto anónimo a nuestro modelo
+            var json = System.Text.Json.JsonSerializer.Serialize(data);
+            var complaintData = System.Text.Json.JsonSerializer.Deserialize<ComplaintNotificationData>(json,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (complaintData != null)
+            {
+                var notification = new NotificationItem
+                {
+                    Id = Guid.NewGuid(),
+                    ClientName = complaintData.ClientName,
+                    Title = complaintData.Title,
+                    Type = complaintData.Type,
+                    Time = complaintData.Time,
+                    IsRead = false
+                };
+
+                notifications.Insert(0, notification);
+                unreadCount++;
+
+                // Reproducir sonido de notificación
+                await JSRuntime.InvokeVoidAsync("playNotificationSound");
+
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling notification: {ex.Message}");
+        }
+    }
+
+    private void ToggleDropdown()
+    {
+        showDropdown = !showDropdown;
+    }
+
+    private void MarkAsRead(NotificationItem notification)
+    {
+        if (!notification.IsRead)
+        {
+            notification.IsRead = true;
+            unreadCount = Math.Max(0, unreadCount - 1);
+            StateHasChanged();
+        }
+    }
+
+    private void MarkAllAsRead()
+    {
+        foreach (var notification in notifications.Where(n => !n.IsRead))
+        {
+            notification.IsRead = true;
+        }
+        unreadCount = 0;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    // Modelos para las notificaciones
+    public class NotificationItem
+    {
+        public Guid Id { get; set; }
+        public string ClientName { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Type { get; set; } = "";
+        public DateTime Time { get; set; }
+        public bool IsRead { get; set; }
+    }
+
+    public class ComplaintNotificationData
+    {
+        public string ClientName { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Type { get; set; } = "";
+        public DateTime Time { get; set; }
+    }
+}
+
+<style>
+    .notification-bell {
+        position: relative;
+        display: inline-block;
+    }
+
+    .notification-dropdown {
+        top: 100%;
+        right: 0;
+        z-index: 1050;
+        margin-top: 0.5rem;
+    }
+
+    .notification-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+        .notification-item:hover {
+            background-color: #f8f9fa !important;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none !important;
+        }
+</style>

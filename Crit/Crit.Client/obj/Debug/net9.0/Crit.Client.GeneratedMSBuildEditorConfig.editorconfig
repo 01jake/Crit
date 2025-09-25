@@ -64,6 +64,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdG9zLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/QuejaPublicaForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUXVlamFQdWJsaWNhRm9ybS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Quejas.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUXVlamFzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -83,6 +87,10 @@ build_metadata.AdditionalFiles.CssScope =
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Components/NotificationComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xOb3RpZmljYXRpb25Db21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-t82pnf4f6b
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Layout/MainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE1haW5MYXlvdXQucmF6b3I=

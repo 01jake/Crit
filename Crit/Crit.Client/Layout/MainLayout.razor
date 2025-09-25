@@ -1,29 +1,47 @@
-﻿@inherits LayoutComponentBase
+﻿@using Crit.Client.Components
+@inherits LayoutComponentBase
 @implements IDisposable
 @inject IJSRuntime JSRuntime
-
 <div class="page">
-    <div class="main-container @(sidebarExpanded ? "sidebar-expanded" : "sidebar-collapsed")">
-        <div class="sidebar">
-            <NavMenu @ref="navMenuRef" OnSidebarToggle="HandleSidebarToggle" />
-        </div>
-        <main class="main-content">
-            <div class="top-row px-4">
-                <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+    <!-- Navbar superior con hamburguesa -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+  
+
+            <!-- Botón hamburguesa -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
+                    aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Links -->
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <NavMenu /> <!-- Aquí va tu menú dinámico -->
+                </ul>
+
+                <!-- Notificaciones si es Admin -->
+                <AuthorizeView Roles="Administrador">
+                    <NotificationComponent />
+                </AuthorizeView>
             </div>
-            <article class="content px-4">
-                @Body
-            </article>
-        </main>
-    </div>
+        </div>
+    </nav>
+
+    <!-- Contenido -->
+    <main class="main-content container-fluid mt-3">
+        <article class="content px-3">
+            @Body
+        </article>
+    </main>
 </div>
 
+<!-- Error UI -->
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
-
 @code {
     private NavMenu navMenuRef;
     private bool sidebarExpanded = false;

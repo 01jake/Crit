@@ -1,11 +1,14 @@
-﻿
-@page "/Dashboard"
+﻿@page "/Dashboard"
 @using Crit.Client.Services
+@using Crit.Shared.Models
+@using System
 @using Microsoft.AspNetCore.Authorization
 @attribute [StreamRendering(false)]
 @rendermode InteractiveWebAssembly
-@inject ProductoService ProductoService
+@inject ArticuloService ArticuloService
 @inject QuejaService QuejaService
+@inject IJSRuntime JSRuntime
+
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
 
@@ -14,127 +17,72 @@
 <div class="min-vh-100 bg-light">
     <div class="container-fluid px-4 py-4">
         <div class="mb-4">
-            <h1 class="h3 fw-bold text-dark mb-1">Dashboard de Inventario</h1>
-            <p class="text-muted">Gestiona tu inventario de manera eficiente</p>
+            <h1 class="h3 fw-bold text-dark mb-1">Dashboard de Artículos</h1>
+            <p class="text-muted">Gestiona tu inventario de artículos de manera eficiente</p>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-0 small">Total Productos</p>
-                                <h4 class="fw-bold text-primary mb-0">@totalProductos</h4>
-                                <small class="text-muted">Productos registrados</small>
-                            </div>
-                            <div class="bg-primary bg-opacity-10 rounded p-3">
-                                <i class="bi bi-box-seam text-primary fs-4"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-0 small">Valor Total</p>
-                                <h4 class="fw-bold text-primary mb-0">$@valorTotal.ToString("N0")</h4>
-                                <small class="text-muted">Valor del inventario</small>
-                            </div>
-                            <div class="bg-success bg-opacity-10 rounded p-3">
-                                <i class="bi bi-graph-up text-success fs-4"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-0 small">Alertas</p>
-                                <h4 class="fw-bold text-warning mb-0">@productosBajoStock</h4>
-                                <small class="text-muted">Productos con stock bajo</small>
-                            </div>
-                            <div class="bg-warning bg-opacity-10 rounded p-3">
-                                <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Stats Cards (omito por brevedad, mantén los tuyos) -->
 
         <!-- Search and Add Button -->
         <div class="row g-3 mb-4">
             <div class="col-md-8">
                 <div class="position-relative">
                     <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                    <input type="text" class="form-control ps-5" placeholder="Buscar productos..."
+                    <input type="text" class="form-control ps-5" placeholder="Buscar artículos..."
                            @bind="searchTerm" @oninput="OnSearchInput" />
                 </div>
             </div>
             <div class="col-md-4">
-                <a href="/productos" class="btn btn-primary w-100">
-                    <i class="bi bi-plus-lg me-2"></i>Agregar Producto
+                <a href="/articulos" class="btn btn-primary w-100">
+                    <i class="bi bi-plus-lg me-2"></i>Agregar Articulo
                 </a>
             </div>
         </div>
 
-        <!-- Products Grid -->
+        <!-- Articles Grid -->
         @if (isLoading)
         {
             <div class="text-center py-5">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
+                <div class="spinner-border" role="status"></div>
             </div>
         }
-        else if (productosFiltrados.Any())
+        else if (articulosFiltrados.Any())
         {
             <div class="row g-4">
-                @foreach (var producto in productosFiltrados)
+                @foreach (var articulo in articulosFiltrados)
                 {
                     <div class="col-lg-4 col-md-6">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header bg-white border-bottom">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <h6 class="fw-bold mb-1">@producto.Nombre</h6>
-                                        <small class="text-muted">@producto.Categoria</small>
+                                        <h6 class="fw-bold mb-1">@articulo.Nombre</h6>
+                                        <small class="text-muted">Código: @articulo.Codigo</small>
                                     </div>
-                                    <span class="badge @GetStockBadgeClass(producto.Cantidad)">
-                                        @GetStockStatus(producto.Cantidad)
+                                    <span class="badge @GetPriorizacionBadgeClass(articulo.NivelPriorizacion)">
+                                        @GetPriorizacionText(articulo.NivelPriorizacion)
                                     </span>
                                 </div>
                             </div>
                             <div class="card-body">
+                                <p class="text-muted small mb-3">@(string.IsNullOrEmpty(articulo.Descripcion) ? "-" : (articulo.Descripcion.Length > 80 ? articulo.Descripcion.Substring(0, 80) + "..." : articulo.Descripcion))</p>
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="text-muted small">Stock:</span>
-                                        <span class="fw-semibold">@producto.Cantidad unidades</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="text-muted small">Registrado por:</span>
-                                        <span class="small">@producto.UsuarioQueRegistroUserName</span>
+                                        <span class="text-muted small">Ubicación:</span>
+                                        <span class="small">@articulo.Ubicacion</span>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted small">Actualizado:</span>
-                                        <span class="small">@producto.FechaIngreso.ToString("dd/MM/yyyy")</span>
+                                        <span class="text-muted small">Registrado:</span>
+                                        <span class="small">@articulo.FechaRegistro.ToString("dd/MM/yyyy")</span>
                                     </div>
                                 </div>
                                 <div class="d-flex gap-2 pt-3 border-top">
-                                    <a href="/productos" class="btn btn-outline-primary btn-sm flex-fill">
+                                    <button class="btn btn-outline-secondary btn-sm flex-fill"
+                                            @onclick="() => EditarArticulo(articulo)">
                                         <i class="bi bi-pencil me-1"></i>Editar
-                                    </a>
-                                    <button class="btn btn-outline-danger btn-sm flex-fill">
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm flex-fill"
+                                            @onclick="() => EliminarArticulo(articulo.Id)">
                                         <i class="bi bi-trash me-1"></i>Eliminar
                                     </button>
                                 </div>
@@ -148,72 +96,209 @@
         {
             <div class="text-center py-5">
                 <i class="bi bi-box-seam display-1 text-muted mb-3"></i>
-                <h5 class="fw-semibold text-dark mb-2">No se encontraron productos</h5>
-                <p class="text-muted">
-                    @(searchTerm != string.Empty ? "Intenta con otros términos de búsqueda" : "Agrega tu primer producto para comenzar")
-                </p>
+                <h5 class="fw-semibold text-dark mb-2">No se encontraron artículos</h5>
+                <p class="text-muted">@(searchTerm != string.Empty ? "Intenta con otros términos" : "Agrega tu primer artículo")</p>
             </div>
         }
     </div>
 </div>
 
+<!-- Modal de edición/creación -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@((articuloSeleccionado?.Id == 0) ? "Nuevo Artículo" : "Editar Artículo")</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" @bind="articuloSeleccionado.Nombre" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Código</label>
+                        <input type="text" class="form-control" @bind="articuloSeleccionado.Codigo" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" @bind="articuloSeleccionado.Descripcion"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ubicación</label>
+                        <input type="text" class="form-control" @bind="articuloSeleccionado.Ubicacion" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Prioridad</label>
+                        <select class="form-select" @bind="nivelSeleccionado">
+                            @foreach (NivelPriorizacion nivel in Enum.GetValues(typeof(NivelPriorizacion)))
+                            {
+                                <option value="@( (int)nivel )">@GetPriorizacionText(nivel)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                    <button class="btn btn-primary" @onclick="GuardarArticulo">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    private List<Producto> productos = new();
-    private List<Producto> productosFiltrados = new();
+    private List<Articulo> articulos = new();
+    private List<Articulo> articulosFiltrados = new();
     private bool isLoading = true;
     private string searchTerm = string.Empty;
+    private int totalQuejas = 0;
+    private bool guardando = false;
+
+    private bool mostrarModal = false;
+    private Articulo articuloSeleccionado = new();
+
+    // propiedad auxiliar para bind del select (int <-> enum)
+    private int nivelSeleccionado
+    {
+        get => (int)(articuloSeleccionado?.NivelPriorizacion ?? NivelPriorizacion.Medio);
+        set
+        {
+            if (articuloSeleccionado != null)
+                articuloSeleccionado.NivelPriorizacion = (NivelPriorizacion)value;
+        }
+    }
 
     // Stats
-    private int totalProductos => productos.Count;
-    private decimal valorTotal => productos.Sum(p => p.Cantidad * 100); // Asumiendo precio base
-    private int productosBajoStock => productos.Count(p => p.Cantidad < 10);
+    private int totalArticulos => articulos.Count;
+    private int articulosCriticos => articulos.Count(a => a.NivelPriorizacion == NivelPriorizacion.Critico);
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarProductos();
-        FiltrarProductos();
+        await CargarDatos();
+        FiltrarArticulos();
     }
 
-    private async Task CargarProductos()
+    private async Task CargarDatos()
     {
         isLoading = true;
-        productos = await ProductoService.GetProductosAsync();
+
+        var articulosTask = ArticuloService.GetArticulosAsync();
+        var quejasTask = QuejaService.GetQuejasAsync();
+
+        await Task.WhenAll(articulosTask, quejasTask);
+
+        articulos = articulosTask.Result ?? new List<Articulo>();
+        totalQuejas = quejasTask.Result?.Count ?? 0;
+
         isLoading = false;
-        FiltrarProductos();
+        FiltrarArticulos();
     }
 
-    private void FiltrarProductos()
+    private void FiltrarArticulos()
     {
-        productosFiltrados = productos.Where(p =>
+        articulosFiltrados = articulos.Where(a =>
             string.IsNullOrEmpty(searchTerm) ||
-            p.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-            p.Categoria.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            (a.Codigo?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (a.Nombre?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (a.Descripcion?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (a.Ubicacion?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
         ).ToList();
     }
 
     private void OnSearchInput(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? string.Empty;
-        FiltrarProductos();
+        FiltrarArticulos();
     }
 
-    private string GetStockBadgeClass(int stock)
+    private void NuevoArticulo()
     {
-        return stock switch
+        articuloSeleccionado = new Articulo
         {
-            > 10 => "bg-success text-white",
-            > 0 => "bg-warning text-dark",
-            _ => "bg-danger text-white"
+            FechaRegistro = DateTime.UtcNow,
+            NivelPriorizacion = NivelPriorizacion.Medio // valor por defecto
         };
+        mostrarModal = true;
     }
 
-    private string GetStockStatus(int stock)
+    private void EditarArticulo(Articulo articulo)
     {
-        return stock switch
+        articuloSeleccionado = new Articulo
         {
-            > 10 => "En Stock",
-            > 0 => "Stock Bajo",
-            _ => "Sin Stock"
+            Id = articulo.Id,
+            Nombre = articulo.Nombre,
+            Codigo = articulo.Codigo,
+            Descripcion = articulo.Descripcion,
+            Ubicacion = articulo.Ubicacion,
+            Uso = articulo.Uso,
+            FechaRegistro = articulo.FechaRegistro,
+            NivelPriorizacion = articulo.NivelPriorizacion
         };
+        mostrarModal = true;
     }
+
+    private async Task GuardarArticulo()
+    {
+
+        guardando = true;
+        bool exito;
+        if (articuloSeleccionado == null) return;
+
+        if (articuloSeleccionado.Id == 0)
+        {
+            exito = await ArticuloService.CreateArticuloAsync(articuloSeleccionado);
+        }
+        else
+        {
+            exito = await ArticuloService.UpdateArticuloAsync(articuloSeleccionado);
+        }
+
+        if (exito)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Artículo guardado exitosamente.");
+            await CargarDatos();
+            CerrarModal();
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Error al guardar el artículo.");
+        }
+        mostrarModal = false;
+        await CargarDatos();
+    }
+
+    private async Task EliminarArticulo(int id)
+    {
+        var ok = await ArticuloService.DeleteArticuloAsync(id);
+        if (ok) await CargarDatos();
+    }
+
+    private void CerrarModal() => mostrarModal = false;
+
+    private string GetPriorizacionBadgeClass(NivelPriorizacion nivel) =>
+        nivel switch
+        {
+            NivelPriorizacion.Critico => "bg-danger text-white",
+            NivelPriorizacion.Alto => "bg-warning text-dark",
+            NivelPriorizacion.Medio => "bg-primary text-white",
+            NivelPriorizacion.Bajo => "bg-success text-white",
+            _ => "bg-secondary text-white"
+        };
+
+    private string GetPriorizacionText(NivelPriorizacion nivel) =>
+        nivel switch
+        {
+            NivelPriorizacion.Critico => "Crítico",
+            NivelPriorizacion.Alto => "Alto",
+            NivelPriorizacion.Medio => "Medio",
+            NivelPriorizacion.Bajo => "Bajo",
+            _ => "Medio"
+        };
 }

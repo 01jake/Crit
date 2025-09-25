@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Crit.Data;
 using Crit.Server.Data;
+using Crit.Server.Services;
 using Crit.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,11 +20,20 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<QuejasController> _logger;
+        private readonly INotificationService _notificationService;
 
-        public QuejasController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public QuejasController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailService emailService, IConfiguration configuration, ILogger<QuejasController> logger, INotificationService notificationService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
+            _configuration = configuration;
+            _logger = logger;
+            _notificationService = notificationService;
+
         }
 
         // GET: api/Quejas (Solo para administradores)
@@ -170,11 +180,14 @@ namespace Crit.Controllers
                     Fecha = DateTime.Now,
                     Estatus = Server.Data.EstatusQueja.Pendiente,
                     Prioridad = Server.Data.PrioridadQueja.Media,
-                    ClienteId = "PUBLICO"
+                    ClienteId = null
                 };
 
                 _context.Quejas.Add(quejaEntity);
                 await _context.SaveChangesAsync();
+
+                // Enviar email para queja anónima
+                await EnviarNotificacionQueja(queja.NombreCliente, queja.Correo, queja.Titulo, queja.DescripcionQueja, queja.Categoria, "ANÓNIMA");
 
                 return Ok(new { message = "Queja enviada exitosamente" });
             }
@@ -212,6 +225,9 @@ namespace Crit.Controllers
                 _context.Quejas.Add(quejaEntity);
                 await _context.SaveChangesAsync();
 
+                // Enviar email para queja de usuario registrado
+                await EnviarNotificacionQueja(queja.NombreCliente, queja.Correo, queja.Titulo, queja.DescripcionQueja, queja.Categoria, "USUARIO REGISTRADO", user.UserName);
+
                 var quejaResponse = new Queja
                 {
                     Id = quejaEntity.Id,
@@ -233,6 +249,62 @@ namespace Crit.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+      
+        private async Task EnviarNotificacionQueja(string nombreCliente, string correoCliente, string titulo, string descripcion, string categoria, string tipoQueja, string? usuarioRegistrado = null)
+        {
+            try
+            {
+                var adminEmail = _configuration["Email:AdminEmail"];
+                if (string.IsNullOrWhiteSpace(adminEmail))
+                {
+                    _logger.LogWarning("No se ha configurado el correo del administrador (Email:AdminEmail). No se enviará el correo de notificación.");
+                    return;
+                }
+
+                var subject = $"Nueva Queja {tipoQueja} - {titulo}";
+
+                var body = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                    <h2 style='color: #dc3545; border-bottom: 2px solid #dc3545; padding-bottom: 10px;'>
+                        Nueva Queja Recibida ({tipoQueja})
+                    </h2>
+                    
+                    <div style='background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                        <h3 style='color: #495057; margin-top: 0;'>Información del Cliente</h3>
+                        <p><strong>Nombre:</strong> {nombreCliente}</p>
+                        <p><strong>Email:</strong> {correoCliente}</p>
+                        {(usuarioRegistrado != null ? $"<p><strong>Usuario en Sistema:</strong> {usuarioRegistrado}</p>" : "")}
+                    </div>
+
+                    <div style='background: #ffffff; padding: 15px; border: 1px solid #dee2e6; border-radius: 5px; margin: 20px 0;'>
+                        <h3 style='color: #495057; margin-top: 0;'>Detalles de la Queja</h3>
+                        <p><strong>Categoría:</strong> <span style='background: #007bff; color: white; padding: 2px 8px; border-radius: 3px;'>{categoria}</span></p>
+                        <p><strong>Título:</strong> {titulo}</p>
+                        <p><strong>Descripción:</strong></p>
+                        <div style='background: #f8f9fa; padding: 10px; border-left: 4px solid #007bff; margin: 10px 0;'>
+                            {descripcion.Replace("\n", "<br>")}
+                        </div>
+                    </div>
+
+                    <div style='background: #e9ecef; padding: 10px; border-radius: 5px; text-align: center;'>
+                        <small style='color: #6c757d;'>
+                            Queja recibida el {DateTime.Now:dd/MM/yyyy} a las {DateTime.Now:HH:mm}
+                        </small>
+                    </div>
+                </div>
+                ";
+
+                await _emailService.SendEmailAsync(adminEmail, subject, body);
+                await _notificationService.NotifyNewComplaint(nombreCliente, titulo, tipoQueja);
+            }
+            catch (Exception ex)
+            {
+                // Log el error pero no fallar la creación de la queja
+                _logger.LogError(ex, "Error enviando notificación de email para queja");
+                _logger.LogError(ex, "Error enviando notificación para queja");
             }
         }
 
@@ -283,5 +355,7 @@ namespace Crit.Controllers
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
         }
+
     }
+
 }

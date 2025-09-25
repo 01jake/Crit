@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <None Include="..\Crit.Client\Pages\Component.razor" Link="Component.razor" />
+    <None Include="..\Crit.Client\Pages\QuejasPublicasForm.razor" Link="QuejasPublicasForm.razor" />
   </ItemGroup>
 
   <ItemGroup>

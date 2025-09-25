@@ -1,175 +1,240 @@
-﻿@page "/productos"
+﻿@page "/articulos"
 @using Crit.Client.Services
 @using Microsoft.AspNetCore.Authorization
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
-@inject ProductoService ProductoService
+@inject ArticuloService ArticuloService
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
 
-<PageTitle>Gestión de Productos</PageTitle>
+<PageTitle>Gestión de Artículos</PageTitle>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">
-                        <i class="fas fa-boxes"></i> Gestión de Productos
-                    </h3>
-                    <button class="btn btn-primary" @onclick="MostrarModalCrear">
-                        <i class="fas fa-plus"></i> Nuevo Producto
-                    </button>
+<div class="min-vh-100 bg-light">
+    <div class="container-fluid px-4 py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold text-dark mb-1">Gestión de Artículos</h1>
+                <p class="text-muted">Administra el inventario de artículos</p>
+            </div>
+            <button class="btn btn-primary" @onclick="MostrarModalCrear">
+                <i class="bi bi-plus-lg me-2"></i>Nuevo Artículo
+            </button>
+        </div>
+
+        <!-- Buscador -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-8">
+                <div class="position-relative">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    <input type="text" class="form-control ps-5" placeholder="Buscar artículos..."
+                           @bind="searchTerm" @oninput="OnSearchInput" />
                 </div>
-                <div class="card-body">
-                    @if (isLoading)
-                    {
-                        <div class="text-center">
-                            <div class="spinner-border" role="status">
-                                <span class="sr-only">Cargando...</span>
+            </div>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        }
+        else if (articulosFiltrados.Any())
+        {
+            <div class="row g-4">
+                @foreach (var articulo in articulosFiltrados)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">@articulo.Nombre</h6>
+                                        <small class="text-muted">Código: @articulo.Codigo</small>
+                                    </div>
+                                    <span class="badge @GetPriorizacionBadgeClass(articulo.NivelPriorizacion)">
+                                        @GetPriorizacionText(articulo.NivelPriorizacion)
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">@articulo.Descripcion</p>
+                                <div class="mb-2">
+                                    <strong class="text-muted small">Ubicación:</strong>
+                                    <span class="small">@articulo.Ubicacion</span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong class="text-muted small">Uso:</strong>
+                                    <span class="small">@articulo.Uso</span>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted small">
+                                    <span>Por: @articulo.UsuarioQueRegistroUserName</span>
+                                    <span>@articulo.FechaRegistro.ToString("dd/MM/yyyy")</span>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-white">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary btn-sm flex-fill" @onclick="() => EditarArticulo(articulo)">
+                                        <i class="bi bi-pencil me-1"></i>Editar
+                                    </button>
+                                    <AuthorizeView Roles="Administrador">
+                                        <button class="btn btn-outline-danger btn-sm flex-fill" @onclick="() => EliminarArticulo(articulo.Id)">
+                                            <i class="bi bi-trash me-1"></i>Eliminar
+                                        </button>
+                                    </AuthorizeView>
+                                </div>
                             </div>
                         </div>
-                    }
-                    else if (productos.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="thead-dark">
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Nombre</th>
-                                        <th>Cantidad</th>
-                                        <th>Categoría</th>
-                                        <th>Fecha Ingreso</th>
-                                        <th>Registrado por</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var producto in productos)
-                                    {
-                                        <tr>
-                                            <td>@producto.Id</td>
-                                            <td>@producto.Nombre</td>
-                                            <td>
-                                                <span class="badge badge-info">@producto.Cantidad</span>
-                                            </td>
-                                            <td>@producto.Categoria</td>
-                                            <td>@producto.FechaIngreso.ToString("dd/MM/yyyy")</td>
-                                            <td>@producto.UsuarioQueRegistroUserName</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-warning me-1" @onclick="() => EditarProducto(producto)">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <AuthorizeView Roles="Administrador">
-                                                    <button class="btn btn-sm btn-danger" @onclick="() => EliminarProducto(producto.Id)">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </AuthorizeView>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                    </div>
+                }
+            </div>
+           
+        }
+
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-box-seam display-1 text-muted mb-3"></i>
+                <h5 class="fw-semibold text-dark mb-2">No se encontraron artículos</h5>
+                <p class="text-muted">
+                    @(searchTerm != string.Empty ? "Intenta con otros términos" : "Agrega tu primer artículo")
+                </p>
+            </div>
+        }
+        <!-- Modal -->
+        @if (mostrarModal)
+        {
+            <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">@(articuloEditando?.Id > 0 ? "Editar" : "Nuevo") Artículo</h5>
+                            <button type="button" class="btn-close" @onclick="CerrarModal"></button>
                         </div>
-                    }
-                    else
-                    {
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> No hay productos registrados.
+                        <div class="modal-body">
+                            <EditForm Model="articuloEditando" OnValidSubmit="GuardarArticulo">
+                                <DataAnnotationsValidator />
+                                <ValidationSummary class="alert alert-danger" />
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nombre *</label>
+                                    <InputText class="form-control" @bind-Value="articuloEditando.Nombre" />
+                                    <ValidationMessage For="@(() => articuloEditando.Nombre)" />
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Código *</label>
+                                        <InputText class="form-control" @bind-Value="articuloEditando.Codigo" />
+                                        <ValidationMessage For="@(() => articuloEditando.Codigo)" />
+                                    </div>
+                                    
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Descripción *</label>
+                                    <InputTextArea class="form-control" rows="3" @bind-Value="articuloEditando.Descripcion" />
+                                    <ValidationMessage For="@(() => articuloEditando.Descripcion)" />
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Ubicación *</label>
+                                        <InputText class="form-control" @bind-Value="articuloEditando.Ubicacion" />
+                                        <ValidationMessage For="@(() => articuloEditando.Ubicacion)" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Nivel de Priorización</label>
+                                        <InputSelect class="form-select" @bind-Value="articuloEditando.NivelPriorizacion">
+                                            <option value="@NivelPriorizacion.Bajo">Bajo</option>
+                                            <option value="@NivelPriorizacion.Medio">Medio</option>
+                                            <option value="@NivelPriorizacion.Alto">Alto</option>
+                                            <option value="@NivelPriorizacion.Critico">Crítico</option>
+                                        </InputSelect>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Uso *</label>
+                                    <InputTextArea class="form-control" rows="2" @bind-Value="articuloEditando.Uso" />
+                                    <ValidationMessage For="@(() => articuloEditando.Uso)" />
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary" disabled="@guardando">
+                                        @if (guardando)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                        }
+                                        @(articuloEditando?.Id > 0 ? "Actualizar" : "Crear")
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                                </div>
+                            </EditForm>
                         </div>
-                    }
+                    </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
 </div>
-<QuejasPublicas/>
-<!-- Modal para Crear/Editar Producto -->
-@if (mostrarModal)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        @(productoEditando?.Id > 0 ? "Editar Producto" : "Nuevo Producto")
-                    </h5>
-                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
-                </div>
-                <div class="modal-body">
-                    <EditForm Model="productoEditando" OnValidSubmit="GuardarProducto">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary class="alert alert-danger" />
-
-                        <div class="mb-3">
-                            <label class="form-label">Nombre:</label>
-                            <InputText class="form-control" @bind-Value="productoEditando.Nombre" />
-                            <ValidationMessage For="@(() => productoEditando.Nombre)" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Cantidad:</label>
-                            <InputNumber class="form-control" @bind-Value="productoEditando.Cantidad" />
-                            <ValidationMessage For="@(() => productoEditando.Cantidad)" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Categoría:</label>
-                            <InputText class="form-control" @bind-Value="productoEditando.Categoria" />
-                            <ValidationMessage For="@(() => productoEditando.Categoria)" />
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary" disabled="@guardando">
-                                @if (guardando)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                @(productoEditando?.Id > 0 ? "Actualizar" : "Crear")
-                            </button>
-                        </div>
-                    </EditForm>
-                </div>
-            </div>
-        </div>
-    </div>
-}
 
 @code {
-    private List<Producto> productos = new();
+    private List<Articulo> articulos = new();
+    private List<Articulo> articulosFiltrados = new();
     private bool isLoading = true;
     private bool mostrarModal = false;
     private bool guardando = false;
-    private Producto productoEditando = new();
+    private Articulo articuloEditando = new();
+    private string searchTerm = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarProductos();
+        await CargarArticulos();
+        FiltrarArticulos();
     }
 
-    private async Task CargarProductos()
+    private async Task CargarArticulos()
     {
         isLoading = true;
-        productos = await ProductoService.GetProductosAsync();
+        articulos = await ArticuloService.GetArticulosAsync();
         isLoading = false;
+        FiltrarArticulos();
+    }
+
+    private void FiltrarArticulos()
+    {
+        articulosFiltrados = articulos.Where(a =>
+            string.IsNullOrEmpty(searchTerm) ||
+            a.Codigo.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            a.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            a.Descripcion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        FiltrarArticulos();
     }
 
     private void MostrarModalCrear()
     {
-        productoEditando = new Producto();
+        articuloEditando = new Articulo();
         mostrarModal = true;
     }
 
-    private void EditarProducto(Producto producto)
+    private void EditarArticulo(Articulo articulo)
     {
-        productoEditando = new Producto
+        articuloEditando = new Articulo
         {
-            Id = producto.Id,
-            Nombre = producto.Nombre,
-            Cantidad = producto.Cantidad,
-            Categoria = producto.Categoria
+            Id = articulo.Id,
+            Codigo = articulo.Codigo,
+            Nombre = articulo.Nombre,
+            Descripcion = articulo.Descripcion,
+            Ubicacion = articulo.Ubicacion,
+            Uso = articulo.Uso,
+            NivelPriorizacion = articulo.NivelPriorizacion
         };
         mostrarModal = true;
     }
@@ -177,52 +242,76 @@
     private void CerrarModal()
     {
         mostrarModal = false;
-        productoEditando = new();
+        articuloEditando = new();
     }
 
-    private async Task GuardarProducto()
+    private async Task GuardarArticulo()
     {
         guardando = true;
         bool exito;
 
-        if (productoEditando.Id > 0)
+        if (articuloEditando.Id > 0)
         {
-            exito = await ProductoService.UpdateProductoAsync(productoEditando);
+            exito = await ArticuloService.UpdateArticuloAsync(articuloEditando);
         }
         else
         {
-            exito = await ProductoService.CreateProductoAsync(productoEditando);
+            exito = await ArticuloService.CreateArticuloAsync(articuloEditando);
         }
 
         if (exito)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Producto guardado exitosamente.");
-            await CargarProductos();
+            await JSRuntime.InvokeVoidAsync("alert", "Artículo guardado exitosamente.");
+            await CargarArticulos();
             CerrarModal();
         }
         else
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Error al guardar el producto.");
+            await JSRuntime.InvokeVoidAsync("alert", "Error al guardar el artículo.");
         }
 
         guardando = false;
     }
 
-    private async Task EliminarProducto(int id)
+    private async Task EliminarArticulo(int id)
     {
-        bool confirmar = await JSRuntime.InvokeAsync<bool>("confirm", "¿Estás seguro de eliminar este producto?");
+        bool confirmar = await JSRuntime.InvokeAsync<bool>("confirm", "¿Estás seguro de eliminar este artículo?");
         if (confirmar)
         {
-            bool exito = await ProductoService.DeleteProductoAsync(id);
+            bool exito = await ArticuloService.DeleteArticuloAsync(id);
             if (exito)
             {
-                await JSRuntime.InvokeVoidAsync("alert", "Producto eliminado exitosamente.");
-                await CargarProductos();
+                await JSRuntime.InvokeVoidAsync("alert", "Artículo eliminado exitosamente.");
+                await CargarArticulos();
             }
             else
             {
-                await JSRuntime.InvokeVoidAsync("alert", "Error al eliminar el producto.");
+                await JSRuntime.InvokeVoidAsync("alert", "Error al eliminar el artículo.");
             }
         }
+    }
+
+    private string GetPriorizacionBadgeClass(NivelPriorizacion nivel)
+    {
+        return nivel switch
+        {
+            NivelPriorizacion.Critico => "bg-danger text-white",
+            NivelPriorizacion.Alto => "bg-warning text-dark",
+            NivelPriorizacion.Medio => "bg-primary text-white",
+            NivelPriorizacion.Bajo => "bg-success text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+
+    private string GetPriorizacionText(NivelPriorizacion nivel)
+    {
+        return nivel switch
+        {
+            NivelPriorizacion.Critico => "Crítico",
+            NivelPriorizacion.Alto => "Alto",
+            NivelPriorizacion.Medio => "Medio",
+            NivelPriorizacion.Bajo => "Bajo",
+            _ => "Medio"
+        };
     }
 }

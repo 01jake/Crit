@@ -1,0 +1,127 @@
+﻿@using Crit.Shared.Models
+@inject QuejaPublicaService QuejaPublicaService
+
+<div class="card shadow-lg border-0">
+    <div class="card-body p-5">
+        <div class="text-center mb-4">
+            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                <i class="bi bi-chat-square-text text-primary fs-1"></i>
+            </div>
+            <h3 class="fw-bold">Envía tu Queja</h3>
+            <p class="text-muted">Completa el formulario y nos pondremos en contacto contigo</p>
+        </div>
+
+        <EditForm Model="queja" OnValidSubmit="EnviarQueja">
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>@errorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>@successMessage
+                </div>
+            }
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Nombre Completo *</label>
+                    <InputText class="form-control form-control-lg" @bind-Value="queja.NombreCliente"
+                               placeholder="Tu nombre completo" />
+                    <ValidationMessage For="@(() => queja.NombreCliente)" class="text-danger small" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Correo Electrónico *</label>
+                    <InputText class="form-control form-control-lg" @bind-Value="queja.Correo"
+                               type="email" placeholder="tu@correo.com" />
+                    <ValidationMessage For="@(() => queja.Correo)" class="text-danger small" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Número de Afiliación</label>
+                    <InputText class="form-control form-control-lg" @bind-Value="queja.NumeroAfiliacion"
+                               placeholder="Opcional" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Categoría *</label>
+                    <InputSelect class="form-select form-select-lg" @bind-Value="queja.Categoria">
+                        <option value="">Selecciona una categoría</option>
+                        <option value="Servicio al Cliente">Servicio al Cliente</option>
+                        <option value="Producto/Servicio">Producto/Servicio</option>
+                        <option value="Facturación">Facturación</option>
+                        <option value="Soporte Técnico">Soporte Técnico</option>
+                        <option value="Otros">Otros</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => queja.Categoria)" class="text-danger small" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Título de la Queja *</label>
+                <InputText class="form-control form-control-lg" @bind-Value="queja.Titulo"
+                           placeholder="Resume tu queja en una línea" />
+                <ValidationMessage For="@(() => queja.Titulo)" class="text-danger small" />
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Descripción Detallada *</label>
+                <InputTextArea class="form-control form-control-lg" rows="5" @bind-Value="queja.DescripcionQueja"
+                               placeholder="Describe detalladamente tu queja o sugerencia..." />
+                <ValidationMessage For="@(() => queja.DescripcionQueja)" class="text-danger small" />
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5" disabled="@enviando">
+                    @if (enviando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Enviar Queja
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private QuejaPublica queja = new();
+    private bool enviando = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+
+    private async Task EnviarQueja()
+    {
+        enviando = true;
+        errorMessage = successMessage = string.Empty;
+
+        try
+        {
+            var (success, error) = await QuejaPublicaService.EnviarQuejaPublicaAsync(queja);
+
+            if (success)
+            {
+                successMessage = "¡Tu queja ha sido enviada exitosamente! Te contactaremos pronto.";
+                queja = new QuejaPublica();
+            }
+            else
+            {
+                errorMessage = error ?? "Error al enviar la queja.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Error inesperado al enviar la queja.";
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+}

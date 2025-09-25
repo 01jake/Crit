@@ -1,8 +1,12 @@
 ﻿using Crit.Client.Pages;
+using Crit.Client.Services;
 using Crit.Components;
 using Crit.Components.Account;
 using Crit.Data;
 using Crit.Server.Data;
+using Crit.Server.Hubs;
+using Crit.Server.Services;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +18,25 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents()
     .AddAuthenticationStateSerialization();
-
+//por mientras
+builder.Services.AddScoped(sp =>
+{
+    var nav = sp.GetRequiredService<NavigationManager>();
+    return new HttpClient { BaseAddress = new Uri(nav.BaseUri) };
+});
+builder.Services.AddSignalR();
 builder.Services.AddCascadingAuthenticationState();
+//builder.Services.AddScoped<QuejaService>();
+//builder.Services.AddScoped<AdminService>();
+//builder.Services.AddScoped<QuejaPublicaService>();
+//builder.Services.AddScoped<ArticuloService>();
+
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
+
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Configurar correctamente el AuthenticationStateProvider
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
@@ -38,7 +57,10 @@ builder.Services.AddAuthentication(options =>
         cookieOptions.SlidingExpiration = true;
     });
 });
-
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true; // Solo para desarrollo
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -116,6 +138,7 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+app.MapHub<NotificationHub>("/notificationhub");
 
 app.UseCors();
 
@@ -127,7 +150,6 @@ app.MapRazorComponents<App>()
 
 app.MapAdditionalIdentityEndpoints();
 app.MapControllers();
-
 app.Run();
 
 // Clase SeedData 
