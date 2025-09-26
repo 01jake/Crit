@@ -183,3 +183,8 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\staticwebasse
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\staticwebassets.build.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\staticwebassets.build.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\staticwebassets.build.json

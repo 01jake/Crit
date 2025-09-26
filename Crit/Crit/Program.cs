@@ -26,10 +26,10 @@ builder.Services.AddScoped(sp =>
 });
 builder.Services.AddSignalR();
 builder.Services.AddCascadingAuthenticationState();
-//builder.Services.AddScoped<QuejaService>();
-//builder.Services.AddScoped<AdminService>();
-//builder.Services.AddScoped<QuejaPublicaService>();
-//builder.Services.AddScoped<ArticuloService>();
+builder.Services.AddScoped<QuejaService>();
+builder.Services.AddScoped<AdminService>();
+builder.Services.AddScoped<QuejaPublicaService>();
+builder.Services.AddScoped<ArticuloService>();
 
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
@@ -48,13 +48,35 @@ builder.Services.AddAuthentication(options =>
 })
 .AddIdentityCookies(options =>
 {
-    //Configuración de cookies para Blazor
     options.ApplicationCookie?.Configure(cookieOptions =>
     {
         cookieOptions.Cookie.SameSite = SameSiteMode.Lax;
         cookieOptions.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         cookieOptions.ExpireTimeSpan = TimeSpan.FromHours(8);
         cookieOptions.SlidingExpiration = true;
+
+        // IMPORTANTE: Configurar respuestas para APIs
+        cookieOptions.Events.OnRedirectToLogin = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = 401;
+                return Task.CompletedTask;
+            }
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        };
+
+        cookieOptions.Events.OnRedirectToAccessDenied = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = 403;
+                return Task.CompletedTask;
+            }
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        };
     });
 });
 builder.Services.AddSignalR(options =>

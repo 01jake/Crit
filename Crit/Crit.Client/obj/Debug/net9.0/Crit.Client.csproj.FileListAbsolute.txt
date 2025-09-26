@@ -1096,10 +1096,10 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\ea
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\t9uvrjlpxi-2j5jvbvyl8.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\4l4mvnaiui-yus4od2jkp.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\fofgpadr9m-yus4od2jkp.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Debug\net9.0\wwwroot\_framework\Crit.Client.6yqeuretgr.pdb
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Debug\net9.0\wwwroot\_framework\Crit.Client.c8bsxc81on.wasm
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Debug\net9.0\wwwroot\_framework\Crit.Client.6yqeuretgr.pdb.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Debug\net9.0\wwwroot\_framework\Crit.Client.c8bsxc81on.wasm.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\slfprx99sn-c8bsxc81on.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\hgc44c941a-6yqeuretgr.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\zxfmuth5dd-dc0d3n6yg9.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Debug\net9.0\wwwroot\_framework\Crit.Client.dmidkyx0yd.pdb
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Debug\net9.0\wwwroot\_framework\Crit.Client.bfuj20i0uy.wasm
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Debug\net9.0\wwwroot\_framework\Crit.Client.dmidkyx0yd.pdb.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Debug\net9.0\wwwroot\_framework\Crit.Client.bfuj20i0uy.wasm.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\slfprx99sn-bfuj20i0uy.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\hgc44c941a-dmidkyx0yd.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Debug\net9.0\compressed\zxfmuth5dd-1p8tcpyi4l.gz
