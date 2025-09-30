@@ -11,20 +11,12 @@
                     <h1 class="display-4 fw-bold mb-3">Centro de Quejas y Sugerencias</h1>
                     <p class="lead">Tu opinión es importante para nosotros. Comparte tus comentarios.</p>
                 </div>
-                <div class="text-center text-white mb-4">
-                  
-                    <a href="/QuejasPublicas" class="btn btn-light btn-lg"> Haz tu Queja</a>
-                </div>
+           
                 <AuthorizeView>
-                    <Authorized>
-                        <div class="text-center text-white mb-4">
-                            <h3>Bienvenido, @context.User.Identity?.Name</h3>
-                            <a href="/dashboard" class="btn btn-light btn-lg">Ir al Dashboard</a>
-                        </div>
-                    </Authorized>
+                   
                     <NotAuthorized>
-@*                         <QuejaPublicaForm />
- *@                    </NotAuthorized>
+                        <QuejaPublicaForm />
+                    </NotAuthorized>
                 </AuthorizeView>
 
                 <div class="text-center text-white mt-4">

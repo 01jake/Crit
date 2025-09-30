@@ -1,10 +1,10 @@
 /* Gradiente personalizado para el navbar */
-.bg-gradient-primary {
+/*.bg-gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-}
+}*/
 
 /* Efectos hover para los nav-links */
-.nav-link {
+/*.nav-link {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -19,10 +19,10 @@
         background-color: rgba(255, 255, 255, 0.2) !important;
         color: white !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+    }*/
 
 /* Efectos para botones */
-.btn-outline-light:hover {
+/*.btn-outline-light:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
@@ -30,10 +30,10 @@
 .btn-light:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
+}*/
 
 /* Dropdown mejorado */
-.dropdown-menu {
+/*.dropdown-menu {
     border: none;
     border-radius: 12px;
     min-width: 220px;
@@ -48,10 +48,10 @@
     .dropdown-item:hover {
         background-color: #f8f9fa;
         transform: translateX(4px);
-    }
+    }*/
 
 /* Responsiveness mejorado */
-@media (max-width: 991.98px) {
+/*@media (max-width: 991.98px) {
     .navbar-nav {
         padding-top: 1rem;
     }
@@ -94,10 +94,10 @@
     .nav-text {
         font-size: 0.95rem;
     }
-}
+}*/
 
 /* Animaciones adicionales */
-.navbar-collapse {
+/*.navbar-collapse {
     transition: all 0.3s ease;
 }
 
@@ -108,12 +108,12 @@
     .navbar-toggler:focus {
         box-shadow: none;
         transform: scale(1.05);
-    }
+    }*/
 
 /* Efecto de enfoque para accesibilidad */
-.nav-link:focus,
+/*.nav-link:focus,
 .btn:focus,
 .dropdown-toggle:focus {
     outline: 2px solid rgba(255,255,255,0.5);
     outline-offset: 2px;
-}
+}*/
