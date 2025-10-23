@@ -1,0 +1,220 @@
+﻿@page "/empleados-quejas"
+@using Crit.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Crit.Client.Services
+@using Crit.Client.Components.Quejas
+@inject HttpClient HttpClient
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject QuejaService QuejaService
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Gestión de Empleados y Quejas</PageTitle>
+
+<div class="container-fluid py-4">
+    <h3 class="mb-4">Empleados y Asignación de Quejas</h3>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border"></div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var empleado in empleados)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-badge"></i> @empleado.UserName
+                            </h5>
+                            <small>@empleado.Email</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center mb-3">
+                                <div class="col-4">
+                                    <div class="border rounded p-2">
+                                        <h4 class="mb-0 text-primary">@empleado.QuejasAsignadas</h4>
+                                        <small class="text-muted">Total</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border rounded p-2">
+                                        <h4 class="mb-0 text-warning">@empleado.QuejasEnProceso</h4>
+                                        <small class="text-muted">En Proceso</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border rounded p-2">
+                                        <h4 class="mb-0 text-success">@empleado.QuejasResueltas</h4>
+                                        <small class="text-muted">Resueltas</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-primary w-100" @onclick="() => VerEstadisticas(empleado.Id)">
+                                <i class="bi bi-bar-chart"></i> Ver Estadísticas Detalladas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (mostrarEstadisticas && estadisticasEmpleado != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Estadísticas - @estadisticasEmpleado.EmpleadoNombre</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarEstadisticas"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h3>@estadisticasEmpleado.TotalAsignadas</h3>
+                                        <p class="mb-0">Total Asignadas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-danger text-white">
+                                    <div class="card-body text-center">
+                                        <h3>@estadisticasEmpleado.Pendientes</h3>
+                                        <p class="mb-0">Pendientes</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-dark">
+                                    <div class="card-body text-center">
+                                        <h3>@estadisticasEmpleado.EnProceso</h3>
+                                        <p class="mb-0">En Proceso</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h3>@estadisticasEmpleado.Resueltas</h3>
+                                        <p class="mb-0">Resueltas</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h6>Quejas Asignadas:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Título</th>
+                                        <th>Cliente</th>
+                                        <th>Categoría</th>
+                                        <th>Estado</th>
+                                        <th>Prioridad</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var queja in estadisticasEmpleado.Quejas)
+                                    {
+                                        <tr>
+                                            <td>@queja.Id</td>
+                                            <td>@queja.Titulo</td>
+                                            <td>@queja.NombreCliente</td>
+                                            <td>@queja.Categoria</td>
+                                            <td><span class="badge bg-@GetEstatusBadge(queja.Estatus)">@queja.Estatus</span></td>
+                                            <td><span class="badge bg-@GetPrioridadBadge(queja.Prioridad)">@queja.Prioridad</span></td>
+                                            <td>@queja.Fecha.ToString("dd/MM/yyyy")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<EmpleadoDto> empleados = new();
+    private bool isLoading = true;
+    private bool mostrarEstadisticas = false;
+    private EmpleadoEstadisticasDto? estadisticasEmpleado;
+    private bool showAlert = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEmpleados();
+    }
+
+    private async Task CargarEmpleados()
+    {
+        isLoading = true;
+        try
+        {
+            empleados = await HttpClient.GetFromJsonAsync<List<EmpleadoDto>>("api/Quejas/empleados") ?? new();
+        }
+        catch
+        {
+            showAlert = true;
+        }
+        isLoading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (showAlert)
+        {
+                await JSRuntime.InvokeVoidAsync("alert", "Error al cargar empleados");
+            showAlert = false;
+        }
+    }
+
+    private async Task VerEstadisticas(string empleadoId)
+    {
+        try
+        {
+            estadisticasEmpleado = await HttpClient.GetFromJsonAsync<EmpleadoEstadisticasDto>($"api/Quejas/empleado/{empleadoId}/estadisticas");
+            mostrarEstadisticas = true;
+        }
+        catch
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Error al cargar estadísticas");
+        }
+    }
+
+    private void CerrarEstadisticas()
+    {
+        mostrarEstadisticas = false;
+        estadisticasEmpleado = null;
+    }
+
+    private string GetEstatusBadge(EstatusQueja estatus) => estatus switch
+    {
+        EstatusQueja.Pendiente => "warning",
+        EstatusQueja.Atendida => "primary",
+        EstatusQueja.Cerrada => "success",
+        _ => "secondary"
+    };
+
+    private string GetPrioridadBadge(PrioridadQueja prioridad) => prioridad switch
+    {
+        PrioridadQueja.Alta => "danger",
+        PrioridadQueja.Media => "warning",
+        PrioridadQueja.Baja => "success",
+        _ => "secondary"
+    };
+}

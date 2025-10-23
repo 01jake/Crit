@@ -1,0 +1,127 @@
+﻿@* Components/QuejasAsignadas/QuejaAsignadaCard.razor *@
+
+<div class="card shadow-sm h-100">
+    <div class="card-header d-flex justify-content-between align-items-center @GetHeaderClass()">
+        <span class="badge @GetEstatusBadgeClass()">
+            @GetEstatusText()
+        </span>
+        <span class="badge @GetPrioridadBadgeClass()">
+            @GetPrioridadText()
+        </span>
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">@Queja.Titulo</h5>
+        <p class="card-text text-muted small">
+            @(Queja.DescripcionQueja.Length > 100
+                        ? Queja.DescripcionQueja.Substring(0, 100) + "..."
+                        : Queja.DescripcionQueja)
+        </p>
+        <div class="mb-2">
+            <small class="text-muted">
+                <i class="bi bi-tag me-1"></i>@Queja.Categoria
+            </small>
+        </div>
+        <div class="mb-2">
+            <small class="text-muted">
+                <i class="bi bi-person me-1"></i>@Queja.NombreCliente
+            </small>
+        </div>
+        <div class="mb-3">
+            <small class="text-muted">
+                <i class="bi bi-calendar me-1"></i>
+                Asignada: @(Queja.FechaAsignacion?.ToString("dd/MM/yyyy") ?? "N/A")
+            </small>
+        </div>
+    </div>
+    <div class="card-footer bg-transparent">
+        <div class="d-flex flex-column gap-2">
+            <button class="btn btn-sm btn-outline-info"
+                    @onclick="HandleVerDetalle">
+                <i class="bi bi-eye me-1"></i>Ver Detalle
+            </button>
+
+            @if (Queja.Estatus == EstatusQueja.Pendiente)
+            {
+                <button class="btn btn-sm btn-warning"
+                        @onclick="() => HandleCambiarEstatus(EstatusQueja.Atendida)"
+                        disabled="@IsProcessing">
+                    <i class="bi bi-play-circle me-1"></i>Iniciar Trabajo
+                </button>
+            }
+
+            @if (Queja.Estatus == EstatusQueja.Atendida)
+            {
+                <button class="btn btn-sm btn-success"
+                        @onclick="() => HandleCambiarEstatus(EstatusQueja.Cerrada)"
+                        disabled="@IsProcessing">
+                    <i class="bi bi-check-circle me-1"></i>Marcar Resuelta
+                </button>
+            }
+
+            @if (Queja.Estatus == EstatusQueja.Cerrada)
+            {
+                <div class="alert alert-success mb-0 py-2 text-center small">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Completada
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Queja Queja { get; set; } = new();
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public EventCallback<Queja> OnVerDetalle { get; set; }
+    [Parameter] public EventCallback<(int Id, EstatusQueja Estatus)> OnCambiarEstatus { get; set; }
+
+    private async Task HandleVerDetalle()
+    {
+        await OnVerDetalle.InvokeAsync(Queja);
+    }
+
+    private async Task HandleCambiarEstatus(EstatusQueja nuevoEstatus)
+    {
+        await OnCambiarEstatus.InvokeAsync((Queja.Id, nuevoEstatus));
+    }
+
+    private string GetEstatusText() => Queja.Estatus switch
+    {
+        EstatusQueja.Pendiente => "Pendiente",
+        EstatusQueja.Atendida => "En Proceso",
+        EstatusQueja.Cerrada => "Resuelta",
+        _ => "Desconocido"
+    };
+
+    private string GetPrioridadText() => Queja.Prioridad switch
+    {
+        PrioridadQueja.Baja => "Baja",
+        PrioridadQueja.Media => "Media",
+        PrioridadQueja.Alta => "Alta",
+        _ => "Desconocida"
+    };
+
+    private string GetEstatusBadgeClass() => Queja.Estatus switch
+    {
+        EstatusQueja.Pendiente => "bg-secondary",
+        EstatusQueja.Atendida => "bg-warning text-dark",
+        EstatusQueja.Cerrada => "bg-success",
+        _ => "bg-secondary"
+    };
+
+    private string GetPrioridadBadgeClass() => Queja.Prioridad switch
+    {
+        PrioridadQueja.Baja => "bg-info",
+        PrioridadQueja.Media => "bg-warning text-dark",
+        PrioridadQueja.Alta => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private string GetHeaderClass() => Queja.Estatus switch
+    {
+        EstatusQueja.Pendiente => "bg-light",
+        EstatusQueja.Atendida => "bg-warning bg-opacity-10",
+        EstatusQueja.Cerrada => "bg-success bg-opacity-10",
+        _ => "bg-light"
+    };
+}

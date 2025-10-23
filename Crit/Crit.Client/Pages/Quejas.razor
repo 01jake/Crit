@@ -49,7 +49,7 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <select class="form-select" @bind="filterStatus">
+                <select class="form-select" @onchange="OnFilterChange" value="@filterStatus">
                     <option value="all">Todos los estados</option>
                     <option value="Pendiente">Pendientes</option>
                     <option value="Atendida">En Proceso</option>
@@ -242,8 +242,8 @@
         return estatus switch
         {
             EstatusQueja.Pendiente => "Pendiente",
-            EstatusQueja.Atendida => "En Proceso",
-            EstatusQueja.Cerrada => "Resuelto",
+            EstatusQueja.Atendida => "Atendida",
+            EstatusQueja.Cerrada => "Cerrada",
             _ => "Desconocido"
         };
     }

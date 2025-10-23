@@ -182,7 +182,8 @@ public static class SeedData
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        string[] roleNames = { "Administrador", "Usuario" };
+        // Crear roles
+        string[] roleNames = { "Administrador", "Empleado", "Usuario" };
         foreach (var roleName in roleNames)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
@@ -191,9 +192,9 @@ public static class SeedData
             }
         }
 
+        // Crear usuario admin
         var adminEmail = "admin@crit.com";
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        
         if (adminUser == null)
         {
             adminUser = new ApplicationUser
@@ -202,11 +203,28 @@ public static class SeedData
                 Email = adminEmail,
                 EmailConfirmed = true
             };
-            
             var result = await userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(adminUser, "Administrador");
+            }
+        }
+
+        // Crear usuario empleado de ejemplo
+        var empleadoEmail = "empleado@crit.com";
+        var empleadoUser = await userManager.FindByEmailAsync(empleadoEmail);
+        if (empleadoUser == null)
+        {
+            empleadoUser = new ApplicationUser
+            {
+                UserName = empleadoEmail,
+                Email = empleadoEmail,
+                EmailConfirmed = true
+            };
+            var result = await userManager.CreateAsync(empleadoUser, "Empleado123!");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(empleadoUser, "Empleado");
             }
         }
     }

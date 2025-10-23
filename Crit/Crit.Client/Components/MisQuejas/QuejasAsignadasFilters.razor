@@ -1,0 +1,43 @@
+﻿@* Components/QuejasAsignadas/QuejasAsignadasFilters.razor *@
+
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="position-relative">
+            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+            <input type="text"
+                   class="form-control ps-5"
+                   placeholder="Buscar quejas..."
+                   value="@SearchTerm"
+                   @oninput="OnSearchChanged" />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <select class="form-select"
+                value="@FilterStatus"
+                @onchange="OnFilterChanged">
+            <option value="all">Todos los estados</option>
+            <option value="Pendiente">Pendientes</option>
+            <option value="Atendida">En Proceso</option>
+            <option value="Cerrada">Resueltas</option>
+        </select>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string SearchTerm { get; set; } = string.Empty;
+    [Parameter] public string FilterStatus { get; set; } = "all";
+    [Parameter] public EventCallback<string> OnSearchTermChanged { get; set; }
+    [Parameter] public EventCallback<string> OnFilterStatusChanged { get; set; }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString() ?? string.Empty;
+        await OnSearchTermChanged.InvokeAsync(newValue);
+    }
+
+    private async Task OnFilterChanged(ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString() ?? "all";
+        await OnFilterStatusChanged.InvokeAsync(newValue);
+    }
+}

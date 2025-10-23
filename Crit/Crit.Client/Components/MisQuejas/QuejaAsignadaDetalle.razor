@@ -1,0 +1,164 @@
+﻿
+@if (IsVisible && Queja != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-file-text me-2"></i>
+                        Detalle de la Queja
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="HandleClose"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="alert @GetAlertClass()" role="alert">
+                                <strong>Estado:</strong> @GetEstatusText()
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Título</label>
+                            <p>@Queja.Titulo</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Categoría</label>
+                            <p>@Queja.Categoria</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Descripción</label>
+                            <p class="text-muted">@Queja.DescripcionQueja</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Cliente</label>
+                            <p>@Queja.NombreCliente</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Correo</label>
+                            <p>@Queja.Correo</p>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Queja.NumeroAfiliacion))
+                        {
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Número de Afiliación</label>
+                                <p>@Queja.NumeroAfiliacion</p>
+                            </div>
+                        }
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Prioridad</label>
+                            <p>
+                                <span class="badge @GetPrioridadBadgeClass()">
+                                    @GetPrioridadText()
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Fecha de Creación</label>
+                            <p>@Queja.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Fecha de Asignación</label>
+                            <p>@(Queja.FechaAsignacion?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</p>
+                        </div>
+                        @if (Queja.FechaResolucion.HasValue)
+                        {
+                            <div class="col-12">
+                                <div class="alert alert-success">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    <strong>Fecha de Resolución:</strong> @Queja.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (Queja.Estatus == EstatusQueja.Pendiente)
+                    {
+                        <button type="button"
+                                class="btn btn-warning"
+                                @onclick="() => HandleCambiarEstatus(EstatusQueja.Atendida)"
+                                disabled="@IsProcessing">
+                            @if (IsProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            <i class="bi bi-play-circle me-1"></i>
+                            Iniciar Trabajo
+                        </button>
+                    }
+
+                    @if (Queja.Estatus == EstatusQueja.Atendida)
+                    {
+                        <button type="button"
+                                class="btn btn-success"
+                                @onclick="() => HandleCambiarEstatus(EstatusQueja.Cerrada)"
+                                disabled="@IsProcessing">
+                            @if (IsProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            <i class="bi bi-check-circle me-1"></i>
+                            Marcar como Resuelta
+                        </button>
+                    }
+
+                    <button type="button" class="btn btn-secondary" @onclick="HandleClose">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Queja? Queja { get; set; }
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<(int Id, EstatusQueja Estatus)> OnCambiarEstatus { get; set; }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleCambiarEstatus(EstatusQueja nuevoEstatus)
+    {
+        if (Queja != null)
+        {
+            await OnCambiarEstatus.InvokeAsync((Queja.Id, nuevoEstatus));
+        }
+    }
+
+    private string GetEstatusText() => Queja?.Estatus switch
+    {
+        EstatusQueja.Pendiente => "Pendiente",
+        EstatusQueja.Atendida => "En Proceso",
+        EstatusQueja.Cerrada => "Resuelta",
+        _ => "Desconocido"
+    };
+
+    private string GetPrioridadText() => Queja?.Prioridad switch
+    {
+        PrioridadQueja.Baja => "Baja",
+        PrioridadQueja.Media => "Media",
+        PrioridadQueja.Alta => "Alta",
+        _ => "Desconocida"
+    };
+
+    private string GetPrioridadBadgeClass() => Queja?.Prioridad switch
+    {
+        PrioridadQueja.Baja => "bg-info",
+        PrioridadQueja.Media => "bg-warning text-dark",
+        PrioridadQueja.Alta => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private string GetAlertClass() => Queja?.Estatus switch
+    {
+        EstatusQueja.Pendiente => "alert-secondary",
+        EstatusQueja.Atendida => "alert-warning",
+        EstatusQueja.Cerrada => "alert-success",
+        _ => "alert-secondary"
+    };
+}

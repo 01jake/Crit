@@ -42,12 +42,18 @@ public class Queja
     [StringLength(100, ErrorMessage = "La categoría no puede exceder los 100 caracteres.")]
     public string Categoria { get; set; } = string.Empty;
 
+    public string? EmpleadoAsignadoId { get; set; }
+    public string? EmpleadoAsignadoUserName { get; set; }
+    public DateTime? FechaAsignacion { get; set; }
+    public DateTime? FechaResolucion { get; set; }
+
     [DataType(DataType.Date)]
     public DateTime Fecha { get; set; } = DateTime.Now;
 
     public EstatusQueja Estatus { get; set; } = EstatusQueja.Pendiente;
 
     public PrioridadQueja Prioridad { get; set; } = PrioridadQueja.Media;
+
 
     // Propiedades para el DTO (lo que envías al cliente)
     public string? ClienteId { get; set; }

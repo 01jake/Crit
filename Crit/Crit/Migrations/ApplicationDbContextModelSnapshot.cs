@@ -218,6 +218,10 @@ namespace Crit.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<string>("EmpleadoAsignadoId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("Estatus")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -227,6 +231,12 @@ namespace Crit.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime?>("FechaAsignacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaResolucion")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("NombreCliente")
                         .IsRequired()
@@ -251,6 +261,8 @@ namespace Crit.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
+
+                    b.HasIndex("EmpleadoAsignadoId");
 
                     b.ToTable("Quejas");
                 });
@@ -416,10 +428,22 @@ namespace Crit.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<string>("EmpleadoAsignadoId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmpleadoAsignadoUserName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Estatus")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaAsignacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaResolucion")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("NombreCliente")
@@ -463,7 +487,14 @@ namespace Crit.Migrations
                         .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Crit.Data.ApplicationUser", "EmpleadoAsignado")
+                        .WithMany()
+                        .HasForeignKey("EmpleadoAsignadoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Cliente");
+
+                    b.Navigation("EmpleadoAsignado");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

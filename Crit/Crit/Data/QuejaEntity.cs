@@ -55,6 +55,15 @@ namespace Crit.Server.Data
 
         public PrioridadQueja Prioridad { get; set; } = PrioridadQueja.Media;
 
+        [StringLength(450)]
+        public string? EmpleadoAsignadoId { get; set; }
+
+        [ForeignKey(nameof(EmpleadoAsignadoId))]
+        public virtual ApplicationUser? EmpleadoAsignado { get; set; }
+
+        public DateTime? FechaAsignacion { get; set; }
+        public DateTime? FechaResolucion { get; set; }
+
         // Relación con ApplicationUser (Cliente que reporta)
         [Required]
         public string ClienteId { get; set; } = string.Empty;

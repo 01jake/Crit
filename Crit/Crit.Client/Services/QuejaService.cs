@@ -60,6 +60,21 @@ namespace Crit.Client.Services
             }
         }
 
+        // Para que el usuario vea las quejas que tiene asignadas
+        public async Task<List<Queja>> GetMisQuejasAsignadasAsync()
+        {
+            try
+            {
+                var quejas = await _httpClient.GetFromJsonAsync<List<Queja>>("api/Quejas/mis-asignadas");
+                return quejas ?? new List<Queja>();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error al obtener quejas asignadas: {ex.Message}");
+                return new List<Queja>();
+            }
+        }
+
         // Para obtener una queja por ID
         public async Task<Queja?> GetQuejaByIdAsync(int id)
         {
@@ -78,7 +93,7 @@ namespace Crit.Client.Services
             }
         }
 
-        // Para actualizar el estatus de una queja (Admin)
+        // Para actualizar el estatus de una queja
         public async Task<bool> UpdateQuejaStatusAsync(int id, EstatusQueja nuevoEstatus)
         {
             try

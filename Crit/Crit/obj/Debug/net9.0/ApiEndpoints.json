@@ -285,6 +285,27 @@
   },
   {
     "ContainingType": "Crit.Controllers.QuejasController",
+    "Method": "AsignarQueja",
+    "RelativePath": "api/Quejas/{id}/asignar",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "Crit.Controllers.QuejasController\u002BAsignarQuejaDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Crit.Controllers.QuejasController",
     "Method": "UpdateQuejaStatus",
     "RelativePath": "api/Quejas/{id}/status",
     "HttpMethod": "PUT",
@@ -303,6 +324,26 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Crit.Controllers.QuejasController",
+    "Method": "GetMisQuejasAsignadas",
+    "RelativePath": "api/Quejas/mis-asignadas",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Queja, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "Crit.Controllers.QuejasController",
@@ -339,5 +380,51 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Crit.Controllers.QuejasController",
+    "Method": "GetEstadisticasUsuario",
+    "RelativePath": "api/Quejas/usuario/{usuarioId}/estadisticas",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "usuarioId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Crit.Shared.Models.UsuarioEstadisticasDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Crit.Controllers.QuejasController",
+    "Method": "GetUsuarios",
+    "RelativePath": "api/Quejas/usuarios",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.Models.UsuarioDto, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   }
 ]

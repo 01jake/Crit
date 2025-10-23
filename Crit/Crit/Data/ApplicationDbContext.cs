@@ -102,6 +102,12 @@ namespace Crit.Server.Data
                       .HasForeignKey(q => q.ClienteId)
                       .OnDelete(DeleteBehavior.Restrict)
                       .IsRequired(false);
+
+                entity.HasOne(q => q.EmpleadoAsignado)
+                      .WithMany()
+                      .HasForeignKey(q => q.EmpleadoAsignadoId)
+                      .OnDelete(DeleteBehavior.SetNull)
+                      .IsRequired(false);
             });
         }
         //public DbSet<Producto> Producto { get; set; } = default!;

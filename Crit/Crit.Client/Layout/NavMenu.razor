@@ -3,8 +3,13 @@
 @implements IDisposable
 <nav class="navbar navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="/">
-            <i class="bi bi-shield-check me-2"></i>CRIT System
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
+            <img src="https://teletonorgmx.s3.amazonaws.com/wp-content/themes/Teleton/images/logoteleton1.svg.gzip"
+                 alt="Logo Teletón"
+                 width="50"
+                 height="50"
+                 class="me-2">
+            Quejas y Sugerencias
         </a>
 
         <div class="d-flex align-items-center gap-3">
@@ -23,7 +28,12 @@
         <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title">
-                    <i class="bi bi-shield-check me-2"></i>Crit System
+                    <img src="https://teletonorgmx.s3.amazonaws.com/wp-content/themes/Teleton/images/logoteleton1.svg.gzip"
+                         alt="Logo Teletón"
+                         width="60"
+                         height="60"
+                         class="me-2">
+                    Quejas y Sugerencias
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
             </div>
@@ -44,6 +54,16 @@
                             <li class="nav-item">
                                 <NavLink class="nav-link" href="quejas">
                                     <i class="bi bi-chat-square-text-fill me-2"></i>Quejas
+                                </NavLink>
+                            </li>
+                            <li class="nav-item">
+                                <NavLink class="nav-link" href="/admin/asignar-quejas">
+                                    <i class="bi bi-chat-square-text-fill me-2"></i>Asignar
+                                </NavLink>
+                            </li>
+                            <li class="nav-item">
+                                <NavLink class="nav-link" href="/mis-quejas-asignadas">
+                                    <i class="bi bi-chat-square-text-fill me-2"></i>Mis Quejas
                                 </NavLink>
                             </li>
                         </ul>

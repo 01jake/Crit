@@ -6,6 +6,7 @@ namespace Crit.Server.Services
     public interface INotificationService
     {
         Task NotifyNewComplaint(string clientName, string title, string type);
+        Task NotifyQuejaAssigned(string? v, string titulo);
     }
 
     public class NotificationService : INotificationService
@@ -26,6 +27,11 @@ namespace Crit.Server.Services
                 Type = type,
                 Time = DateTime.Now
             });
+        }
+
+        public Task NotifyQuejaAssigned(string? v, string titulo)
+        {
+            throw new NotImplementedException();
         }
     }
 }

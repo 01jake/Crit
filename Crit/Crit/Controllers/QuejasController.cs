@@ -33,7 +33,6 @@ namespace Crit.Controllers
             _configuration = configuration;
             _logger = logger;
             _notificationService = notificationService;
-
         }
 
         // GET: api/Quejas (Solo para administradores)
@@ -45,6 +44,7 @@ namespace Crit.Controllers
             {
                 var quejas = await _context.Quejas
                     .Include(q => q.Cliente)
+                    .Include(q => q.EmpleadoAsignado)
                     .Select(q => new Queja
                     {
                         Id = q.Id,
@@ -58,7 +58,11 @@ namespace Crit.Controllers
                         Estatus = (EstatusQueja)q.Estatus,
                         Prioridad = (PrioridadQueja)q.Prioridad,
                         ClienteId = q.ClienteId,
-                        ClienteUserName = q.Cliente!.UserName
+                        ClienteUserName = q.Cliente != null ? q.Cliente.UserName : "Usuario Anónimo",
+                        EmpleadoAsignadoId = q.EmpleadoAsignadoId,
+                        EmpleadoAsignadoUserName = q.EmpleadoAsignado != null ? q.EmpleadoAsignado.UserName : null,
+                        FechaAsignacion = q.FechaAsignacion,
+                        FechaResolucion = q.FechaResolucion
                     })
                     .OrderByDescending(q => q.Fecha)
                     .ToListAsync();
@@ -85,6 +89,7 @@ namespace Crit.Controllers
 
                 var quejaEntity = await _context.Quejas
                     .Include(q => q.Cliente)
+                    .Include(q => q.EmpleadoAsignado)
                     .FirstOrDefaultAsync(q => q.Id == id);
 
                 if (quejaEntity == null)
@@ -93,7 +98,10 @@ namespace Crit.Controllers
                 }
 
                 var isAdmin = await _userManager.IsInRoleAsync(user, "Administrador");
-                if (!isAdmin && quejaEntity.ClienteId != user.Id)
+                var esAsignado = quejaEntity.EmpleadoAsignadoId == user.Id;
+                var esCliente = quejaEntity.ClienteId == user.Id;
+
+                if (!isAdmin && !esAsignado && !esCliente)
                 {
                     return Forbid("No tienes permisos para ver esta queja.");
                 }
@@ -111,7 +119,11 @@ namespace Crit.Controllers
                     Estatus = (EstatusQueja)quejaEntity.Estatus,
                     Prioridad = (PrioridadQueja)quejaEntity.Prioridad,
                     ClienteId = quejaEntity.ClienteId,
-                    ClienteUserName = quejaEntity.Cliente?.UserName
+                    ClienteUserName = quejaEntity.Cliente?.UserName ?? "Usuario Anónimo",
+                    EmpleadoAsignadoId = quejaEntity.EmpleadoAsignadoId,
+                    EmpleadoAsignadoUserName = quejaEntity.EmpleadoAsignado?.UserName,
+                    FechaAsignacion = quejaEntity.FechaAsignacion,
+                    FechaResolucion = quejaEntity.FechaResolucion
                 };
 
                 return Ok(queja);
@@ -136,6 +148,7 @@ namespace Crit.Controllers
 
                 var quejas = await _context.Quejas
                     .Include(q => q.Cliente)
+                    .Include(q => q.EmpleadoAsignado)
                     .Where(q => q.ClienteId == user.Id)
                     .Select(q => new Queja
                     {
@@ -150,7 +163,11 @@ namespace Crit.Controllers
                         Estatus = (EstatusQueja)q.Estatus,
                         Prioridad = (PrioridadQueja)q.Prioridad,
                         ClienteId = q.ClienteId,
-                        ClienteUserName = q.Cliente!.UserName
+                        ClienteUserName = q.Cliente!.UserName,
+                        EmpleadoAsignadoId = q.EmpleadoAsignadoId,
+                        EmpleadoAsignadoUserName = q.EmpleadoAsignado != null ? q.EmpleadoAsignado.UserName : null,
+                        FechaAsignacion = q.FechaAsignacion,
+                        FechaResolucion = q.FechaResolucion
                     })
                     .OrderByDescending(q => q.Fecha)
                     .ToListAsync();
@@ -162,9 +179,56 @@ namespace Crit.Controllers
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
         }
-        // Post: api/Quejas (Solo para quejas para clientes)
+
+        // GET: api/Quejas/mis-asignadas - Para usuarios que tienen quejas asignadas
+        [HttpGet("mis-asignadas")]
+        public async Task<ActionResult<IEnumerable<Queja>>> GetMisQuejasAsignadas()
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return Unauthorized();
+                }
+
+                var quejas = await _context.Quejas
+                    .Include(q => q.Cliente)
+                    .Include(q => q.EmpleadoAsignado)
+                    .Where(q => q.EmpleadoAsignadoId == user.Id)
+                    .Select(q => new Queja
+                    {
+                        Id = q.Id,
+                        NombreCliente = q.NombreCliente,
+                        NumeroAfiliacion = q.NumeroAfiliacion,
+                        Correo = q.Correo,
+                        Titulo = q.Titulo,
+                        DescripcionQueja = q.DescripcionQueja,
+                        Categoria = q.Categoria,
+                        Fecha = q.Fecha,
+                        Estatus = (EstatusQueja)q.Estatus,
+                        Prioridad = (PrioridadQueja)q.Prioridad,
+                        ClienteId = q.ClienteId,
+                        ClienteUserName = q.Cliente != null ? q.Cliente.UserName : "Usuario Anónimo",
+                        EmpleadoAsignadoId = q.EmpleadoAsignadoId,
+                        EmpleadoAsignadoUserName = q.EmpleadoAsignado!.UserName,
+                        FechaAsignacion = q.FechaAsignacion,
+                        FechaResolucion = q.FechaResolucion
+                    })
+                    .OrderByDescending(q => q.Fecha)
+                    .ToListAsync();
+
+                return Ok(quejas);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        // Post: api/Quejas/publica (Solo para quejas anónimas)
         [HttpPost("publica")]
-        [AllowAnonymous] // Permite acceso sin autenticación
+        [AllowAnonymous]
         public async Task<IActionResult> PostQuejaPublica([FromBody] QuejaPublica queja)
         {
             try
@@ -180,22 +244,23 @@ namespace Crit.Controllers
                     Fecha = DateTime.Now,
                     Estatus = Server.Data.EstatusQueja.Pendiente,
                     Prioridad = Server.Data.PrioridadQueja.Media,
-                    ClienteId = null
+                    ClienteId = string.Empty // Usuario anónimo
                 };
 
                 _context.Quejas.Add(quejaEntity);
                 await _context.SaveChangesAsync();
 
-                // Enviar email para queja anónima
                 await EnviarNotificacionQueja(queja.NombreCliente, queja.Correo, queja.Titulo, queja.DescripcionQueja, queja.Categoria, "ANÓNIMA");
 
                 return Ok(new { message = "Queja enviada exitosamente" });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al crear queja pública");
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
+
         // POST: api/Quejas
         [HttpPost]
         public async Task<ActionResult<Queja>> PostQueja(Queja queja)
@@ -225,7 +290,6 @@ namespace Crit.Controllers
                 _context.Quejas.Add(quejaEntity);
                 await _context.SaveChangesAsync();
 
-                // Enviar email para queja de usuario registrado
                 await EnviarNotificacionQueja(queja.NombreCliente, queja.Correo, queja.Titulo, queja.DescripcionQueja, queja.Categoria, "USUARIO REGISTRADO", user.UserName);
 
                 var quejaResponse = new Queja
@@ -248,11 +312,230 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al crear queja");
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
         }
 
-      
+        // PUT: api/Quejas/5/status
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateQuejaStatus(int id, [FromBody] EstatusQueja nuevoEstatus)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return Unauthorized();
+                }
+
+                var queja = await _context.Quejas.FindAsync(id);
+                if (queja == null)
+                {
+                    return NotFound($"Queja con ID {id} no encontrada.");
+                }
+
+                var isAdmin = await _userManager.IsInRoleAsync(user, "Administrador");
+                var esAsignado = queja.EmpleadoAsignadoId == user.Id;
+
+                // Solo admin o el usuario asignado pueden cambiar el estatus
+                if (!isAdmin && !esAsignado)
+                {
+                    return Forbid("No tienes permisos para cambiar el estatus de esta queja.");
+                }
+
+                queja.Estatus = (Server.Data.EstatusQueja)nuevoEstatus;
+
+                // Si se marca como cerrada, guardar fecha de resolución
+                if (nuevoEstatus == EstatusQueja.Cerrada && !queja.FechaResolucion.HasValue)
+                {
+                    queja.FechaResolucion = DateTime.Now;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar estatus");
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        // PUT: api/Quejas/5/asignar
+
+        [HttpPut("{id}/asignar")]
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> AsignarQueja(int id, [FromBody] AsignarQuejaDto dto)
+        {
+            try
+            {
+                var queja = await _context.Quejas.FindAsync(id);
+                if (queja == null)
+                {
+                    return NotFound($"Queja con ID {id} no encontrada.");
+                }
+
+                var usuario = await _userManager.FindByIdAsync(dto.UsuarioId);
+                if (usuario == null)
+                {
+                    return BadRequest("Usuario no válido.");
+                }
+
+                queja.EmpleadoAsignadoId = dto.UsuarioId;
+                queja.FechaAsignacion = DateTime.Now;
+                // ✅ CAMBIO: Mantener en Pendiente en lugar de cambiar a Atendida
+                queja.Estatus = Server.Data.EstatusQueja.Pendiente;
+
+                await _context.SaveChangesAsync();
+
+                // Enviar notificación al usuario asignado
+                try
+                {
+                    await _notificationService.NotifyQuejaAssigned(usuario.UserName ?? usuario.Email, queja.Titulo);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error enviando notificación de asignación");
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al asignar queja");
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        // GET: api/Quejas/usuarios - Obtener todos los usuarios registrados (no admins)
+        [HttpGet("usuarios")]
+        [Authorize(Roles = "Administrador")]
+        public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetUsuarios()
+        {
+            try
+            {
+                var todosUsuarios = await _userManager.Users.ToListAsync();
+                var usuariosDto = new List<UsuarioDto>();
+
+                foreach (var usuario in todosUsuarios)
+                {
+                    var isAdmin = await _userManager.IsInRoleAsync(usuario, "Administrador");
+
+                    // No incluir administradores en la lista
+                    if (!isAdmin)
+                    {
+                        var quejasAsignadas = await _context.Quejas
+                            .Where(q => q.EmpleadoAsignadoId == usuario.Id)
+                            .CountAsync();
+
+                        var quejasEnProceso = await _context.Quejas
+                            .Where(q => q.EmpleadoAsignadoId == usuario.Id && q.Estatus == Server.Data.EstatusQueja.Atendida)
+                            .CountAsync();
+
+                        var quejasResueltas = await _context.Quejas
+                            .Where(q => q.EmpleadoAsignadoId == usuario.Id && q.Estatus == Server.Data.EstatusQueja.Cerrada)
+                            .CountAsync();
+
+                        usuariosDto.Add(new UsuarioDto
+                        {
+                            Id = usuario.Id,
+                            UserName = usuario.UserName ?? "Usuario",
+                            Email = usuario.Email ?? "",
+                            QuejasAsignadas = quejasAsignadas,
+                            QuejasEnProceso = quejasEnProceso,
+                            QuejasResueltas = quejasResueltas
+                        });
+                    }
+                }
+
+                return Ok(usuariosDto.OrderBy(u => u.UserName));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuarios");
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        // GET: api/Quejas/usuario/{usuarioId}/estadisticas
+        [HttpGet("usuario/{usuarioId}/estadisticas")]
+        [Authorize(Roles = "Administrador")]
+        public async Task<ActionResult<UsuarioEstadisticasDto>> GetEstadisticasUsuario(string usuarioId)
+        {
+            try
+            {
+                var usuario = await _userManager.FindByIdAsync(usuarioId);
+                if (usuario == null)
+                {
+                    return NotFound("Usuario no encontrado.");
+                }
+
+                var quejas = await _context.Quejas
+                    .Include(q => q.Cliente)
+                    .Where(q => q.EmpleadoAsignadoId == usuarioId)
+                    .ToListAsync();
+
+                var estadisticas = new UsuarioEstadisticasDto
+                {
+                    UsuarioId = usuarioId,
+                    UsuarioNombre = usuario.UserName ?? usuario.Email,
+                    UsuarioEmail = usuario.Email,
+                    TotalAsignadas = quejas.Count,
+                    Pendientes = quejas.Count(q => q.Estatus == Server.Data.EstatusQueja.Pendiente),
+                    EnProceso = quejas.Count(q => q.Estatus == Server.Data.EstatusQueja.Atendida),
+                    Resueltas = quejas.Count(q => q.Estatus == Server.Data.EstatusQueja.Cerrada),
+                    Quejas = quejas.Select(q => new Queja
+                    {
+                        Id = q.Id,
+                        Titulo = q.Titulo,
+                        DescripcionQueja = q.DescripcionQueja,
+                        Categoria = q.Categoria,
+                        Estatus = (EstatusQueja)q.Estatus,
+                        Prioridad = (PrioridadQueja)q.Prioridad,
+                        Fecha = q.Fecha,
+                        FechaAsignacion = q.FechaAsignacion,
+                        FechaResolucion = q.FechaResolucion,
+                        NombreCliente = q.NombreCliente,
+                        ClienteUserName = q.Cliente != null ? q.Cliente.UserName : "Usuario Anónimo"
+                    }).OrderByDescending(q => q.Fecha).ToList()
+                };
+
+                return Ok(estadisticas);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener estadísticas de usuario");
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        // DELETE: api/Quejas/5
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> DeleteQueja(int id)
+        {
+            try
+            {
+                var queja = await _context.Quejas.FindAsync(id);
+                if (queja == null)
+                {
+                    return NotFound($"Queja con ID {id} no encontrada.");
+                }
+
+                _context.Quejas.Remove(queja);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar queja");
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         private async Task EnviarNotificacionQueja(string nombreCliente, string correoCliente, string titulo, string descripcion, string categoria, string tipoQueja, string? usuarioRegistrado = null)
         {
             try
@@ -260,7 +543,7 @@ namespace Crit.Controllers
                 var adminEmail = _configuration["Email:AdminEmail"];
                 if (string.IsNullOrWhiteSpace(adminEmail))
                 {
-                    _logger.LogWarning("No se ha configurado el correo del administrador (Email:AdminEmail). No se enviará el correo de notificación.");
+                    _logger.LogWarning("No se ha configurado el correo del administrador");
                     return;
                 }
 
@@ -302,60 +585,13 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                // Log el error pero no fallar la creación de la queja
                 _logger.LogError(ex, "Error enviando notificación de email para queja");
-                _logger.LogError(ex, "Error enviando notificación para queja");
             }
         }
 
-        // PUT: api/Quejas/5/status
-        [HttpPut("{id}/status")]
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> UpdateQuejaStatus(int id, [FromBody] EstatusQueja nuevoEstatus)
+        public class AsignarQuejaDto
         {
-            try
-            {
-                var queja = await _context.Quejas.FindAsync(id);
-                if (queja == null)
-                {
-                    return NotFound($"Queja con ID {id} no encontrada.");
-                }
-
-                queja.Estatus = (Server.Data.EstatusQueja)nuevoEstatus;
-                await _context.SaveChangesAsync();
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno: {ex.Message}");
-            }
+            public string UsuarioId { get; set; } = string.Empty;
         }
-
-        // DELETE: api/Quejas/5
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DeleteQueja(int id)
-        {
-            try
-            {
-                var queja = await _context.Quejas.FindAsync(id);
-                if (queja == null)
-                {
-                    return NotFound($"Queja con ID {id} no encontrada.");
-                }
-
-                _context.Quejas.Remove(queja);
-                await _context.SaveChangesAsync();
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno: {ex.Message}");
-            }
-        }
-
     }
-
 }
