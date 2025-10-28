@@ -1,9 +1,9 @@
 ﻿@using Crit.Client.Components
 @inject NavigationManager NavigationManager
 @implements IDisposable
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-dark " style="background-color:#651E6E">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
+        <a class="navbar-brand fw-bold d-flex text-white align-items-center" href="/">
             <img src="https://teletonorgmx.s3.amazonaws.com/wp-content/themes/Teleton/images/logoteleton1.svg.gzip"
                  alt="Logo Teletón"
                  width="50"
@@ -15,17 +15,17 @@
         <div class="d-flex align-items-center gap-3">
             <AuthorizeView>
                 <Authorized>
-                    <NotificationComponent/>
+                    <NotificationComponent />
                 </Authorized>
             </AuthorizeView>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" 
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas"
                     data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
                 <span class="navbar-toggler-icon"></span>
             </button>
         </div>
 
-        <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar">
+        <div class="offcanvas offcanvas-end text-white" tabindex="-1" id="offcanvasDarkNavbar" style="background-color:#651E6E">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title">
                     <img src="https://teletonorgmx.s3.amazonaws.com/wp-content/themes/Teleton/images/logoteleton1.svg.gzip"
@@ -37,7 +37,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
             </div>
-            <div class="offcanvas-body">
+            <div class="offcanvas-body" style="background-color:#651E6E">
                 <AuthorizeView>
                     <Authorized>
                         <ul class="navbar-nav flex-grow-1 mb-3">
@@ -69,8 +69,8 @@
                         </ul>
 
                         <hr class="text-white-50">
-                        
-                        <div class="mb-3">
+
+                        <div class="mb-3" >
                             <div class="d-flex align-items-center mb-3 text-white">
                                 <i class="bi bi-person-circle fs-3 me-2"></i>
                                 <div>
@@ -91,7 +91,7 @@
                         </div>
                     </Authorized>
                     <NotAuthorized>
-                        <div class="d-grid gap-2">
+                        <div class="d-grid gap-2" >
                             <NavLink class="btn btn-outline-light" href="Account/Login">
                                 <i class="bi bi-person-badge me-2"></i>Iniciar Sesión
                             </NavLink>
@@ -123,7 +123,7 @@
     private string GetDisplayName(string? fullName)
     {
         if (string.IsNullOrEmpty(fullName)) return "Usuario";
-        
+
         // Extraer solo el primer nombre si es un email o nombre completo
         var parts = fullName.Split('@', ' ');
         return parts[0];

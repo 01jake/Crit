@@ -244,7 +244,7 @@ namespace Crit.Controllers
                     Fecha = DateTime.Now,
                     Estatus = Server.Data.EstatusQueja.Pendiente,
                     Prioridad = Server.Data.PrioridadQueja.Media,
-                    ClienteId = string.Empty // Usuario anónimo
+                    ClienteId = null // Usuario anónimo
                 };
 
                 _context.Quejas.Add(quejaEntity);
