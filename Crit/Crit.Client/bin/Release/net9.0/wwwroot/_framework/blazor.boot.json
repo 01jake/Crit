@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "Crit.Client",
   "resources": {
-    "hash": "sha256-gE8XrDzFghyV1atF2TZWDGETeVHudnMIlsKXgRz8LRI=",
+    "hash": "sha256-75LeCrtTbz0TvAMez4/QbTjQLSrlrGNiJYelVR9yoSA=",
     "fingerprinting": {
       "Microsoft.AspNetCore.Authorization.phaa9r44xv.wasm": "Microsoft.AspNetCore.Authorization.wasm",
       "Microsoft.AspNetCore.Components.4o2vz6uw5j.wasm": "Microsoft.AspNetCore.Components.wasm",
@@ -212,10 +212,10 @@
       "icudt_CJK.tjcz0u77k5.dat": "icudt_CJK.dat",
       "icudt_EFIGS.tptq2av103.dat": "icudt_EFIGS.dat",
       "icudt_no_CJK.lfu7j35m59.dat": "icudt_no_CJK.dat",
-      "Crit.Shared.oyohjcdq1t.wasm": "Crit.Shared.wasm",
-      "Crit.Shared.c3n7e32sow.pdb": "Crit.Shared.pdb",
-      "Crit.Client.ic2yw367c7.wasm": "Crit.Client.wasm",
-      "Crit.Client.cthff7scbl.pdb": "Crit.Client.pdb"
+      "Crit.Shared.qsdbflwhyr.wasm": "Crit.Shared.wasm",
+      "Crit.Shared.ftv5supk0t.pdb": "Crit.Shared.pdb",
+      "Crit.Client.j2rtsmq5q2.wasm": "Crit.Client.wasm",
+      "Crit.Client.ix4v12grlf.pdb": "Crit.Client.pdb"
     },
     "jsModuleNative": {
       "dotnet.native.rtblh4npr3.js": "sha256-HyBzcYNpT2l19+f1bpjNOa1oFoLe3K4JIQ6GsFK5m6I="
@@ -436,19 +436,19 @@
       "WindowsBase.u25hol0de4.wasm": "sha256-CgB28KCiYKHd4yK6IM0PJ526P7IbRCpNkGTqn+cLwxs=",
       "mscorlib.brg9pkj3je.wasm": "sha256-FzZwzxUYYyg3qxc7Km8r50UKAmRWrIeckSFG1NTHKNU=",
       "netstandard.wuzd3f1y6v.wasm": "sha256-yAXc0deBIRkWTVXqADZfhgZtrxGgJCIbZYVtA0NjvdM=",
-      "Crit.Shared.oyohjcdq1t.wasm": "sha256-oItuGkdSuURlHZxnXwib/XTO/Jdpe/0Cwor7o+y252I=",
-      "Crit.Client.ic2yw367c7.wasm": "sha256-npPtkXN36jXanQuNXth6DUBhZ+sQYp87q22RSP5GNxM="
+      "Crit.Shared.qsdbflwhyr.wasm": "sha256-mj3K+QOcqU0+G4TqP/+clZ4GBhSFiVWG+wuAaqcrK5U=",
+      "Crit.Client.j2rtsmq5q2.wasm": "sha256-S8Id692LRREM5k0CUH+Fsz4bwzU9fZnpTI4VxnkLGEM="
     },
     "pdb": {
-      "Crit.Shared.c3n7e32sow.pdb": "sha256-WLXufiJY/xPc4PjRyN3sQZdC3vapKlYRKL1dlC4gYb8=",
-      "Crit.Client.cthff7scbl.pdb": "sha256-EE36x714Rh+KA7oHLBmHarsyOsLy9WLv6mEbWTThfo4="
+      "Crit.Shared.ftv5supk0t.pdb": "sha256-rWvFiTb6jVSR3v+qt004KVtUqRD1d46FY260G4v4fao=",
+      "Crit.Client.ix4v12grlf.pdb": "sha256-Siwo8vrOF9b2mZNPwRAWjUEuMZPcNGGzEpgIxw6wAqA="
     }
   },
   "cacheBootResources": true,
   "debugLevel": -1,
   "appsettings": [
-    "../appsettings.Development.json",
-    "../appsettings.json"
+    "../appsettings.json",
+    "../appsettings.Development.json"
   ],
   "globalizationMode": "sharded",
   "extensions": {

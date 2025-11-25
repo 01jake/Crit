@@ -1,9 +1,5 @@
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\blazor.boot.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\blazor.webassembly.js
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Client.cthff7scbl.pdb
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Client.ic2yw367c7.wasm
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Shared.c3n7e32sow.pdb
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Shared.oyohjcdq1t.wasm
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\dotnet.js
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\dotnet.js.map
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\dotnet.native.rtblh4npr3.js
@@ -234,7 +230,6 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_fr
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Threading.Thread.07bttawl88.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Runtime.InteropServices.RuntimeInformation.uanr5ywdiz.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Runtime.Serialization.Primitives.8mh3k1xubv.wasm.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Shared.c3n7e32sow.pdb.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Private.CoreLib.05ksnw82w3.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\mscorlib.brg9pkj3je.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Security.Cryptography.Encoding.4j2304etti.wasm.gz
@@ -314,7 +309,6 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_fr
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Memory.ub9sra6ubv.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Microsoft.AspNetCore.Connections.Abstractions.h3n2c0kxa5.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\dotnet.runtime.js.map.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Client.cthff7scbl.pdb.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Threading.Tasks.x86n4j91or.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Threading.Overlapped.0g3k20op8c.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Microsoft.Win32.Registry.ykr6iyjchr.wasm.gz
@@ -375,10 +369,8 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_fr
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Microsoft.Extensions.FileProviders.Abstractions.w4n6sx9nop.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Microsoft.AspNetCore.Components.Forms.1ddspp16i2.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Xml.ReaderWriter.pcqwh7wu97.wasm.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Shared.oyohjcdq1t.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.ServiceModel.Web.bnlcmxi1w6.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Diagnostics.Tracing.ogliygwa1r.wasm.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Client.ic2yw367c7.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Microsoft.Extensions.FileSystemGlobbing.sdsdr06lyk.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\System.Security.AccessControl.jtnq7vre8d.wasm.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Microsoft.Extensions.DependencyInjection.Abstractions.199illpwgv.wasm.gz
@@ -1088,11 +1080,6 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\lbrrc8m9vj-tjcz0u77k5.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\0zmu4x6zai-tptq2av103.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\oskckbrtyw-lfu7j35m59.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\rvrk9y4dvz-oyohjcdq1t.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\2zd4kbwuou-c3n7e32sow.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\slfprx99sn-ic2yw367c7.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\hgc44c941a-cthff7scbl.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\zxfmuth5dd-7olwxwq834.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\staticwebassets.build.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\staticwebassets.build.json.cache
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\staticwebassets.development.json
@@ -1102,3 +1089,17 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\Crit.Client
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\refint\Crit.Client.dll
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\Crit.Client.pdb
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\ref\Crit.Client.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Client.ix4v12grlf.pdb
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Client.j2rtsmq5q2.wasm
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Shared.ftv5supk0t.pdb
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Shared.qsdbflwhyr.wasm
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Shared.ftv5supk0t.pdb.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Client.ix4v12grlf.pdb.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Shared.qsdbflwhyr.wasm.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\bin\Release\net9.0\wwwroot\_framework\Crit.Client.j2rtsmq5q2.wasm.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\rvrk9y4dvz-qsdbflwhyr.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\2zd4kbwuou-ftv5supk0t.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\slfprx99sn-j2rtsmq5q2.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\hgc44c941a-ix4v12grlf.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\staticwebassets.upToDateCheck.txt
+C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\obj\Release\net9.0\compressed\zxfmuth5dd-i6wd4680uz.gz

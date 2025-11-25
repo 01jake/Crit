@@ -262,3 +262,32 @@
     outline: 2px solid rgba(255,255,255,0.5);
     outline-offset: 2px;
 }*/
+/* /Pages/Home.razor.rz.scp.css */
+.hover-lift[b-708s0bk394] {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .hover-lift:hover[b-708s0bk394] {
+        transform: translateY(-10px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+    }
+
+.smooth-scroll[b-708s0bk394] {
+    scroll-behavior: smooth;
+}
+
+.hero-section[b-708s0bk394] {
+    position: relative;
+    overflow: hidden;
+}
+
+    .hero-section[b-708s0bk394]::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        opacity: 0.5;
+    }

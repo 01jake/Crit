@@ -1,31 +1,261 @@
 ﻿@page "/"
-<div class="min-vh-100">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-transparent">
-       
-    </nav>
 
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="text-center text-black mb-5">
-                    <h1 class="display-4 fw-bold mb-3">Centro de Quejas y Sugerencias</h1>
-                    <p class="lead">Tu opinión es importante para nosotros. Comparte tus comentarios.</p>
+<PageTitle>Centro de Quejas y Sugerencias - CRIT</PageTitle>
+
+<div class="min-vh-100 bg-light">
+    <!-- Hero Section con Degradado -->
+    <section class="hero-section position-relative" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 100px 0;">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 text-white mb-5 mb-lg-0">
+                    <h1 class="display-3 fw-bold mb-4">Centro de Quejas y Sugerencias</h1>
+                    <p class="lead mb-4">Tu opinión es importante para nosotros. Ayúdanos a mejorar compartiendo tus experiencias, quejas o sugerencias.</p>
+
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <a href="/quejas" class="btn btn-light btn-lg px-4">
+                                    <i class="bi bi-inbox me-2"></i>Mis Quejas
+                                </a>
+                                <a href="/mis-quejas-asignadas" class="btn btn-outline-light btn-lg px-4">
+                                    <i class="bi bi-clipboard-check me-2"></i>Asignadas
+                                </a>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <a href="#formulario" class="btn btn-light btn-lg px-4 smooth-scroll">
+                                <i class="bi bi-pencil-square me-2"></i>Enviar Queja
+                            </a>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 </div>
-           
-                <AuthorizeView>
-                   
-                    <NotAuthorized>
-                        <QuejaPublicaForm />
-                    </NotAuthorized>
-                </AuthorizeView>
 
-                <div class="text-center text-white mt-4">
-                    <p class="mb-0">
-                        <i class="bi bi-shield-check me-2"></i>
-                        Tu información está protegida y será tratada de forma confidencial
-                    </p>
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-body p-5 text-center">
+                            <div class="mb-4">
+                                <i class="bi bi-chat-dots-fill text-primary" style="font-size: 4rem;"></i>
+                            </div>
+                            <h3 class="fw-bold mb-3">¿Necesitas ayuda?</h3>
+                            <p class="text-muted mb-4">Estamos aquí para escucharte y resolver tus inquietudes de manera rápida y eficiente.</p>
+                            <div class="row g-3 text-start">
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <small>Respuesta rápida</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <small>Seguimiento 24/7</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <small>100% Confidencial</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <small>Soporte dedicado</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Estadísticas -->
+    <section class="py-5 bg-white">
+        <div class="container">
+            <div class="row text-center g-4">
+                <div class="col-md-3 col-6">
+                    <div class="p-4">
+                        <i class="bi bi-people-fill text-primary mb-3" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold mb-1">1,000+</h3>
+                        <p class="text-muted mb-0">Usuarios Satisfechos</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="p-4">
+                        <i class="bi bi-clock-history text-success mb-3" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold mb-1">24h</h3>
+                        <p class="text-muted mb-0">Tiempo de Respuesta</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="p-4">
+                        <i class="bi bi-star-fill text-warning mb-3" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold mb-1">4.8/5</h3>
+                        <p class="text-muted mb-0">Calificación Promedio</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="p-4">
+                        <i class="bi bi-check-circle-fill text-info mb-3" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold mb-1">95%</h3>
+                        <p class="text-muted mb-0">Quejas Resueltas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Características -->
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold mb-3">¿Cómo funciona?</h2>
+                <p class="text-muted">Tres simples pasos para que tu voz sea escuchada</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 text-center hover-lift">
+                        <div class="card-body p-5">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-4 mb-4">
+                                <i class="bi bi-pencil-square text-primary" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3">1. Comparte tu Experiencia</h4>
+                            <p class="text-muted mb-0">Completa el formulario con los detalles de tu queja o sugerencia. Es rápido y sencillo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 text-center hover-lift">
+                        <div class="card-body p-5">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex p-4 mb-4">
+                                <i class="bi bi-search text-success" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3">2. Revisamos tu Caso</h4>
+                            <p class="text-muted mb-0">Nuestro equipo analiza tu situación y te asigna un especialista para resolver tu caso.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 text-center hover-lift">
+                        <div class="card-body p-5">
+                            <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex p-4 mb-4">
+                                <i class="bi bi-check-circle text-info" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3">3. Obtienes Solución</h4>
+                            <p class="text-muted mb-0">Te mantenemos informado del progreso y trabajamos para resolver tu situación.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categorías de Quejas -->
+    <section class="py-5 bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold mb-3">Categorías de Atención</h2>
+                <p class="text-muted">Selecciona el área que mejor describe tu situación</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-3 col-sm-6">
+                    <div class="card border-0 bg-light h-100 text-center p-4 hover-lift">
+                        <i class="bi bi-headset text-primary mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="fw-bold">Servicio al Cliente</h5>
+                        <p class="text-muted small mb-0">Atención, trato y experiencia</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card border-0 bg-light h-100 text-center p-4 hover-lift">
+                        <i class="bi bi-box-seam text-success mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="fw-bold">Producto/Servicio</h5>
+                        <p class="text-muted small mb-0">Calidad y funcionamiento</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card border-0 bg-light h-100 text-center p-4 hover-lift">
+                        <i class="bi bi-receipt text-warning mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="fw-bold">Facturación</h5>
+                        <p class="text-muted small mb-0">Pagos y cobros</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card border-0 bg-light h-100 text-center p-4 hover-lift">
+                        <i class="bi bi-gear-fill text-info mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="fw-bold">Soporte Técnico</h5>
+                        <p class="text-muted small mb-0">Problemas técnicos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formulario -->
+    <AuthorizeView>
+        <NotAuthorized>
+            <section class="py-5" id="formulario">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8">
+                            <div class="text-center mb-5">
+                                <h2 class="fw-bold mb-3">Envía tu Queja o Sugerencia</h2>
+                                <p class="text-muted">Completa el formulario y nos pondremos en contacto contigo</p>
+                            </div>
+                            <QuejaPublicaForm />
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <!-- Información de Contacto -->
+    <section class="py-5 bg-dark text-white">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Confidencialidad Garantizada
+                    </h5>
+                    <p class="text-white-50 mb-0">Tu información está protegida y será tratada de forma confidencial según nuestras políticas de privacidad.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Respuesta Rápida
+                    </h5>
+                    <p class="text-white-50 mb-0">Nos comprometemos a responder todas las quejas en un plazo máximo de 24-48 horas hábiles.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-graph-up-arrow me-2"></i>
+                        Mejora Continua
+                    </h5>
+                    <p class="text-white-50 mb-0">Cada comentario nos ayuda a mejorar nuestros servicios y experiencia del usuario.</p>
+                </div>
+            </div>
+
+            <hr class="my-5 border-secondary">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0 text-white-50">© 2024 CRIT - Centro de Quejas y Sugerencias. Todos los derechos reservados.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white-50 text-decoration-none me-3">Términos y Condiciones</a>
+                    <a href="#" class="text-white-50 text-decoration-none">Política de Privacidad</a>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
+
+
+
