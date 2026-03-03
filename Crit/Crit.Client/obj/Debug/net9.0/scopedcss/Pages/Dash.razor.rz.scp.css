@@ -1,0 +1,30 @@
+.dashboard[b-bhcxiibrfu] {
+    padding: 20px;
+}
+
+.kpi-card[b-bhcxiibrfu] {
+    border: none;
+    color: white;
+    border-radius: 15px;
+    transition: 0.3s;
+}
+
+    .kpi-card:hover[b-bhcxiibrfu] {
+        transform: translateY(-5px);
+    }
+
+.bg-gradient-primary[b-bhcxiibrfu] {
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
+}
+
+.bg-gradient-success[b-bhcxiibrfu] {
+    background: linear-gradient(45deg, #43e97b, #38f9d7);
+}
+
+.bg-gradient-info[b-bhcxiibrfu] {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+}
+
+.bg-gradient-warning[b-bhcxiibrfu] {
+    background: linear-gradient(45deg, #f7971e, #ffd200);
+}

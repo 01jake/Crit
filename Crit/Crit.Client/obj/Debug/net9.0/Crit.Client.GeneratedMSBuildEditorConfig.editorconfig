@@ -72,6 +72,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Clientes.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -104,6 +108,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUXVlamFzUHVibGljYXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Ventas.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVudGFzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/RedirectToLogin.razor]
 build_metadata.AdditionalFiles.TargetPath = UmVkaXJlY3RUb0xvZ2luLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -127,6 +135,10 @@ build_metadata.AdditionalFiles.CssScope = b-adzybd6foo
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Layout/NavMenu.razor]
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE5hdk1lbnUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-vmfwnc5aaa
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Dash.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGFzaC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-bhcxiibrfu
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==

@@ -1,0 +1,434 @@
+﻿@page "/ventas"
+@using Crit.Client.Services
+@using Crit.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject ClienteHttpService ClienteHttpService
+@inject VentaHttpService VentaHttpService
+@inject ProductoHttpService ProductoHttpService
+@inject PdfHttpService PdfHttpService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Punto de Venta</PageTitle>
+
+<div class="container-fluid">
+    <h2 class="mb-4">Punto de Venta</h2>
+
+    <div class="row">
+        <!-- Sección de productos -->
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" placeholder="Buscar producto por código o nombre..."
+                                   @bind="busquedaProducto" @bind:event="oninput" @onkeyup="BuscarProducto" />
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                    <div class="row">
+                        @foreach (var producto in productosFiltrados.Take(20))
+                        {
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100 producto-card" @onclick="() => AgregarAlCarrito(producto)">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-box-seam fs-1 text-primary"></i>
+                                        <h6 class="card-title mt-2">@producto.Nombre</h6>
+                                        <p class="card-text text-muted small">@producto.Codigo</p>
+                                        <p class="card-text"><strong>$@producto.PrecioVenta.ToString("N2")</strong></p>
+                                        <span class="badge @(producto.Stock > producto.StockMinimo ? "bg-success" : "bg-warning")">
+                                            Stock: @producto.Stock
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carrito de compra -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Carrito de Compra</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Cliente -->
+                    <div class="mb-3">
+                        <label class="form-label">Cliente</label>
+                        <select class="form-select" @bind="ventaActual.ClienteId">
+                            <option value="0">Seleccione un cliente...</option>
+                            @foreach (var cliente in clientes)
+                            {
+                                <option value="@cliente.Id">@cliente.Nombre</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Items del carrito -->
+                    <div class="carrito-items mb-3" style="max-height: 300px; overflow-y: auto;">
+                        @if (!ventaActual.Detalles.Any())
+                        {
+                            <p class="text-muted text-center">No hay productos en el carrito</p>
+                        }
+                        else
+                        {
+                            @foreach (var detalle in ventaActual.Detalles)
+                            {
+                                <div class="carrito-item mb-2 p-2 border rounded">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="flex-grow-1">
+                                            <strong>@GetProductoNombre(detalle.ProductoId)</strong>
+                                            <div class="small text-muted">$@detalle.PrecioUnitario.ToString("N2") c/u</div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => DisminuirCantidad(detalle)">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                            <span class="mx-2"><strong>@detalle.Cantidad</strong></span>
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => AumentarCantidad(detalle)">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" @onclick="() => EliminarDelCarrito(detalle)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-1">
+                                        <strong>Subtotal: $@detalle.Subtotal.ToString("N2")</strong>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <!-- Descuento -->
+                    <div class="mb-3">
+                        <label class="form-label">Descuento ($)</label>
+                        <input type="number" class="form-control" @bind="ventaActual.Descuento"
+                               @bind:event="oninput" @onchange="RecalcularTotales" step="0.01" min="0" />
+                    </div>
+
+                    <!-- Totales -->
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <strong>$@subtotal.ToString("N2")</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Descuento:</span>
+                            <strong class="text-danger">-$@ventaActual.Descuento.ToString("N2")</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>IVA (16%):</span>
+                            <strong>$@iva.ToString("N2")</strong>
+                        </div>
+                        <div class="d-flex justify-content-between border-top pt-2">
+                            <h5>Total:</h5>
+                            <h5 class="text-primary">$@total.ToString("N2")</h5>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="d-grid gap-2 mt-3">
+                        <button class="btn btn-primary btn-lg" @onclick="ProcesarVenta"
+                                disabled="@(!ventaActual.Detalles.Any() || ventaActual.ClienteId == 0)">
+                            <i class="bi bi-check-circle"></i> Procesar Venta
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="LimpiarCarrito">
+                            <i class="bi bi-x-circle"></i> Limpiar Carrito
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de ventas recientes -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Ventas Recientes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Folio</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var venta in ventasRecientes)
+                                {
+                                    <tr>
+                                        <td>@venta.NumeroVenta</td>
+                                        <td>@venta.Cliente?.Nombre</td>
+                                        <td>@venta.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>$@venta.Total.ToString("N2")</td>
+                                        <td>
+                                            <span class="badge bg-success">@venta.Estado</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => DescargarPdfVenta(venta.Id)">
+                                                <i class="bi bi-file-pdf"></i> PDF
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@* <div class="text-center py-5">
+    <i class="bi bi-chat-square-text display-1 text-muted mb-3"></i>
+    <h5 class="fw-semibold text-dark mb-2">@EmptyTitle</h5>
+    <p class="text-muted">@EmptyMessage</p>
+</div> *@
+<style>
+    .producto-card {
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+        .producto-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+    .carrito-item {
+        background-color: #f8f9fa;
+    }
+</style>
+
+@code {
+    private List<Cliente> clientes = new();
+    private List<Producto> productos = new();
+    private List<Producto> productosFiltrados = new();
+    private List<Venta> ventasRecientes = new();
+    private Venta ventaActual = new();
+    private bool procesando = false;
+    private string busquedaProducto = "";
+    private decimal subtotal => ventaActual.Detalles.Sum(d => d.Subtotal);
+    private decimal iva => (subtotal - ventaActual.Descuento) * 0.16m;
+    private decimal total => subtotal - ventaActual.Descuento + iva;
+    // [Parameter] public string EmptyTitle { get; set; } = "No se encontraron quejas";
+    // [Parameter] public string EmptyMessage { get; set; } = "No hay quejas registradas aún";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+        InicializarVenta();
+    }
+
+    private async Task CargarDatos()
+    {
+        clientes = (await ClienteHttpService.GetClientesActivosAsync()).ToList();
+        productos = (await ProductoHttpService.GetProductosActivosAsync()).ToList();
+        productosFiltrados = productos;
+
+        var hoy = DateTime.Now;
+        ventasRecientes = (await VentaHttpService.GetVentasPorFechaAsync(hoy.AddDays(-7), hoy))
+            .OrderByDescending(v => v.Fecha)
+            .Take(10)
+            .ToList();
+    }
+
+    private void InicializarVenta()
+    {
+        ventaActual = new Venta
+        {
+            Fecha = DateTime.Now,
+            Estado = "Completada",
+            Detalles = new List<DetalleVenta>()
+        };
+    }
+
+    private async Task CargarVentasPorFecha()
+    {
+        // ✅ Asegúrate de pasar fechas válidas
+        var desde = DateTime.Now.AddMonths(-1); // Último mes
+        var hasta = DateTime.Now;
+
+        var ventas = await VentaHttpService.GetVentasPorFechaAsync(desde, hasta);
+    }
+
+
+    private void BuscarProducto()
+    {
+        if (string.IsNullOrWhiteSpace(busquedaProducto))
+        {
+            productosFiltrados = productos;
+        }
+        else
+        {
+            productosFiltrados = productos.Where(p =>
+                p.Nombre.Contains(busquedaProducto, StringComparison.OrdinalIgnoreCase) ||
+                p.Codigo.Contains(busquedaProducto, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+    }
+
+    private void AgregarAlCarrito(Producto producto)
+    {
+        if (producto.Stock <= 0)
+        {
+            // Mostrar mensaje de error
+            return;
+        }
+
+        var detalleExistente = ventaActual.Detalles.FirstOrDefault(d => d.ProductoId == producto.Id);
+
+        if (detalleExistente != null)
+        {
+            if (detalleExistente.Cantidad < producto.Stock)
+            {
+                detalleExistente.Cantidad++;
+                detalleExistente.Subtotal = detalleExistente.Cantidad * detalleExistente.PrecioUnitario;
+            }
+        }
+        else
+        {
+            ventaActual.Detalles.Add(new DetalleVenta
+            {
+                ProductoId = producto.Id,
+                Producto = producto,
+                Cantidad = 1,
+                PrecioUnitario = producto.PrecioVenta,
+                Subtotal = producto.PrecioVenta
+            });
+        }
+
+        RecalcularTotales();
+    }
+
+    private void AumentarCantidad(DetalleVenta detalle)
+    {
+        var producto = productos.FirstOrDefault(p => p.Id == detalle.ProductoId);
+        if (producto != null && detalle.Cantidad < producto.Stock)
+        {
+            detalle.Cantidad++;
+            detalle.Subtotal = detalle.Cantidad * detalle.PrecioUnitario;
+            RecalcularTotales();
+        }
+    }
+
+    private void DisminuirCantidad(DetalleVenta detalle)
+    {
+        if (detalle.Cantidad > 1)
+        {
+            detalle.Cantidad--;
+            detalle.Subtotal = detalle.Cantidad * detalle.PrecioUnitario;
+            RecalcularTotales();
+        }
+        else
+        {
+            EliminarDelCarrito(detalle);
+        }
+    }
+
+    private void EliminarDelCarrito(DetalleVenta detalle)
+    {
+        ventaActual.Detalles.Remove(detalle);
+        RecalcularTotales();
+    }
+
+    private void RecalcularTotales()
+    {
+        ventaActual.Subtotal = subtotal;
+        ventaActual.IVA = iva;
+        ventaActual.Total = total;
+        StateHasChanged();
+    }
+
+    private async Task ProcesarVenta()
+    {
+        try
+        {
+            procesando = true;
+
+            if (ventaActual.ClienteId == 0)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Debe seleccionar un cliente");
+                return;
+            }
+
+            if (!ventaActual.Detalles.Any())
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Debe agregar productos");
+                return;
+            }
+
+            // Preparar datos
+            ventaActual.Subtotal = subtotal;
+            ventaActual.IVA = iva;
+            ventaActual.Total = total;
+            ventaActual.Fecha = DateTime.Now;
+            ventaActual.Estado = "Completada";
+
+            // Enviar
+            var response = await VentaHttpService.CreateVentaAsync(ventaActual);
+
+            if (response != null)
+            {
+                await JSRuntime.InvokeVoidAsync("alert",
+                    $"Venta procesada exitosamente");
+
+                await CargarDatos();
+                InicializarVenta();
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Error HTTP: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert",
+                "Error al procesar venta. Revisa la consola del servidor para más detalles.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private void LimpiarCarrito()
+    {
+        InicializarVenta();
+    }
+
+    private string GetProductoNombre(int productoId)
+    {
+        return productos.FirstOrDefault(p => p.Id == productoId)?.Nombre ?? "Producto no encontrado";
+    }
+
+    private async Task DescargarPdfVenta(int ventaId)
+    {
+        try
+        {
+            await PdfHttpService.DescargarVentaPdfAsync(ventaId);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error al generar PDF: {ex.Message}");
+        }
+    }
+}

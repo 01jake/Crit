@@ -15,6 +15,11 @@ builder.Services.AddScoped<HttpClient>(sp =>
 });
 
 builder.Services.AddScoped<QuejaService>();
+builder.Services.AddScoped<ClienteHttpService>();
+builder.Services.AddScoped<VentaHttpService>();
+builder.Services.AddScoped<ProductoHttpService>();
+builder.Services.AddScoped<PdfHttpService>();
+
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<QuejaPublicaService>();
 builder.Services.AddScoped<ArticuloService>();

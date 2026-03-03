@@ -2,3 +2,4 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\wwwroot\appsettings.Developmen
 C:\Users\ang31\source\repos\Crit\Crit\Crit.Client\wwwroot\appsettings.json
 wwwroot\appsettings.Development.json
 wwwroot\appsettings.json
+wwwroot\Images\Polynex.png

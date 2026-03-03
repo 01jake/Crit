@@ -262,6 +262,37 @@
     outline: 2px solid rgba(255,255,255,0.5);
     outline-offset: 2px;
 }*/
+/* /Pages/Dash.razor.rz.scp.css */
+.dashboard[b-bhcxiibrfu] {
+    padding: 20px;
+}
+
+.kpi-card[b-bhcxiibrfu] {
+    border: none;
+    color: white;
+    border-radius: 15px;
+    transition: 0.3s;
+}
+
+    .kpi-card:hover[b-bhcxiibrfu] {
+        transform: translateY(-5px);
+    }
+
+.bg-gradient-primary[b-bhcxiibrfu] {
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
+}
+
+.bg-gradient-success[b-bhcxiibrfu] {
+    background: linear-gradient(45deg, #43e97b, #38f9d7);
+}
+
+.bg-gradient-info[b-bhcxiibrfu] {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+}
+
+.bg-gradient-warning[b-bhcxiibrfu] {
+    background: linear-gradient(45deg, #f7971e, #ffd200);
+}
 /* /Pages/Home.razor.rz.scp.css */
 .hover-lift[b-708s0bk394] {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -278,7 +309,7 @@
 
 .hero-section[b-708s0bk394] {
     position: relative;
-    overflow: hidden;
+    z-index: 1;
 }
 
     .hero-section[b-708s0bk394]::before {
@@ -290,4 +321,6 @@
         bottom: 0;
         background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
         opacity: 0.5;
+        /* 🔥 CLAVE */
+        pointer-events: none;
     }

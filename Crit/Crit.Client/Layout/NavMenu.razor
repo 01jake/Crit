@@ -1,15 +1,14 @@
 ﻿@using Crit.Client.Components
 @inject NavigationManager NavigationManager
 @implements IDisposable
-<nav class="navbar navbar-dark " style="background-color:#651E6E">
+<nav class="navbar navbar-dark " style="background-color:#1743a9">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold d-flex text-white align-items-center" href="/">
-            <img src="https://teletonorgmx.s3.amazonaws.com/wp-content/themes/Teleton/images/logoteleton1.svg.gzip"
-                 alt="Logo Teletón"
-                 width="50"
-                 height="50"
+            <img src="images/polynex.png"
+                 alt="Logo Polynex"
+                 style="height:80px; width:auto;"
                  class="me-2">
-            Quejas y Sugerencias
+           
         </a>
 
         <div class="d-flex align-items-center gap-3">
@@ -25,19 +24,18 @@
             </button>
         </div>
 
-        <div class="offcanvas offcanvas-end text-white" tabindex="-1" id="offcanvasDarkNavbar" style="background-color:#651E6E">
+        <div class="offcanvas offcanvas-end text-white" tabindex="-1" id="offcanvasDarkNavbar" style="background-color:#1743a9">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title">
-                    <img src="https://teletonorgmx.s3.amazonaws.com/wp-content/themes/Teleton/images/logoteleton1.svg.gzip"
+                    <img src="images/polynex.png"
                          alt="Logo Teletón"
-                         width="60"
-                         height="60"
+                         style="height:80px; width:auto;"
                          class="me-2">
-                    Quejas y Sugerencias
+                    Gestion Empresarial
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
             </div>
-            <div class="offcanvas-body" style="background-color:#651E6E">
+            <div class="offcanvas-body" style="background-color:#1743a9">
                 <AuthorizeView>
                     <Authorized>
                         <ul class="navbar-nav flex-grow-1 mb-3">

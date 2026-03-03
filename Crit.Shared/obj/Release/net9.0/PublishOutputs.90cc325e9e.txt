@@ -1,3 +1,0 @@
-C:\Users\ang31\source\repos\Crit\publish\Crit.Shared.dll
-C:\Users\ang31\source\repos\Crit\publish\Crit.Shared.deps.json
-C:\Users\ang31\source\repos\Crit\publish\Crit.Shared.pdb
