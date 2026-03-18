@@ -180,7 +180,8 @@
                                             <span class="badge bg-success">@venta.Estado</span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => DescargarPdfVenta(venta.Id)">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                    @onclick="() => DescargarPdfVenta(venta.Id)">
                                                 <i class="bi bi-file-pdf"></i> PDF
                                             </button>
                                         </td>
@@ -194,11 +195,7 @@
         </div>
     </div>
 </div>
-@* <div class="text-center py-5">
-    <i class="bi bi-chat-square-text display-1 text-muted mb-3"></i>
-    <h5 class="fw-semibold text-dark mb-2">@EmptyTitle</h5>
-    <p class="text-muted">@EmptyMessage</p>
-</div> *@
+
 <style>
     .producto-card {
         cursor: pointer;
@@ -226,8 +223,7 @@
     private decimal subtotal => ventaActual.Detalles.Sum(d => d.Subtotal);
     private decimal iva => (subtotal - ventaActual.Descuento) * 0.16m;
     private decimal total => subtotal - ventaActual.Descuento + iva;
-    // [Parameter] public string EmptyTitle { get; set; } = "No se encontraron quejas";
-    // [Parameter] public string EmptyMessage { get; set; } = "No hay quejas registradas aún";
+
 
 
     protected override async Task OnInitializedAsync()
@@ -242,11 +238,7 @@
         productos = (await ProductoHttpService.GetProductosActivosAsync()).ToList();
         productosFiltrados = productos;
 
-        var hoy = DateTime.Now;
-        ventasRecientes = (await VentaHttpService.GetVentasPorFechaAsync(hoy.AddDays(-7), hoy))
-            .OrderByDescending(v => v.Fecha)
-            .Take(10)
-            .ToList();
+        ventasRecientes = (await VentaHttpService.GetVentasRecientesAsync(20)).ToList();
     }
 
     private void InicializarVenta()
@@ -348,6 +340,18 @@
         RecalcularTotales();
     }
 
+    private async Task DescargarPdfVenta(int ventaId)
+    {
+        try
+        {
+            await PdfHttpService.DescargarVentaPdfAsync(ventaId);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+
     private void RecalcularTotales()
     {
         ventaActual.Subtotal = subtotal;
@@ -420,15 +424,5 @@
         return productos.FirstOrDefault(p => p.Id == productoId)?.Nombre ?? "Producto no encontrado";
     }
 
-    private async Task DescargarPdfVenta(int ventaId)
-    {
-        try
-        {
-            await PdfHttpService.DescargarVentaPdfAsync(ventaId);
-        }
-        catch (Exception ex)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", $"Error al generar PDF: {ex.Message}");
-        }
-    }
+  
 }

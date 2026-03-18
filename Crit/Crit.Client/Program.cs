@@ -19,7 +19,7 @@ builder.Services.AddScoped<ClienteHttpService>();
 builder.Services.AddScoped<VentaHttpService>();
 builder.Services.AddScoped<ProductoHttpService>();
 builder.Services.AddScoped<PdfHttpService>();
-
+builder.Services.AddScoped<Dashboardhttpservice>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<QuejaPublicaService>();
 builder.Services.AddScoped<ArticuloService>();

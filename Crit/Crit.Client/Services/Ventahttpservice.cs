@@ -92,7 +92,7 @@ namespace Crit.Client.Services
             }
         }
 
-        public async Task<List<Venta>> GetVentasRecientesAsync(int cantidad = 10)
+        public async Task<List<Venta>> GetVentasRecientesAsync(int cantidad = 50)
         {
             try
             {

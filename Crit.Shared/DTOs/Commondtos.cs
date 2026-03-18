@@ -12,6 +12,16 @@ namespace Crit.Shared.DTOs
         public int TotalClientes { get; set; }
         public int TotalProductos { get; set; }
         public int ProductosBajoStock { get; set; }
+        public decimal IngresosMes { get; set; }
+        public decimal GananciaMes { get; set; }
+        public decimal TicketPromedio { get; set; }
+
+        // VENTAS
+        public int VentasHoy { get; set; }
+        public int VentasMes { get; set; }
+
+        // INVENTARIO
+        public decimal ValorInventario { get; set; }
     }
 
     public class VentasPorMesDto
@@ -90,4 +100,14 @@ namespace Crit.Shared.DTOs
         public int Stock { get; set; }
         public bool Activo { get; set; }
     }
+
+
+    //public class DashboardStatsDto
+    //{
+    //    public decimal TotalVentasMes { get; set; }
+    //    public int TotalClientes { get; set; }
+    //    public int TotalProductos { get; set; }
+    //    public int ProductosBajoStock { get; set; }
+    //}
+
 }

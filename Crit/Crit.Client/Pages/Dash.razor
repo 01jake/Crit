@@ -1,11 +1,14 @@
 ﻿@page "/Dash"
+@using ApexCharts
 @using Crit.Client.Services
+@using Crit.Shared.DTOs
 @using Crit.Shared.Models
 @using System
 @using Microsoft.AspNetCore.Authorization
 @attribute [StreamRendering(false)]
 @rendermode InteractiveWebAssembly
 @inject VentaHttpService VentaHttpService
+@inject Dashboardhttpservice Dashboardpservice
 @inject ProductoHttpService ProductoHttpService
 @inject ClienteHttpService ClienteHttpService
 @attribute [Authorize]
@@ -13,14 +16,11 @@
 <PageTitle>Dashboard</PageTitle>
 
 <div class="container-fluid dashboard">
-
-    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-0">Dashboard</h2>
             <small class="text-muted">Resumen general del negocio</small>
         </div>
-
         <div class="d-flex gap-2">
             <a href="/ventas" class="btn btn-primary">
                 <i class="bi bi-plus-lg"></i> Nueva Venta
@@ -41,166 +41,360 @@
     {
         <!-- KPI CARDS -->
         <div class="row g-4 mb-4">
-
-            <!-- Ventas -->
             <div class="col-md-3">
-                <div class="card kpi-card bg-gradient-primary">
+                <div class="card kpi-card bg-gradient-primary text-white">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <small>Ventas del Mes</small>
-                                <h3>$@totalVentasMes.ToString("N0")</h3>
+                                <small class="text-white-50">Ventas del Mes</small>
+                                <h3 class="mb-0">$@stats.TotalVentasMes.ToString("N0")</h3>
                             </div>
-                            <i class="bi bi-cash-stack fs-1"></i>
+                            <i class="bi bi-cash-stack fs-1 opacity-50"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Clientes -->
             <div class="col-md-3">
-                <div class="card kpi-card bg-gradient-success">
+                <div class="card kpi-card bg-gradient-success text-white">
                     <div class="card-body">
-                        <small>Clientes</small>
-                        <h3>@totalClientes</h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-white-50">Clientes</small>
+                                <h3 class="mb-0">@stats.TotalClientes</h3>
+                            </div>
+                            <i class="bi bi-people fs-1 opacity-50"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Productos -->
             <div class="col-md-3">
-                <div class="card kpi-card bg-gradient-info">
+                <div class="card kpi-card bg-gradient-info text-white">
                     <div class="card-body">
-                        <small>Productos</small>
-                        <h3>@totalProductos</h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-white-50">Productos</small>
+                                <h3 class="mb-0">@stats.TotalProductos</h3>
+                            </div>
+                            <i class="bi bi-box-seam fs-1 opacity-50"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Stock -->
             <div class="col-md-3">
-                <div class="card kpi-card bg-gradient-warning">
+                <div class="card kpi-card bg-gradient-warning text-white">
                     <div class="card-body">
-                        <small>Stock Bajo</small>
-                        <h3>@productosBajoStock</h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-white-50">Stock Bajo</small>
+                                <h3 class="mb-0">@stats.ProductosBajoStock</h3>
+                            </div>
+                            <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- GRÁFICAS -->
-        <div class="row g-4">
-
+        <!-- GRÁFICAS CON APEXCHARTS -->
+        <div class="row g-4 mb-4">
             <div class="col-lg-8">
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white">
-                        <strong>Ventas (6 meses)</strong>
+                    <div class="card-header bg-white border-bottom">
+                        <strong><i class="bi bi-graph-up"></i> Ventas (6 meses)</strong>
                     </div>
                     <div class="card-body">
-                        <canvas id="ventasChart"></canvas>
+                        <ApexChart TItem="VentasPorMesDto"
+                                   Title="Ventas Mensuales"
+                                   Options="ventasChartOptions">
+                            <ApexPointSeries TItem="VentasPorMesDto"
+                                             Items="ventasPorMes"
+                                             Name="Ventas"
+                                             SeriesType="SeriesType.Line"
+                                             XValue="@(e => e.Mes)"
+                                             YValue="@(e => (decimal)e.Total)" />
+                        </ApexChart>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-4">
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white">
-                        <strong>Top Productos</strong>
+                    <div class="card-header bg-white border-bottom">
+                        <strong><i class="bi bi-trophy"></i> Top Productos</strong>
                     </div>
                     <div class="card-body">
-                        <canvas id="productosChart"></canvas>
+                        <ApexChart TItem="ProductoMasVendidoDto"
+                                   Title="Productos Más Vendidos"
+                                   Options="productosChartOptions">
+                            <ApexPointSeries TItem="ProductoMasVendidoDto"
+                                             Items="topProductos"
+                                             Name="Cantidad"
+                                             SeriesType="SeriesType.Donut"
+                                             XValue="@(e => e.Nombre)"
+                                             YValue="@(e => e.CantidadVendida)" />
+                        </ApexChart>
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- TABLA -->
-        @if (productosBajoStockLista.Any())
+        <!-- TABLA STOCK BAJO -->
+        @if (productosBajoStock.Any())
         {
-            <div class="card mt-4 border-0 shadow-sm">
+            <div class="card border-0 shadow-sm">
                 <div class="card-header bg-danger text-white">
-                    <i class="bi bi-exclamation-triangle"></i> Stock Bajo
+                    <i class="bi bi-exclamation-triangle"></i> Productos con Stock Bajo
                 </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Producto</th>
-                                <th>Stock</th>
-                                <th>Mínimo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var p in productosBajoStockLista.Take(5))
-                            {
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
                                 <tr>
-                                    <td>@p.Nombre</td>
-                                    <td><span class="badge bg-danger">@p.Stock</span></td>
-                                    <td>@p.StockMinimo</td>
+                                    <th>Código</th>
+                                    <th>Producto</th>
+                                    <th>Stock Actual</th>
+                                    <th>Stock Mínimo</th>
+                                    <th>Estado</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in productosBajoStock.Take(10))
+                                {
+                                    <tr>
+                                        <td><code>@p.Codigo</code></td>
+                                        <td><strong>@p.Nombre</strong></td>
+                                        <td><span class="badge bg-danger">@p.Stock</span></td>
+                                        <td>@p.StockMinimo</td>
+                                        <td>
+                                            @if (p.Stock == 0)
+                                            {
+                                                <span class="badge bg-dark">Sin stock</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning">Crítico</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         }
     }
 </div>
 
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Ingresos del Mes</small>
+                <h3 class="fw-bold">$@stats.IngresosMes.ToString("N0")</h3>
+                <span class="text-success">Ventas totales del mes</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Ganancia del Mes</small>
+                <h3 class="fw-bold text-success">$@stats.GananciaMes.ToString("N0")</h3>
+                <span class="text-muted">Ingresos - costos</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Valor Inventario</small>
+                <h3 class="fw-bold">$@stats.ValorInventario.ToString("N0")</h3>
+                <span class="text-muted">@stats.TotalProductos productos</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Stock Crítico</small>
+                <h3 class="fw-bold text-danger">@stats.ProductosBajoStock</h3>
+                <span class="text-muted">requieren reposición</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="row g-4 mb-4">
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Ventas Hoy</small>
+                <h3>@stats.VentasHoy</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Ventas del Mes</small>
+                <h3>@stats.VentasMes</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Ticket Promedio</small>
+                <h3>$@stats.TicketPromedio.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+        <div class="card-header">
+            <strong>Cash Flow</strong>
+        </div>
+
+        <div class="card-body">
+
+            <ApexChart TItem="VentasPorMesDto"
+                       Options="ventasChartOptions">
+
+                <ApexPointSeries TItem="VentasPorMesDto"
+                                 Items="ventasPorMes"
+                                 Name="Ingresos"
+                                 SeriesType="SeriesType.Bar"
+                                 XValue="@(e => e.Mes)"
+                                 YValue="@(e => e.Total)" />
+
+            </ApexChart>
+
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mt-4">
+
+    <div class="card-header">
+        <strong>Ventas Recientes</strong>
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table table-hover">
+
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @foreach (var v in ventasRecientes)
+                {
+                    <tr>
+                        <td>@v.NumeroVenta</td>
+                        <td>@v.Cliente?.Nombre</td>
+                        <td>@v.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>$@v.Total.ToString("N2")</td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<style>
+    .bg-gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .bg-gradient-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .bg-gradient-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .bg-gradient-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .kpi-card { transition: transform 0.2s; border: none; }
+    .kpi-card:hover { transform: translateY(-5px); }
+</style>
+
 @code {
     private bool loading = true;
-    private decimal totalVentasMes;
-    private int totalClientes;
-    private int totalProductos;
-    private int productosBajoStock;
-    private List<Producto> productosBajoStockLista = new();
+    private List<Venta> ventasRecientes = new();
+    private DashboardStatsDto stats = new();
+    private List<VentasPorMesDto> ventasPorMes = new();
+    private List<ProductoMasVendidoDto> topProductos = new();
+    private List<Producto> productosBajoStock = new();
+
+    private ApexChartOptions<VentasPorMesDto> ventasChartOptions = new();
+    private ApexChartOptions<ProductoMasVendidoDto> productosChartOptions = new();
 
     protected override async Task OnInitializedAsync()
     {
         await CargarDatos();
+        ConfigurarGraficas();
         loading = false;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await CargarGraficas();
-        }
     }
 
     private async Task CargarDatos()
     {
-        var mesActual = DateTime.Now.Month;
-        var añoActual = DateTime.Now.Year;
-        // Reemplaza la línea problemática por una llamada sin argumentos, ya que CountAsync no acepta un predicado.
-        // Si necesitas filtrar por "Activo", deberás obtener la lista y filtrar manualmente, o modificar el servicio para aceptar un predicado.
-        totalClientes = await ClienteHttpService.GetClientesCountAsync();
-        totalVentasMes = await VentaHttpService.GetTotalVentasMesAsync(mesActual, añoActual);
-        totalProductos = await ProductoHttpService.GetProductosCountAsync();
-
-        productosBajoStockLista = (await ProductoHttpService.GetProductosBajoStockAsync()).ToList();
-        productosBajoStock = productosBajoStockLista.Count;
-    }
-
-    private async Task CargarGraficas()
-    {
-
-
-        var ventasPorMes = new List<decimal>();
-        var meses = new List<string>();
-
-        for (int i = 5; i >= 0; i--)
+        try
         {
-            var fecha = DateTime.Now.AddMonths(-i);
-            var total = await VentaHttpService.GetTotalVentasMesAsync(fecha.Month, fecha.Year);
-            ventasPorMes.Add(total);
-            meses.Add(fecha.ToString("MMM yyyy"));
+            stats = await Dashboardpservice.GetStatsAsync();
+            ventasPorMes = await Dashboardpservice.GetVentasPorMesAsync(6);
+            topProductos = await Dashboardpservice.GetProductosMasVendidosAsync(5);
+            var alertas = await Dashboardpservice.GetAlertasAsync();
+            productosBajoStock = alertas.ProductosBajoStock;
+            ventasRecientes = (await VentaHttpService.GetVentasRecientesAsync(5)).ToList();
         }
-
-
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
+
+    private void ConfigurarGraficas()
+    {
+        ventasChartOptions = new ApexChartOptions<VentasPorMesDto>
+        {
+            Chart = new Chart
+            {
+                Height = 320,
+                Type = ChartType.Bar
+            },
+
+            Colors = new List<string>
+    {
+        "#6366F1"
+    },
+
+            PlotOptions = new PlotOptions
+            {
+                Bar = new PlotOptionsBar
+                {
+                    BorderRadius = 6,
+                    ColumnWidth = "40%"
+                }
+            }
+        };
+    }
+
+
 }

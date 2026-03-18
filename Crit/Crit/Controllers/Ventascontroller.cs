@@ -6,6 +6,9 @@ using Crit.Server.Data;
 using Crit.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace Crit.Controllers
 {
@@ -271,6 +274,111 @@ namespace Crit.Controllers
                 _logger.LogError(ex, "Error al obtener total de ventas del mes");
                 return StatusCode(500, "Error interno del servidor");
             }
+        }
+        [HttpGet("{id}/pdf")]
+        public async Task<IActionResult> DescargarVentaPdf(int id)
+        {
+            try
+            {
+                var venta = await _context.Ventas
+                    .Include(v => v.Cliente)
+                    .Include(v => v.Detalles)
+                        .ThenInclude(d => d.Producto)
+                    .FirstOrDefaultAsync(v => v.Id == id);
+
+                if (venta == null)
+                {
+                    return NotFound($"Venta {id} no encontrada");
+                }
+
+                var pdfBytes = GenerarPdfVenta(venta);
+
+                return File(pdfBytes, "application/pdf", $"Venta-{venta.NumeroVenta}.pdf");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al generar PDF de venta {Id}", id);
+                return StatusCode(500, "Error al generar el PDF");
+            }
+        }
+
+        private byte[] GenerarPdfVenta(Venta venta)
+        {
+            QuestPDF.Settings.License = LicenseType.Community;
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.Letter);
+                    page.Margin(2, Unit.Centimetre);
+                    page.DefaultTextStyle(x => x.FontSize(11));
+
+                    // Header
+                    page.Header().Row(row =>
+                    {
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Text("POLYNEX").FontSize(24).Bold().FontColor(Colors.Blue.Darken2);
+                            col.Item().Text("Sistema de Ventas").FontSize(10);
+                        });
+
+                        row.RelativeItem().AlignRight().Column(col =>
+                        {
+                            col.Item().Text($"VENTA #{venta.NumeroVenta}").FontSize(14).Bold();
+                            col.Item().Text($"Fecha: {venta.Fecha:dd/MM/yyyy}").FontSize(9);
+                        });
+                    });
+
+                    // Content
+                    page.Content().PaddingVertical(10).Column(column =>
+                    {
+                        column.Item().Text("CLIENTE").FontSize(12).Bold();
+                        column.Item().Text($"{venta.Cliente?.Nombre ?? "N/A"}");
+                        column.Item().Text($"{venta.Cliente?.Email ?? ""}").FontSize(9);
+
+                        column.Item().PaddingVertical(10).LineHorizontal(1);
+
+                        column.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1);
+                            });
+
+                            table.Header(header =>
+                            {
+                                header.Cell().Text("Producto").Bold();
+                                header.Cell().Text("Cant.").Bold();
+                                header.Cell().Text("Precio").Bold();
+                                header.Cell().Text("Subtotal").Bold();
+                            });
+
+                            foreach (var detalle in venta.Detalles)
+                            {
+                                table.Cell().Text(detalle.Producto?.Nombre ?? "");
+                                table.Cell().Text(detalle.Cantidad.ToString());
+                                table.Cell().Text($"${detalle.PrecioUnitario:N2}");
+                                table.Cell().Text($"${detalle.Subtotal:N2}");
+                            }
+                        });
+
+                        column.Item().PaddingTop(15).AlignRight().Column(col =>
+                        {
+                            col.Item().Text($"Subtotal: ${venta.Subtotal:N2}");
+                            col.Item().Text($"IVA: ${venta.IVA:N2}");
+                            col.Item().Text($"TOTAL: ${venta.Total:N2}").FontSize(14).Bold();
+                        });
+                    });
+
+                    page.Footer().AlignCenter().Text($"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(8);
+                });
+            });
+
+            return document.GeneratePdf();
         }
     }
 }

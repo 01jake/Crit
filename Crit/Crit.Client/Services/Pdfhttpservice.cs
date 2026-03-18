@@ -48,13 +48,10 @@ namespace Crit.Client.Services
         {
             try
             {
-                // Obtener el PDF como bytes desde el servidor
+                // ✅ CORRECTO: Usa api/ventas/{id}/pdf
                 var pdfBytes = await _httpClient.GetByteArrayAsync($"api/ventas/{ventaId}/pdf");
-
-                // Convertir a Base64
                 var base64 = Convert.ToBase64String(pdfBytes);
 
-                // Descargar usando JavaScript
                 await _jsRuntime.InvokeVoidAsync(
                     "downloadPdf",
                     $"Venta-{ventaId}.pdf",

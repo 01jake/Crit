@@ -922,6 +922,22 @@
   },
   {
     "ContainingType": "Crit.Controllers.VentasController",
+    "Method": "DescargarVentaPdf",
+    "RelativePath": "api/Ventas/{id}/pdf",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Crit.Controllers.VentasController",
     "Method": "GetVentasPorCliente",
     "RelativePath": "api/Ventas/cliente/{clienteId}",
     "HttpMethod": "GET",

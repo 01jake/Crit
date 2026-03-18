@@ -19,28 +19,33 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents()
     .AddAuthenticationStateSerialization();
+
 //por mientras
 builder.Services.AddScoped(sp =>
 {
     var nav = sp.GetRequiredService<NavigationManager>();
     return new HttpClient { BaseAddress = new Uri(nav.BaseUri) };
 });
-builder.Services.AddSignalR();
+
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true; // Solo para desarrollo
+});
+
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<QuejaService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<QuejaPublicaService>();
 builder.Services.AddScoped<ArticuloService>();
+builder.Services.AddScoped<Dashboardhttpservice>();
+
 builder.Services.AddScoped<VentaHttpService>();
 builder.Services.AddScoped<ProductoHttpService>();
 builder.Services.AddScoped<PdfHttpService>();
-
 builder.Services.AddScoped<ClienteHttpService>();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
-
 builder.Services.AddScoped<INotificationService, NotificationService>();
-
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Configurar correctamente el AuthenticationStateProvider
@@ -84,18 +89,17 @@ builder.Services.AddAuthentication(options =>
         };
     });
 });
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = true; // Solo para desarrollo
-});
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Configuración de Identity
-builder.Services.AddIdentityCore<ApplicationUser>(options => 
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false; // Para desarrollo
     options.Password.RequireDigit = false;
@@ -103,7 +107,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     options.Password.RequireUppercase = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
-    
+
     // Configurar lockout
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
@@ -115,6 +119,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -137,6 +142,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// ===== SEED DE USUARIOS Y ROLES =====
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -147,7 +153,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error al sembrar la base de datos.");
+        logger.LogError(ex, "Error al sembrar usuarios y roles");
     }
 }
 
@@ -168,12 +174,15 @@ app.UseRouting();
 
 app.MapStaticAssets();
 app.UseStaticFiles();
+
 //  Orden correcto de middleware
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+
 app.MapHub<NotificationHub>("/notificationhub");
 app.UseCors();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
@@ -182,6 +191,8 @@ app.MapRazorComponents<App>()
 
 app.MapAdditionalIdentityEndpoints();
 app.MapControllers();
+
+// ===== SEED DE VENTAS DE PRUEBA =====
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -190,81 +201,108 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        // Solo si no hay datos
-        if (!context.Clientes.Any())
+        logger.LogInformation("🔍 Verificando ventas de prueba...");
+
+        var hayVentas = await context.Ventas.AnyAsync();
+
+        if (!hayVentas)
         {
-            logger.LogInformation("Creando datos de prueba...");
+            logger.LogInformation("📊 === CREANDO VENTAS DE PRUEBA ===");
 
-            // Clientes
-            var clientes = new List<Cliente>
+            var clientes = await context.Clientes.Where(c => c.Activo).ToListAsync();
+            var productos = await context.Productos.Where(p => p.Activo).ToListAsync();
+
+            if (!clientes.Any())
             {
-                new() { Nombre = "Juan Pérez", Email = "juan@test.com", Telefono = "555-1234", RFC = "PEPJ850101XXX", Activo = true, FechaRegistro = DateTime.Now },
-                new() { Nombre = "María García", Email = "maria@test.com", Telefono = "555-5678", RFC = "GARM900202XXX", Activo = true, FechaRegistro = DateTime.Now },
-                new() { Nombre = "Carlos López", Email = "carlos@test.com", Telefono = "555-9012", RFC = "LOPC880303XXX", Activo = true, FechaRegistro = DateTime.Now }
-            };
-            context.Clientes.AddRange(clientes);
-            context.SaveChanges();
-
-            // Productos
-            var productos = new List<Producto>
-            {
-                new() { Codigo = "P001", Nombre = "Laptop", Descripcion = "Laptop Dell", PrecioCompra = 8000, PrecioVenta = 12000, Stock = 15, StockMinimo = 5, Categoria = "Electrónica", Unidad = "Pieza", Activo = true, FechaCreacion = DateTime.Now },
-                new() { Codigo = "P002", Nombre = "Mouse", Descripcion = "Mouse Logitech", PrecioCompra = 200, PrecioVenta = 350, Stock = 50, StockMinimo = 10, Categoria = "Accesorios", Unidad = "Pieza", Activo = true, FechaCreacion = DateTime.Now },
-                new() { Codigo = "P003", Nombre = "Teclado", Descripcion = "Teclado mecánico", PrecioCompra = 600, PrecioVenta = 950, Stock = 30, StockMinimo = 8, Categoria = "Accesorios", Unidad = "Pieza", Activo = true, FechaCreacion = DateTime.Now },
-                new() { Codigo = "P004", Nombre = "Monitor", Descripcion = "Monitor 24\"", PrecioCompra = 2000, PrecioVenta = 3200, Stock = 20, StockMinimo = 5, Categoria = "Electrónica", Unidad = "Pieza", Activo = true, FechaCreacion = DateTime.Now }
-            };
-            context.Productos.AddRange(productos);
-            context.SaveChanges();
-
-            // Ventas de los últimos 6 meses
-            var random = new Random();
-            for (int mes = 5; mes >= 0; mes--)
-            {
-                for (int i = 0; i < 5; i++) // 5 ventas por mes
-                {
-                    var fecha = DateTime.Now.AddMonths(-mes).AddDays(-random.Next(0, 28));
-                    var cliente = clientes[random.Next(clientes.Count)];
-                    var producto = productos[random.Next(productos.Count)];
-
-                    var venta = new Venta
-                    {
-                        NumeroVenta = $"V-{fecha:yyyyMMdd}-{(mes * 5 + i + 1):D6}",
-                        ClienteId = cliente.Id,
-                        Fecha = fecha,
-                        Estado = "Completada",
-                        Descuento = 0
-                    };
-
-                    var detalle = new DetalleVenta
-                    {
-                        ProductoId = producto.Id,
-                        Cantidad = random.Next(1, 4),
-                        PrecioUnitario = producto.PrecioVenta,
-                        Descuento = 0
-                    };
-                    detalle.Subtotal = detalle.Cantidad * detalle.PrecioUnitario;
-
-                    venta.Detalles = new List<DetalleVenta> { detalle };
-                    venta.Subtotal = detalle.Subtotal;
-                    venta.IVA = venta.Subtotal * 0.16m;
-                    venta.Total = venta.Subtotal + venta.IVA;
-
-                    context.Ventas.Add(venta);
-                }
+                logger.LogWarning("⚠️ No hay clientes activos. Crea clientes primero.");
             }
-            context.SaveChanges();
+            else if (!productos.Any())
+            {
+                logger.LogWarning("⚠️ No hay productos activos. Crea productos primero.");
+            }
+            else
+            {
+                logger.LogInformation($"✅ Usando {clientes.Count} clientes y {productos.Count} productos");
 
-            logger.LogInformation("✅ Datos de prueba creados");
+                var random = new Random();
+                var ventasCreadas = 0;
+
+                // Crear ventas para los últimos 6 meses
+                for (int mes = 5; mes >= 0; mes--)
+                {
+                    int numVentas = random.Next(4, 7); // 4-6 ventas por mes
+
+                    for (int i = 0; i < numVentas; i++)
+                    {
+                        var fechaVenta = DateTime.Now.AddMonths(-mes).AddDays(-random.Next(0, 28));
+                        var cliente = clientes[random.Next(clientes.Count)];
+
+                        var venta = new Venta
+                        {
+                            NumeroVenta = $"V-{fechaVenta:yyyyMMdd}-{(ventasCreadas + 1):D6}",
+                            ClienteId = cliente.Id,
+                            Fecha = fechaVenta,
+                            Estado = "Completada",
+                            Descuento = 0,
+                            Notas = $"Venta de prueba #{ventasCreadas + 1}",
+                            Detalles = new List<DetalleVenta>()
+                        };
+
+                        // Agregar 1-3 productos aleatorios
+                        int numProductos = random.Next(1, 4);
+                        decimal subtotalVenta = 0;
+
+                        for (int j = 0; j < numProductos; j++)
+                        {
+                            var producto = productos[random.Next(productos.Count)];
+                            var cantidad = random.Next(1, 3);
+                            var subtotal = producto.PrecioVenta * cantidad;
+
+                            var detalle = new DetalleVenta
+                            {
+                                ProductoId = producto.Id,
+                                Cantidad = cantidad,
+                                PrecioUnitario = producto.PrecioVenta,
+                                Descuento = 0,
+                                Subtotal = subtotal
+                            };
+
+                            venta.Detalles.Add(detalle);
+                            subtotalVenta += subtotal;
+                        }
+
+                        venta.Subtotal = subtotalVenta;
+                        venta.IVA = venta.Subtotal * 0.16m;
+                        venta.Total = venta.Subtotal + venta.IVA - venta.Descuento;
+
+                        context.Ventas.Add(venta);
+                        ventasCreadas++;
+                    }
+                }
+
+                await context.SaveChangesAsync();
+                logger.LogInformation($"✅ {ventasCreadas} ventas creadas exitosamente");
+            }
+        }
+        else
+        {
+            var totalVentas = await context.Ventas.CountAsync();
+            logger.LogInformation($"ℹ️ Ya existen {totalVentas} ventas en la base de datos");
         }
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error al crear datos de prueba");
+        logger.LogError(ex, "❌ ERROR al crear ventas: {Message}", ex.Message);
+        if (ex.InnerException != null)
+        {
+            logger.LogError("💥 Inner exception: {InnerMessage}", ex.InnerException.Message);
+        }
     }
 }
+
 app.Run();
 
-// Clase SeedData 
+// ===== CLASE SEED DATA =====
 public static class SeedData
 {
     public static async Task Initialize(IServiceProvider serviceProvider)
@@ -300,7 +338,7 @@ public static class SeedData
             }
         }
 
-        // Crear usuario empleado de ejemplo
+        // Crear usuario empleado
         var empleadoEmail = "empleado@crit.com";
         var empleadoUser = await userManager.FindByEmailAsync(empleadoEmail);
         if (empleadoUser == null)
