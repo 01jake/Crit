@@ -19,9 +19,12 @@ builder.Services.AddScoped<ClienteHttpService>();
 builder.Services.AddScoped<VentaHttpService>();
 builder.Services.AddScoped<ProductoHttpService>();
 builder.Services.AddScoped<PdfHttpService>();
+builder.Services.AddScoped<CompraHttpService>();
+//builder.Services.AddScoped<KardexHttpService>(); 
 builder.Services.AddScoped<Dashboardhttpservice>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<QuejaPublicaService>();
 builder.Services.AddScoped<ArticuloService>();
+builder.Services.AddScoped<ProveedorHttpService>();
 
 await builder.Build().RunAsync();

@@ -22,6 +22,29 @@ namespace Crit.Shared.DTOs
 
         // INVENTARIO
         public decimal ValorInventario { get; set; }
+        public decimal CostosMes { get; set; }
+        public decimal UtilidadMes { get; set; }
+        public decimal MargenUtilidad { get; set; }
+
+
+
+
+        public decimal IngresosHoy { get; set; }
+  
+
+        public decimal CostoVentasHoy { get; set; }
+        public decimal CostoVentasMes { get; set; }
+
+        public decimal UtilidadBrutaHoy { get; set; }
+        public decimal UtilidadBrutaMes { get; set; }
+
+        public decimal MargenBrutoHoy { get; set; }
+        public decimal MargenBrutoMes { get; set; }
+
+        public decimal TicketPromedioHoy { get; set; }
+        public decimal TicketPromedioMes { get; set; }
+
+   
     }
 
     public class VentasPorMesDto
@@ -53,6 +76,8 @@ namespace Crit.Shared.DTOs
         public string Nombre { get; set; } = string.Empty;
         public int CantidadVendida { get; set; }
         public decimal TotalVentas { get; set; }
+
+
     }
 
     // DTO para reportes
@@ -100,7 +125,50 @@ namespace Crit.Shared.DTOs
         public int Stock { get; set; }
         public bool Activo { get; set; }
     }
+    public class CashFlowDto
+    {
+        public string Mes { get; set; } = string.Empty;
+        public decimal Ingresos { get; set; }
+        public decimal CostoMercancia { get; set; }
+        public decimal UtilidadBruta { get; set; }
+        public decimal FlujoEstimado { get; set; }
+    }
 
+
+
+    public class VentasPorDiaDto
+    {
+        public DateTime Fecha { get; set; }
+        public decimal Total { get; set; }
+        public int Cantidad { get; set; }
+    }
+
+
+    public class DashboardAlertaDto
+    {
+        public List<ProductoBajoStockDto> ProductosBajoStock { get; set; } = new();
+        public List<string> Mensajes { get; set; } = new();
+    }
+
+    public class ProductoBajoStockDto
+    {
+        public int Id { get; set; }
+        public string Codigo { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+        public int Stock { get; set; }
+        public int StockMinimo { get; set; }
+        public string Estado { get; set; } = string.Empty;
+    }
+
+    public class VentaRecienteDto
+    {
+        public int Id { get; set; }
+        public string NumeroVenta { get; set; } = string.Empty;
+        public string? Cliente { get; set; }
+        public DateTime Fecha { get; set; }
+        public decimal Total { get; set; }
+        public string Estado { get; set; } = string.Empty;
+    }
 
     //public class DashboardStatsDto
     //{

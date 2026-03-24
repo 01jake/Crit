@@ -1,0 +1,61 @@
+﻿@page "/compras/{id:int}"
+@using Crit.Shared.Models
+@inject CompraHttpService CompraHttpService
+
+<h3>Detalle de Compra</h3>
+
+@if (compra == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+
+            <h5>@compra.Proveedor?.Nombre</h5>
+
+            <p>
+                Factura: <strong>@compra.SerieFactura-@compra.FolioFactura</strong><br />
+                Fecha: @compra.Fecha.ToString("dd/MM/yyyy")
+            </p>
+
+        </div>
+    </div>
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in compra.Detalles)
+            {
+                <tr>
+                    <td>@d.Producto?.Nombre</td>
+                    <td>@d.Cantidad</td>
+                    <td>$@d.PrecioUnitario</td>
+                    <td>$@d.Subtotal</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="text-end">
+        <h5>Total: $@compra.Total</h5>
+    </div>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    private Compra? compra;
+
+    protected override async Task OnInitializedAsync()
+    {
+        compra = await CompraHttpService.GetCompraAsync(id);
+    }
+}

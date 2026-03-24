@@ -24,6 +24,9 @@ namespace Crit.Server.Data
         // DbSets para las entidades
         public DbSet<ArticuloEntity> Articulos { get; set; }
         public DbSet<QuejaEntity> Quejas { get; set; }
+        public DbSet<Proveedor> Proveedores { get; set; }
+        //public DbSet<Kardex> Kardex { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -192,5 +195,6 @@ namespace Crit.Server.Data
         //public DbSet<Producto> Producto { get; set; } = default!;
         public DbSet<Queja> Queja { get; set; } = default!;
         public DbSet<Articulo> Articulo { get; set; } = default!;
+        public DbSet<Crit.Shared.Models.Compra> Compra { get; set; } = default!;
     }
 }

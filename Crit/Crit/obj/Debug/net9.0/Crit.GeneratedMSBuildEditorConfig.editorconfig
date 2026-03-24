@@ -204,6 +204,46 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2xpZW50ZXNjb250cm9sbGVyXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Compras/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29tcHJhc1xDcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Compras/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29tcHJhc1xEZWxldGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Compras/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29tcHJhc1xEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Compras/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29tcHJhc1xFZGl0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Compras/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29tcHJhc1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Kardex/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2FyZGV4XENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Kardex/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2FyZGV4XERlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Kardex/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2FyZGV4XERldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Kardex/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2FyZGV4XEVkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Kardex/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2FyZGV4XEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Productoescontroller/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvZHVjdG9lc2NvbnRyb2xsZXJcQ3JlYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
@@ -222,6 +262,26 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Productoescontroller/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvZHVjdG9lc2NvbnRyb2xsZXJcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Proveedores/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvdmVlZG9yZXNcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Proveedores/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvdmVlZG9yZXNcRGVsZXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Proveedores/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvdmVlZG9yZXNcRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Proveedores/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvdmVlZG9yZXNcRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Proveedores/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvdmVlZG9yZXNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit/Views/Shared/_ValidationScriptsPartial.cshtml]

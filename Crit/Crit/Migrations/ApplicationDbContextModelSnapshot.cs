@@ -309,6 +309,52 @@ namespace Crit.Migrations
                     b.ToTable("Clientes");
                 });
 
+            modelBuilder.Entity("Crit.Shared.Models.Compra", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaFactura")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FolioFactura")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("IVA")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProveedorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RFCProveedor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SerieFactura")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProveedorId");
+
+                    b.ToTable("Compra");
+                });
+
             modelBuilder.Entity("Crit.Shared.Models.Cotizacion", b =>
                 {
                     b.Property<int>("Id")
@@ -370,6 +416,41 @@ namespace Crit.Migrations
                         .IsUnique();
 
                     b.ToTable("Cotizaciones");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.DetalleCompra", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompraId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrecioCompra")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompraId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("DetalleCompra");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.DetalleCotizacion", b =>
@@ -500,6 +581,57 @@ namespace Crit.Migrations
                         .IsUnique();
 
                     b.ToTable("Productos");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.Proveedor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Contacto")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Direccion")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("RFC")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
+
+                    b.Property<string>("RazonSocial")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RegimenFiscal")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Telefono")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Proveedores");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.Servicio", b =>
@@ -873,6 +1005,17 @@ namespace Crit.Migrations
                     b.Navigation("EmpleadoAsignado");
                 });
 
+            modelBuilder.Entity("Crit.Shared.Models.Compra", b =>
+                {
+                    b.HasOne("Crit.Shared.Models.Proveedor", "Proveedor")
+                        .WithMany()
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Proveedor");
+                });
+
             modelBuilder.Entity("Crit.Shared.Models.Cotizacion", b =>
                 {
                     b.HasOne("Crit.Shared.Models.Cliente", "Cliente")
@@ -882,6 +1025,25 @@ namespace Crit.Migrations
                         .IsRequired();
 
                     b.Navigation("Cliente");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.DetalleCompra", b =>
+                {
+                    b.HasOne("Crit.Shared.Models.Compra", "Compra")
+                        .WithMany("Detalles")
+                        .HasForeignKey("CompraId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Crit.Shared.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Compra");
+
+                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.DetalleCotizacion", b =>
@@ -1008,6 +1170,11 @@ namespace Crit.Migrations
                     b.Navigation("Cotizaciones");
 
                     b.Navigation("Ventas");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.Compra", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.Cotizacion", b =>

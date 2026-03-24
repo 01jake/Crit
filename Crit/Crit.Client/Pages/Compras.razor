@@ -1,0 +1,307 @@
+﻿@page "/compras"
+@using Crit.Client.Services
+@using Crit.Shared.Models
+@inject ProveedorHttpService ProveedorService
+@inject ProductoHttpService ProductoService
+@inject CompraHttpService CompraService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Compras</PageTitle>
+
+<div class="container-fluid">
+    <h2 class="mb-4">Órdenes de Compra</h2>
+
+    <div class="row">
+
+        <!-- PRODUCTOS -->
+        <div class="col-md-8">
+            <div class="card mb-3">
+               @*  <div class="card-header">
+                    <input class="form-control"
+                           placeholder="Buscar producto..."
+                           @bind="busquedaProducto"
+                           @bind:event="oninput"
+                           @oninput="BuscarProducto" />
+                </div> *@
+
+                <div class="card-body" style="max-height:500px; overflow:auto;">
+                    <div class="row">
+                        @foreach (var p in productosFiltrados.Take(20))
+                        {
+                            <div class="col-md-3 mb-3">
+                                <div class="card producto-card"
+                                     @onclick="() => AgregarProducto(p)">
+                                    <div class="card-body text-center">
+                                        <h6>@p.Nombre</h6>
+                                        <small>@p.Codigo</small>
+                                        <p class="text-success">$@p.PrecioCompra</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL COMPRA -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top:20px;">
+                <div class="card-header bg-dark text-white">
+                    Nueva Compra
+                </div>
+
+                <div class="card-body">
+
+                    <!-- PROVEEDOR -->
+                    <select class="form-select mb-2" @bind="compraActual.ProveedorId">
+                        <option value="0">Proveedor</option>
+                        @foreach (var p in proveedores)
+                        {
+                            <option value="@p.Id">@p.Nombre</option>
+                        }
+                    </select>
+
+                    <!-- FACTURA -->
+                    <input class="form-control mb-2" placeholder="Serie"
+                           @bind="compraActual.SerieFactura" />
+                    <input class="form-control mb-2" placeholder="Folio"
+                           @bind="compraActual.FolioFactura" />
+
+                    <!-- DETALLES -->
+                    <div style="max-height:250px; overflow:auto;">
+                        @foreach (var d in compraActual.Detalles)
+                        {
+                            <div class="border p-2 mb-2" @key="d">
+                                <strong>@GetProductoNombre(d.ProductoId)</strong>
+
+                                <div class="d-flex gap-2 mt-1">
+                                    <input type="number"
+                                           class="form-control"
+                                           style="width:70px"
+                                           value="@d.Cantidad"
+                                           decimal.TryParse(e.Value?.ToString(),
+                                           NumberStyles.Any,
+                                           CultureInfo.InvariantCulture,
+                                           out var val);
+                                           @oninput="e => OnCantidadChanged(d, e)" />
+
+                                    <input type="number"
+                                           class="form-control"
+                                           style="width:100px"
+                                           value="@d.PrecioUnitario"
+                                           decimal.TryParse(e.Value?.ToString(),
+                                           NumberStyles.Any,
+                                           CultureInfo.InvariantCulture,
+                                           out var val);
+                                           @oninput="e => OnPrecioChanged(d, e)" />
+
+
+                                    <button class="btn btn-danger"
+                                            @onclick="() => Eliminar(d)">X</button>
+                                </div>
+
+                                <small>Subtotal: $@d.Subtotal</small>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- TOTALES -->
+                    <div class="mt-3">
+                        <div>Subtotal: $@subtotal</div>
+                        <div>IVA: $@iva</div>
+                        <h5>Total: $@total</h5>
+                    </div>
+
+                    <!-- BOTONES -->
+                    <div class="d-grid gap-2 mt-2">
+                        <button class="btn btn-success"
+                                @onclick="GuardarCompra"
+                                disabled="@(!PuedeGuardar)">
+                            Guardar Compra
+                        </button>
+
+                        <button class="btn btn-secondary"
+                                @onclick="Limpiar">
+                            Limpiar
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 🔥 HISTORIAL -->
+    <div class="card mt-4">
+        <div class="card-header">
+            Historial de Compras
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Proveedor</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Factura</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in historial)
+                    {
+                        <tr>
+                            <td>@c.Proveedor?.Nombre</td>
+                            <td>@c.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>$@c.Total</td>
+                            <td>@c.SerieFactura-@c.FolioFactura</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .producto-card {
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .producto-card:hover {
+        transform: scale(1.03);
+    }
+</style>
+
+@code {
+
+    private List<Proveedor> proveedores = new();
+    private List<Producto> productos = new();
+    private List<Producto> productosFiltrados = new();
+    private List<Compra> historial = new();
+
+    private Compra compraActual = new();
+    private string busquedaProducto = "";
+    private bool procesando = false;
+
+    private decimal subtotal => compraActual.Detalles.Sum(x => x.Subtotal);
+    private decimal iva => subtotal * 0.16m;
+    private decimal total => subtotal + iva;
+
+    private bool PuedeGuardar =>
+        compraActual.ProveedorId > 0 &&
+        compraActual.Detalles.Any() &&
+        !procesando;
+
+    private void OnCantidadChanged(DetalleCompra d, ChangeEventArgs e)
+    {
+        d.Cantidad = int.TryParse(e.Value?.ToString(), out var val) ? val : 0;
+        Recalcular();
+    }
+
+    private void OnPrecioChanged(DetalleCompra d, ChangeEventArgs e)
+    {
+        d.PrecioUnitario = decimal.TryParse(e.Value?.ToString(), out var val) ? val : 0;
+        Recalcular();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+        Inicializar();
+    }
+
+    private async Task CargarDatos()
+    {
+        proveedores = await ProveedorService.GetAsync();
+        productos = await ProductoService.GetProductosAsync();
+        historial = await CompraService.GetHistorialAsync();
+
+        productosFiltrados = productos;
+    }
+
+    private void Inicializar()
+    {
+        compraActual = new Compra
+        {
+            Fecha = DateTime.Now,
+            Detalles = new List<DetalleCompra>()
+        };
+    }
+
+    private void BuscarProducto()
+    {
+        productosFiltrados = productos.Where(p =>
+            p.Nombre.Contains(busquedaProducto, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+    }
+
+    private void AgregarProducto(Producto p)
+    {
+        var existente = compraActual.Detalles.FirstOrDefault(x => x.ProductoId == p.Id);
+
+        if (existente != null)
+            existente.Cantidad++;
+        else
+            compraActual.Detalles.Add(new DetalleCompra
+            {
+                ProductoId = p.Id,
+                Cantidad = 1,
+                PrecioUnitario = p.PrecioCompra
+            });
+
+        Recalcular();
+    }
+
+    private void Eliminar(DetalleCompra d)
+    {
+        compraActual.Detalles.Remove(d);
+        Recalcular();
+    }
+
+    private void Recalcular()
+    {
+        foreach (var d in compraActual.Detalles)
+            d.Subtotal = d.Cantidad * d.PrecioUnitario;
+    }
+
+    private async Task GuardarCompra()
+    {
+        try
+        {
+            procesando = true;
+
+            compraActual.Subtotal = subtotal;
+            compraActual.IVA = iva;
+            compraActual.Total = total;
+
+            await CompraService.CrearAsync(compraActual);
+
+            await JSRuntime.InvokeVoidAsync("alert", "Compra guardada");
+
+            await CargarDatos();
+            Inicializar();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", ex.Message);
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private void Limpiar()
+    {
+        Inicializar();
+    }
+
+    private string GetProductoNombre(int id)
+    {
+        return productos.FirstOrDefault(p => p.Id == id)?.Nombre ?? "";
+    }
+}

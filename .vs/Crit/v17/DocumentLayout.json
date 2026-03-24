@@ -3,12 +3,72 @@
   "WorkspaceRootPath": "C:\\Users\\ang31\\source\\repos\\Crit\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit.client\\pages\\dash.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|solutionrelative:crit\\crit.client\\pages\\dash.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit.client\\layout\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|solutionrelative:crit\\crit.client\\layout\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{681556BB-01FC-4669-B251-18716AACF089}|Crit.Shared\\Crit.Shared.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit.shared\\dtos\\commondtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{681556BB-01FC-4669-B251-18716AACF089}|Crit.Shared\\Crit.Shared.csproj|solutionrelative:crit.shared\\dtos\\commondtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit.client\\layout\\mainlayout.razor.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|solutionrelative:crit\\crit.client\\layout\\mainlayout.razor.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit.client\\layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|solutionrelative:crit\\crit.client\\layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit.client\\layout\\navmenu.razor.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|solutionrelative:crit\\crit.client\\layout\\navmenu.razor.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{681556BB-01FC-4669-B251-18716AACF089}|Crit.Shared\\Crit.Shared.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit.shared\\models\\compra.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{681556BB-01FC-4669-B251-18716AACF089}|Crit.Shared\\Crit.Shared.csproj|solutionrelative:crit.shared\\models\\compra.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{681556BB-01FC-4669-B251-18716AACF089}|Crit.Shared\\Crit.Shared.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit.shared\\models\\detallecompra.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{681556BB-01FC-4669-B251-18716AACF089}|Crit.Shared\\Crit.Shared.csproj|solutionrelative:crit.shared\\models\\detallecompra.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit.client\\pages\\compras.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|solutionrelative:crit\\crit.client\\pages\\compras.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit\\controllers\\comprascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|solutionrelative:crit\\crit\\controllers\\comprascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit\\views\\kardex\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|solutionrelative:crit\\crit\\views\\kardex\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit\\views\\kardex\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|solutionrelative:crit\\crit\\views\\kardex\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit\\views\\kardex\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|solutionrelative:crit\\crit\\views\\kardex\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit\\views\\kardex\\delete.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|solutionrelative:crit\\crit\\views\\kardex\\delete.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit\\views\\kardex\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|solutionrelative:crit\\crit\\views\\kardex\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|solutionrelative:crit\\crit\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit.client\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|solutionrelative:crit\\crit.client\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3257AB3A-04F8-4DAA-9532-84D32B618CEA}|Crit\\Crit\\Crit.csproj|solutionrelative:crit\\crit\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|c:\\users\\ang31\\source\\repos\\crit\\crit\\crit.client\\pages\\kardex.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{69B93058-5F91-480D-A9B1-444CBD45403E}|Crit\\Crit.Client\\Crit.Client.csproj|solutionrelative:crit\\crit.client\\pages\\kardex.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,7 +78,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 8,
           "Children": [
             {
               "$type": "Bookmark",
@@ -42,29 +102,208 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "NavMenu.razor.css",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Layout\\NavMenu.razor.css",
+              "RelativeDocumentMoniker": "Crit\\Crit.Client\\Layout\\NavMenu.razor.css",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Layout\\NavMenu.razor.css",
+              "RelativeToolTip": "Crit\\Crit.Client\\Layout\\NavMenu.razor.css",
+              "ViewState": "AgIAAE4AAAAAAAAAAAAmwHcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-03-24T07:05:01.256Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "NavMenu.razor",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Layout\\NavMenu.razor",
+              "RelativeDocumentMoniker": "Crit\\Crit.Client\\Layout\\NavMenu.razor",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Layout\\NavMenu.razor",
+              "RelativeToolTip": "Crit\\Crit.Client\\Layout\\NavMenu.razor",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-24T07:02:28.266Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Commondtos.cs",
-              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit.Shared\\DTOs\\Commondtos.cs",
-              "RelativeDocumentMoniker": "Crit.Shared\\DTOs\\Commondtos.cs",
-              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit.Shared\\DTOs\\Commondtos.cs",
-              "RelativeToolTip": "Crit.Shared\\DTOs\\Commondtos.cs",
-              "ViewState": "AgIAAE4AAAAAAAAAAAA5wFwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-18T21:12:10.458Z",
-              "EditorCaption": ""
+              "Title": "MainLayout.razor.css",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Layout\\MainLayout.razor.css",
+              "RelativeDocumentMoniker": "Crit\\Crit.Client\\Layout\\MainLayout.razor.css",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Layout\\MainLayout.razor.css",
+              "RelativeToolTip": "Crit\\Crit.Client\\Layout\\MainLayout.razor.css",
+              "ViewState": "AgIAAEIAAAAAAAAAAAAmwGsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-03-24T07:02:10.91Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Dash.razor",
-              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Pages\\Dash.razor",
-              "RelativeDocumentMoniker": "Crit\\Crit.Client\\Pages\\Dash.razor",
-              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Pages\\Dash.razor",
-              "RelativeToolTip": "Crit\\Crit.Client\\Pages\\Dash.razor",
-              "ViewState": "AgIAABsBAAAAAAAAAAAAADkBAAAvAAAAAAAAAA==",
+              "Title": "MainLayout.razor",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Layout\\MainLayout.razor",
+              "RelativeDocumentMoniker": "Crit\\Crit.Client\\Layout\\MainLayout.razor",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Layout\\MainLayout.razor",
+              "RelativeToolTip": "Crit\\Crit.Client\\Layout\\MainLayout.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-03-18T05:01:16.129Z",
+              "WhenOpened": "2026-03-24T07:01:15.958Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "DetalleCompra.cs",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit.Shared\\Models\\DetalleCompra.cs",
+              "RelativeDocumentMoniker": "Crit.Shared\\Models\\DetalleCompra.cs",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit.Shared\\Models\\DetalleCompra.cs",
+              "RelativeToolTip": "Crit.Shared\\Models\\DetalleCompra.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-24T06:52:59.733Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Compra.cs",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit.Shared\\Models\\Compra.cs",
+              "RelativeDocumentMoniker": "Crit.Shared\\Models\\Compra.cs",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit.Shared\\Models\\Compra.cs",
+              "RelativeToolTip": "Crit.Shared\\Models\\Compra.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-24T06:50:17.514Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Compras.razor",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Pages\\Compras.razor",
+              "RelativeDocumentMoniker": "Crit\\Crit.Client\\Pages\\Compras.razor",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Pages\\Compras.razor",
+              "RelativeToolTip": "Crit\\Crit.Client\\Pages\\Compras.razor",
+              "ViewState": "AgIAAEgAAAAAAAAAAAAAAF4AAABIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-24T06:29:43.282Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Index.cshtml",
+              "RelativeDocumentMoniker": "Crit\\Crit\\Views\\Kardex\\Index.cshtml",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Index.cshtml",
+              "RelativeToolTip": "Crit\\Crit\\Views\\Kardex\\Index.cshtml",
+              "ViewState": "AgIAACAAAAAAAAAAAAAYwEcAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-24T06:20:45.69Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Edit.cshtml",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Edit.cshtml",
+              "RelativeDocumentMoniker": "Crit\\Crit\\Views\\Kardex\\Edit.cshtml",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Edit.cshtml",
+              "RelativeToolTip": "Crit\\Crit\\Views\\Kardex\\Edit.cshtml",
+              "ViewState": "AgIAABcAAAAAAAAAAAAmwEAAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-24T06:20:43.206Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Details.cshtml",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Details.cshtml",
+              "RelativeDocumentMoniker": "Crit\\Crit\\Views\\Kardex\\Details.cshtml",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Details.cshtml",
+              "RelativeToolTip": "Crit\\Crit\\Views\\Kardex\\Details.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-24T06:20:40.102Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "Delete.cshtml",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Delete.cshtml",
+              "RelativeDocumentMoniker": "Crit\\Crit\\Views\\Kardex\\Delete.cshtml",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Delete.cshtml",
+              "RelativeToolTip": "Crit\\Crit\\Views\\Kardex\\Delete.cshtml",
+              "ViewState": "AgIAABYAAAAAAAAAAAAmwD8AAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-24T06:20:37.618Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Create.cshtml",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Create.cshtml",
+              "RelativeDocumentMoniker": "Crit\\Crit\\Views\\Kardex\\Create.cshtml",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Views\\Kardex\\Create.cshtml",
+              "RelativeToolTip": "Crit\\Crit\\Views\\Kardex\\Create.cshtml",
+              "ViewState": "AgIAABUAAAAAAAAAAAAswCQAAABUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-24T06:20:30.447Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "ApplicationDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Data\\ApplicationDbContext.cs",
+              "RelativeDocumentMoniker": "Crit\\Crit\\Data\\ApplicationDbContext.cs",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Data\\ApplicationDbContext.cs",
+              "RelativeToolTip": "Crit\\Crit\\Data\\ApplicationDbContext.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAswB4AAABFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-24T06:19:09.599Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Program.cs",
+              "RelativeDocumentMoniker": "Crit\\Crit\\Program.cs",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Program.cs",
+              "RelativeToolTip": "Crit\\Crit\\Program.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABoAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-24T06:14:29.452Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Program.cs",
+              "RelativeDocumentMoniker": "Crit\\Crit.Client\\Program.cs",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Program.cs",
+              "RelativeToolTip": "Crit\\Crit.Client\\Program.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAcwBMAAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-24T06:14:17.233Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ComprasController.cs",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Controllers\\ComprasController.cs",
+              "RelativeDocumentMoniker": "Crit\\Crit\\Controllers\\ComprasController.cs",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit\\Controllers\\ComprasController.cs",
+              "RelativeToolTip": "Crit\\Crit\\Controllers\\ComprasController.cs",
+              "ViewState": "AgIAADwAAAAAAAAAAAAcwFwAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-24T06:07:16.857Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "Kardex.razor",
+              "DocumentMoniker": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Pages\\Kardex.razor",
+              "RelativeDocumentMoniker": "Crit\\Crit.Client\\Pages\\Kardex.razor",
+              "ToolTip": "C:\\Users\\ang31\\source\\repos\\Crit\\Crit\\Crit.Client\\Pages\\Kardex.razor",
+              "RelativeToolTip": "Crit\\Crit.Client\\Pages\\Kardex.razor",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAswFcAAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-24T04:58:54.69Z"
             }
           ]
         }

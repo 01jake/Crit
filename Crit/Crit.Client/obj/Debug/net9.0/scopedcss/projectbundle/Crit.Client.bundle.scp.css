@@ -267,17 +267,6 @@
     padding: 20px;
 }
 
-.kpi-card[b-bhcxiibrfu] {
-    border: none;
-    color: white;
-    border-radius: 15px;
-    transition: 0.3s;
-}
-
-    .kpi-card:hover[b-bhcxiibrfu] {
-        transform: translateY(-5px);
-    }
-
 .bg-gradient-primary[b-bhcxiibrfu] {
     background: linear-gradient(45deg, #4facfe, #00f2fe);
 }
@@ -292,6 +281,26 @@
 
 .bg-gradient-warning[b-bhcxiibrfu] {
     background: linear-gradient(45deg, #f7971e, #ffd200);
+}
+.kpi-card[b-bhcxiibrfu] {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    transition: all 0.2s ease;
+    background: white;
+}
+
+    .kpi-card:hover[b-bhcxiibrfu] {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+    }
+
+.card[b-bhcxiibrfu] {
+    border-radius: 16px;
+}
+
+.card-header[b-bhcxiibrfu] {
+    font-weight: 600;
 }
 /* /Pages/Home.razor.rz.scp.css */
 .hover-lift[b-708s0bk394] {

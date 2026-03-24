@@ -1,0 +1,116 @@
+﻿@* @page "/kardex/{productoId:int}"
+@using Crit.Shared.Models
+@inject KardexHttpService KardexHttpService
+
+<PageTitle>Kardex</PageTitle>
+
+<div class="container-fluid">
+
+    <h3 class="mb-4">Kardex del Producto</h3>
+
+    @if (loading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else if (!kardex.Any())
+    {
+        <div class="alert alert-warning">
+            No hay movimientos registrados
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+
+            <div class="card-header bg-dark text-white">
+                Movimientos
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Referencia</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th>Stock</th>
+                            <th>Costo</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var k in kardex)
+                        {
+                            <tr>
+                                <td>@k.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+
+                                <td>
+                                    @if (k.TipoMovimiento == "COMPRA")
+                                    {
+                                        <span class="badge bg-success">COMPRA</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">VENTA</span>
+                                    }
+                                </td>
+
+                                <td>@k.Referencia</td>
+
+                                <td class="text-success fw-bold">
+                                    @(k.TipoMovimiento == "COMPRA" ? k.Cantidad : 0)
+                                </td>
+
+                                <td class="text-danger fw-bold">
+                                    @(k.TipoMovimiento == "VENTA" ? k.Cantidad : 0)
+                                </td>
+
+                                <td><strong>@k.StockNuevo</strong></td>
+
+                                <td>$@k.CostoUnitario.ToString("N2")</td>
+
+                                <td>$@k.Total.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public int productoId { get; set; }
+
+    private List<Kardex> kardex = new();
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        try
+        {
+            kardex = await KardexHttpService.GetKardexAsync(productoId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+} *@

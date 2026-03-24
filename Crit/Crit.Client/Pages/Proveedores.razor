@@ -1,0 +1,307 @@
+﻿@page "/proveedores"
+@using Crit.Client.Services
+@using Crit.Shared.Models
+@inject ProveedorHttpService ProveedorHttpService
+@inject IJSRuntime JSRuntime
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Gestión de Proveedores</h2>
+
+        <button class="btn btn-primary" @onclick="MostrarModalNuevo">
+            <i class="bi bi-plus-circle"></i> Nuevo Proveedor
+        </button>
+    </div>
+
+    @if (loading)
+    {
+        <div class="text-center">
+            <div class="spinner-border"></div>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+
+                <!-- BUSCADOR -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <input class="form-control"
+                               placeholder="Buscar proveedor..."
+                               @bind="terminoBusqueda"
+                               @bind:event="oninput" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <select class="form-select" @bind="filtroEstado">
+                            <option value="todos">Todos</option>
+                            <option value="activos">Activos</option>
+                            <option value="inactivos">Inactivos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TABLA -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>RFC</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Fecha Registro</th>
+                                <th>Estado</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var p in ProveedoresFiltrados)
+                            {
+                                <tr>
+                                    <td>@p.Nombre</td>
+                                    <td>@p.RFC</td>
+                                    <td>@p.Email</td>
+                                    <td>@p.Telefono</td>
+                                    <td>@p.FechaRegistro.ToString("dd/MM/yyyy")</td>
+
+                                    <td>
+                                        <span class="badge @(p.Activo ? "bg-success" : "bg-secondary")">
+                                            @(p.Activo ? "Activo" : "Inactivo")
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" @onclick="() => Editar(p)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+
+                                        <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(p.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    }
+</div>
+
+<!-- MODAL -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @(proveedorActual.Id == 0 ? "Nuevo Proveedor" : "Editar Proveedor")
+                    </h5>
+                    <button class="btn-close" @onclick="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="proveedorActual" OnValidSubmit="Guardar">
+                        <DataAnnotationsValidator />
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label>Nombre *</label>
+                                <InputText class="form-control" @bind-Value="proveedorActual.Nombre" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label>Razón Social</label>
+                                <InputText class="form-control" @bind-Value="proveedorActual.RazonSocial" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label>RFC</label>
+                                <InputText class="form-control" @bind-Value="proveedorActual.RFC" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Contacto</label>
+                                <InputText class="form-control" @bind-Value="proveedorActual.Contacto" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label>Régimen Fiscal</label>
+                                <InputText class="form-control" @bind-Value="proveedorActual.RegimenFiscal" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Email</label>
+                                <InputText class="form-control" @bind-Value="proveedorActual.Email" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label>Teléfono</label>
+                                <InputText class="form-control" @bind-Value="proveedorActual.Telefono" />
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label>Dirección</label>
+                                <InputTextArea class="form-control" @bind-Value="proveedorActual.Direccion" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="proveedorActual.Activo" />
+                                    <label class="form-check-label">Activo</label>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(mensajeError))
+                        {
+                            <div class="alert alert-danger">@mensajeError</div>
+                        }
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
+
+                            <button type="submit" class="btn btn-primary" disabled="@guardando">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                }
+                                Guardar
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    private List<Proveedor> proveedores = new();
+    private Proveedor proveedorActual = new();
+
+    private bool loading = true;
+    private bool mostrarModal = false;
+    private bool guardando = false;
+
+    private string terminoBusqueda = "";
+    private string filtroEstado = "todos";
+    private string mensajeError = "";
+
+    private IEnumerable<Proveedor> ProveedoresFiltrados =>
+        proveedores.Where(p =>
+            (
+                string.IsNullOrEmpty(terminoBusqueda) ||
+                p.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                (p.RFC ?? "").Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)
+            )
+            &&
+            (
+                filtroEstado == "todos" ||
+                (filtroEstado == "activos" && p.Activo) ||
+                (filtroEstado == "inactivos" && !p.Activo)
+            )
+        );
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+        loading = false;
+    }
+
+    private async Task Cargar()
+    {
+        try
+        {
+            proveedores = await ProveedorHttpService.GetAsync();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = ex.Message;
+        }
+    }
+
+    private void MostrarModalNuevo()
+    {
+        proveedorActual = new Proveedor { Activo = true };
+        mensajeError = "";
+        mostrarModal = true;
+    }
+
+    private void Editar(Proveedor p)
+    {
+        proveedorActual = new Proveedor
+        {
+            Id = p.Id,
+            Nombre = p.Nombre,
+            RazonSocial = p.RazonSocial,
+            RFC = p.RFC,
+            Email = p.Email,
+            Telefono = p.Telefono,
+            Direccion = p.Direccion,
+            Activo = p.Activo,
+            FechaRegistro = p.FechaRegistro
+        };
+
+        mensajeError = "";
+        mostrarModal = true;
+    }
+
+    private void Cerrar()
+    {
+        mostrarModal = false;
+        proveedorActual = new();
+        mensajeError = "";
+    }
+
+    private async Task Guardar()
+    {
+        try
+        {
+            guardando = true;
+            mensajeError = "";
+
+            if (proveedorActual.Id == 0)
+                await ProveedorHttpService.CreateAsync(proveedorActual);
+            else
+                await ProveedorHttpService.UpdateAsync(proveedorActual);
+
+            await Cargar();
+            Cerrar();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = ex.Message;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private async Task Eliminar(int id)
+    {
+        try
+        {
+            var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "¿Eliminar proveedor?");
+            if (!confirm) return;
+
+            await ProveedorHttpService.DeleteAsync(id);
+            await Cargar();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = ex.Message;
+        }
+    }
+}

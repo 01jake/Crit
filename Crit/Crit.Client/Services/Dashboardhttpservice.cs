@@ -5,7 +5,6 @@ namespace Crit.Client.Services
 {
     public class Dashboardhttpservice
     {
-     
         private readonly HttpClient _httpClient;
         private readonly ILogger<Dashboardhttpservice> _logger;
 
@@ -19,28 +18,41 @@ namespace Crit.Client.Services
         {
             try
             {
-                var stats = await _httpClient.GetFromJsonAsync<DashboardStatsDto>("api/dashboard/stats");
-                return stats ?? new DashboardStatsDto();
+                return await _httpClient.GetFromJsonAsync<DashboardStatsDto>("api/dashboard/stats")
+                       ?? new DashboardStatsDto();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener estadísticas");
+                _logger.LogError(ex, "Error al obtener stats");
                 return new DashboardStatsDto();
             }
         }
 
-        public async Task<List<VentasPorMesDto>> GetVentasPorMesAsync(int meses = 6)
+        public async Task<List<CashFlowDto>> GetCashFlowAsync(int meses = 6)
         {
             try
             {
-                var ventas = await _httpClient.GetFromJsonAsync<List<VentasPorMesDto>>(
-                    $"api/dashboard/ventas-por-mes?meses={meses}");
-                return ventas ?? new List<VentasPorMesDto>();
+                return await _httpClient.GetFromJsonAsync<List<CashFlowDto>>($"api/dashboard/cash-flow?meses={meses}")
+                       ?? new List<CashFlowDto>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener ventas por mes");
-                return new List<VentasPorMesDto>();
+                _logger.LogError(ex, "Error al obtener cash flow");
+                return new List<CashFlowDto>();
+            }
+        }
+
+        public async Task<List<VentasPorDiaDto>> GetVentasPorDiaAsync(int dias = 30)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<VentasPorDiaDto>>($"api/dashboard/ventas-por-dia?dias={dias}")
+                       ?? new List<VentasPorDiaDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener ventas por día");
+                return new List<VentasPorDiaDto>();
             }
         }
 
@@ -48,32 +60,44 @@ namespace Crit.Client.Services
         {
             try
             {
-                var productos = await _httpClient.GetFromJsonAsync<List<ProductoMasVendidoDto>>(
-                    $"api/dashboard/productos-mas-vendidos?cantidad={cantidad}");
-                return productos ?? new List<ProductoMasVendidoDto>();
+                return await _httpClient.GetFromJsonAsync<List<ProductoMasVendidoDto>>($"api/dashboard/productos-mas-vendidos?cantidad={cantidad}")
+                       ?? new List<ProductoMasVendidoDto>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener productos más vendidos");
+                _logger.LogError(ex, "Error al obtener top productos");
                 return new List<ProductoMasVendidoDto>();
             }
         }
 
-        public async Task<DashboardAlertasDto> GetAlertasAsync()
+        public async Task<DashboardAlertaDto> GetAlertasAsync()
         {
             try
             {
-                var alertas = await _httpClient.GetFromJsonAsync<DashboardAlertasDto>("api/dashboard/alertas");
-                return alertas ?? new DashboardAlertasDto();
+                return await _httpClient.GetFromJsonAsync<DashboardAlertaDto>("api/dashboard/alertas")
+                       ?? new DashboardAlertaDto();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener alertas");
-                return new DashboardAlertasDto();
+                return new DashboardAlertaDto();
+            }
+        }
+
+        public async Task<List<VentaRecienteDto>> GetVentasRecientesAsync(int cantidad = 5)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<VentaRecienteDto>>($"api/dashboard/ventas-recientes?cantidad={cantidad}")
+                       ?? new List<VentaRecienteDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener ventas recientes");
+                return new List<VentaRecienteDto>();
             }
         }
     }
-
     // DTO para alertas
     public class DashboardAlertasDto
     {
