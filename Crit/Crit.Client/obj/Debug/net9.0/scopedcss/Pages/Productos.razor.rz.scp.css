@@ -1,0 +1,36 @@
+
+/* Estilos específicos para inventario */
+.row-warning[b-dpvdm037ze] {
+    background-color: rgba(255, 193, 7, 0.05) !important;
+}
+
+.stat-card[b-dpvdm037ze] {
+    border-radius: 12px;
+    transition: transform 0.2s;
+}
+
+    .stat-card:hover[b-dpvdm037ze] {
+        transform: translateY(-3px);
+    }
+
+/* Sobreescribir status badges para stock */
+.status-badge.bg-danger[b-dpvdm037ze] {
+    background-color: #fee2e2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca;
+}
+
+.status-badge.bg-warning[b-dpvdm037ze] {
+    background-color: #fef3c7 !important;
+    color: #d97706 !important;
+    border: 1px solid #fde68a;
+}
+
+.status-badge.bg-success[b-dpvdm037ze] {
+    background-color: #dcfce7 !important;
+    color: #16a34a !important;
+    border: 1px solid #bbf7d0;
+}
+
+/* Los mismos estilos compartidos de los otros módulos... */
+

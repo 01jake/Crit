@@ -22,6 +22,9 @@ namespace Crit.Shared.Models
         public string Estado { get; set; } = "Completada";
         public string? Notas { get; set; }
         public string? UsuarioId { get; set; }
+        public string? MetodoPago { get; set; } 
+        public string? FormaPago { get; set; }  
+        public string? UsoCFDI { get; set; }
         // Navegación
         public Cliente? Cliente { get; set; }
         public List<DetalleVenta> Detalles { get; set; } = new();

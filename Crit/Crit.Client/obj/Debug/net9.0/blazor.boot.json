@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "Crit.Client",
   "resources": {
-    "hash": "sha256-3N+G5vDmANm1IU7sbL+c9VutelbVMIEeErijslGF7NY=",
+    "hash": "sha256-pAi6bd8kzJ6zePiS/+pqvYnXFEAJSsmRso0JrAqfAIw=",
     "fingerprinting": {
       "Blazor-ApexCharts.mo0reimspa.wasm": "Blazor-ApexCharts.wasm",
       "Microsoft.AspNetCore.Authorization.phaa9r44xv.wasm": "Microsoft.AspNetCore.Authorization.wasm",
@@ -218,10 +218,10 @@
       "icudt_CJK.tjcz0u77k5.dat": "icudt_CJK.dat",
       "icudt_EFIGS.tptq2av103.dat": "icudt_EFIGS.dat",
       "icudt_no_CJK.lfu7j35m59.dat": "icudt_no_CJK.dat",
-      "Crit.Shared.b2418lrt86.wasm": "Crit.Shared.wasm",
-      "Crit.Shared.dmakluk5bv.pdb": "Crit.Shared.pdb",
-      "Crit.Client.0epocmc1sy.wasm": "Crit.Client.wasm",
-      "Crit.Client.q5xtj29yvn.pdb": "Crit.Client.pdb"
+      "Crit.Shared.4p7icr5klt.wasm": "Crit.Shared.wasm",
+      "Crit.Shared.hohbvev5f0.pdb": "Crit.Shared.pdb",
+      "Crit.Client.w7i6flg5n8.wasm": "Crit.Client.wasm",
+      "Crit.Client.1a6r1yges1.pdb": "Crit.Client.pdb"
     },
     "jsModuleNative": {
       "dotnet.native.rtblh4npr3.js": "sha256-HyBzcYNpT2l19+f1bpjNOa1oFoLe3K4JIQ6GsFK5m6I="
@@ -448,12 +448,12 @@
       "WindowsBase.u25hol0de4.wasm": "sha256-CgB28KCiYKHd4yK6IM0PJ526P7IbRCpNkGTqn+cLwxs=",
       "mscorlib.brg9pkj3je.wasm": "sha256-FzZwzxUYYyg3qxc7Km8r50UKAmRWrIeckSFG1NTHKNU=",
       "netstandard.wuzd3f1y6v.wasm": "sha256-yAXc0deBIRkWTVXqADZfhgZtrxGgJCIbZYVtA0NjvdM=",
-      "Crit.Shared.b2418lrt86.wasm": "sha256-Lcnef3AdG9K44n077DdYCJPqwDoMfuy3LTVZ0AxNpeE=",
-      "Crit.Client.0epocmc1sy.wasm": "sha256-iDrWQhfyykQ+X3f6AdB3gEahWF+XsYyq4Nu6QlVUPmA="
+      "Crit.Shared.4p7icr5klt.wasm": "sha256-eB9hFhewM5QpfyGOrGL2Jcd21JDsPxcROTDjdad8cVU=",
+      "Crit.Client.w7i6flg5n8.wasm": "sha256-RDuMz/rmH8/WV3PyEeuPw4HSczmeUDwN0+MLFd0kq9w="
     },
     "pdb": {
-      "Crit.Shared.dmakluk5bv.pdb": "sha256-xV+D4BBWHnlhcfntllsgJGW/7iyJHneyBKxXmbPfhn0=",
-      "Crit.Client.q5xtj29yvn.pdb": "sha256-HpgogSpm61cKs8tGehmEoHgGJpAR7Lwmsxl5w0RIpxE="
+      "Crit.Shared.hohbvev5f0.pdb": "sha256-QdWw7n4faE9fUXX5WpP5RzTwVkHvV88UYNMPMPsz6JY=",
+      "Crit.Client.1a6r1yges1.pdb": "sha256-d76QY9rwgcKq5rzdIJY3FF+qyWBJeXpPGKj3C7Z7sJQ="
     }
   },
   "cacheBootResources": true,

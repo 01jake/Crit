@@ -278,6 +278,11 @@ namespace Crit.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
 
+                    b.Property<string>("CodigoPostal")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
                     b.Property<string>("Direccion")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -295,11 +300,19 @@ namespace Crit.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("RFC")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
+
+                    b.Property<string>("RegimenFiscal")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Telefono")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UsoCFDI")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
@@ -746,8 +759,14 @@ namespace Crit.Migrations
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FormaPago")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("IVA")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("MetodoPago")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Notas")
                         .HasColumnType("nvarchar(max)");
@@ -760,6 +779,9 @@ namespace Crit.Migrations
 
                     b.Property<decimal>("Total")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UsoCFDI")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UsuarioId")
                         .HasColumnType("nvarchar(max)");

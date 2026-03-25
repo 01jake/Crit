@@ -5,156 +5,211 @@
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject ClienteHttpService ClienteHttpService
-
 @inject IJSRuntime JSRuntime
 
-<div class="container-fluid">
+<PageTitle>Gestión de Clientes</PageTitle>
+
+<div class="admin-container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Gestión de Clientes</h2>
-        <button class="btn btn-primary" @onclick="MostrarModalNuevo">
-            <i class="bi bi-plus-circle"></i> Nuevo Cliente
+        <div>
+            <h2 class="page-title mb-0">Gestión de Clientes</h2>
+            <p class="text-muted small">Administra la base de datos de compradores y sus datos fiscales para pre-facturación</p>
+        </div>
+
+        <button class="btn btn-primary shadow-sm px-4" @onclick="MostrarModalNuevo">
+            <i class="bi bi-person-plus-fill me-2"></i> Nuevo Cliente
         </button>
+    </div>
+
+    @* Buscador y Filtros *@
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <div class="search-box-container">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" placeholder="Buscar por nombre, email o RFC..."
+                               @bind="terminoBusqueda" @bind:event="oninput" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select border-light-subtle" @bind="filtroEstado">
+                        <option value="todos">Todos los estados</option>
+                        <option value="activos">Solo Activos</option>
+                        <option value="inactivos">Solo Inactivos</option>
+                    </select>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if (loading)
     {
-        <div class="text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Cargando...</span>
-            </div>
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-custom"></div>
         </div>
     }
     else
     {
-        <div class="card">
-            <div class="card-body">
-                <!-- Buscador -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <input type="text" class="form-control" placeholder="Buscar cliente..."
-                               @bind="terminoBusqueda" @bind:event="oninput" />
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" @bind="filtroEstado">
-                            <option value="todos">Todos</option>
-                            <option value="activos">Activos</option>
-                            <option value="inactivos">Inactivos</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Tabla -->
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+        <div class="card shadow-sm border-0 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Cliente</th>
+                            <th>Contacto</th>
+                            <th>Datos Fiscales</th>
+                            <th>Estado</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var cliente in ClientesFiltrados)
+                        {
                             <tr>
-                                <th>Nombre</th>
-                                <th>Email</th>
-                                <th>Teléfono</th>
-                                <th>RFC</th>
-                                <th>Fecha Registro</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle me-3">
+                                            @cliente.Nombre.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@cliente.Nombre</div>
+                                            <div class="text-muted extra-small">ID: #@cliente.Id</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="small"><i class="bi bi-envelope me-1 text-muted"></i> @cliente.Email</div>
+                                    <div class="small"><i class="bi bi-telephone me-1 text-muted"></i> @(cliente.Telefono ?? "S/N")</div>
+                                </td>
+                                <td>
+                                    <div class="small fw-bold text-secondary">RFC: @(string.IsNullOrEmpty(cliente.RFC) ? "XAXX010101000" : cliente.RFC)</div>
+                                    <div class="extra-small text-muted">CP: @(cliente.CodigoPostal ?? "S/N")</div>
+                                </td>
+                                <td>
+                                    <span class="status-badge @(cliente.Activo ? "status-active" : "status-inactive")">
+                                        @(cliente.Activo ? "Activo" : "Inactivo")
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group shadow-sm">
+                                        <button class="btn btn-white btn-sm" @onclick="() => EditarCliente(cliente)">
+                                            <i class="bi bi-pencil-square text-primary"></i>
+                                        </button>
+                                        <button class="btn btn-white btn-sm" @onclick="() => EliminarCliente(cliente.Id)">
+                                            <i class="bi bi-trash3 text-danger"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var cliente in ClientesFiltrados)
-                            {
-                                <tr>
-                                    <td>@cliente.Nombre</td>
-                                    <td>@cliente.Email</td>
-                                    <td>@cliente.Telefono</td>
-                                    <td>@cliente.RFC</td>
-                                    <td>@cliente.FechaRegistro.ToString("dd/MM/yyyy")</td>
-                                    <td>
-                                        <span class="badge @(cliente.Activo ? "bg-success" : "bg-secondary")">
-                                            @(cliente.Activo ? "Activo" : "Inactivo")
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary" @onclick="() => EditarCliente(cliente)">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" @onclick="() => EliminarCliente(cliente.Id)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
 </div>
 
-<!-- Modal para Crear/Editar Cliente -->
 @if (mostrarModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">@(clienteActual.Id == 0 ? "Nuevo Cliente" : "Editar Cliente")</h5>
-                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white border-0">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi @(clienteActual.Id == 0 ? "bi-person-plus" : "bi-person-gear") me-2"></i>
+                        @(clienteActual.Id == 0 ? "Nuevo Cliente" : "Editar Cliente")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
-                <div class="modal-body">
+
+                <div class="modal-body p-4 bg-light">
                     <EditForm Model="clienteActual" OnValidSubmit="GuardarCliente">
                         <DataAnnotationsValidator />
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nombre *</label>
-                                <InputText class="form-control" @bind-Value="clienteActual.Nombre" />
-                                <ValidationMessage For="@(() => clienteActual.Nombre)" />
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-person-vcard me-2"></i>Información de Contacto</h6>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Email *</label>
-                                <InputText type="email" class="form-control" @bind-Value="clienteActual.Email" />
-                                <ValidationMessage For="@(() => clienteActual.Email)" />
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Teléfono</label>
-                                <InputText class="form-control" @bind-Value="clienteActual.Telefono" />
-                                <ValidationMessage For="@(() => clienteActual.Telefono)" />
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">RFC</label>
-                                <InputText class="form-control" @bind-Value="clienteActual.RFC" />
-                                <ValidationMessage For="@(() => clienteActual.RFC)" />
-                            </div>
-
-                            <div class="col-12 mb-3">
-                                <label class="form-label">Dirección</label>
-                                <InputTextArea class="form-control" @bind-Value="clienteActual.Direccion" rows="3" />
-                                <ValidationMessage For="@(() => clienteActual.Direccion)" />
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="clienteActual.Activo" />
-                                    <label class="form-check-label">Activo</label>
+                            <div class="card-body row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold small">Nombre / Razón Social *</label>
+                                    <InputText class="form-control" @bind-Value="clienteActual.Nombre" placeholder="Juan Pérez" />
+                                    <ValidationMessage For="@(() => clienteActual.Nombre)" class="text-danger small" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small">Teléfono</label>
+                                    <InputText class="form-control" @bind-Value="clienteActual.Telefono" />
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold small">Correo Electrónico *</label>
+                                    <InputText class="form-control" @bind-Value="clienteActual.Email" />
+                                    <ValidationMessage For="@(() => clienteActual.Email)" class="text-danger small" />
                                 </div>
                             </div>
                         </div>
 
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="mb-0 fw-bold text-success"><i class="bi bi-file-earmark-text me-2"></i>Datos SAT (Fiscales)</h6>
+                            </div>
+                            <div class="card-body row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">RFC *</label>
+                                    <InputText class="form-control fw-bold"
+                                               @bind-Value="clienteActual.RFC"
+                                               @onblur="NormalizarRFC"
+                                               placeholder="ABCD000000XXX"
+                                               style="text-transform: uppercase;" />
+                                    <ValidationMessage For="@(() => clienteActual.RFC)" class="text-danger small" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">Código Postal *</label>
+                                    <InputText class="form-control" @bind-Value="clienteActual.CodigoPostal" maxlength="5" />
+                                    <ValidationMessage For="@(() => clienteActual.CodigoPostal)" class="text-danger small" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">Régimen Fiscal</label>
+                                    <InputSelect class="form-select" @bind-Value="clienteActual.RegimenFiscal">
+                                        <option value="">Seleccione...</option>
+                                        <option value="601">601 - General de Ley Personas Morales</option>
+                                        <option value="612">612 - Actividades Empresariales y Prof.</option>
+                                        <option value="626">626 - Régimen Simplificado de Confianza</option>
+                                        <option value="605">605 - Sueldos y Salarios</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">Uso de CFDI</label>
+                                    <InputSelect class="form-select" @bind-Value="clienteActual.UsoCFDI">
+                                        <option value="">Seleccione...</option>
+                                        <option value="G03">G03 - Gastos en general</option>
+                                        <option value="G01">G01 - Adquisición de mercancías</option>
+                                        <option value="I01">I01 - Construcciones</option>
+                                        <option value="S01">S01 - Sin efectos fiscales</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold small">Dirección Fiscal / Entrega</label>
+                                    <InputTextArea class="form-control" @bind-Value="clienteActual.Direccion" rows="2" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch p-3 bg-white rounded ps-5 shadow-sm mb-3">
+                            <InputCheckbox class="form-check-input ms-0" @bind-Value="clienteActual.Activo" id="chkActivo" />
+                            <label class="form-check-label ms-2 fw-bold" for="chkActivo">Cliente habilitado para operaciones</label>
+                        </div>
+
                         @if (!string.IsNullOrEmpty(mensajeError))
                         {
-                            <div class="alert alert-danger">@mensajeError</div>
+                            <div class="alert alert-danger py-2 small">@mensajeError</div>
                         }
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary" disabled="@guardando">
-                                @if (guardando)
-                                {
-                                    <span class="spinner-border spinner-border-sm"></span>
-                                }
-                                Guardar
+                        <div class="modal-footer border-0 px-0 pb-0">
+                            <button type="button" class="btn btn-outline-secondary px-4" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary px-5" disabled="@guardando">
+                                @(guardando ? "Guardando..." : "Guardar Cliente")
                             </button>
                         </div>
                     </EditForm>
@@ -165,7 +220,6 @@
 }
 
 @code {
-
     private List<Cliente> clientes = new();
     private Cliente clienteActual = new();
     private bool loading = true;
@@ -175,15 +229,12 @@
     private string filtroEstado = "todos";
     private string mensajeError = "";
 
-    private IEnumerable<Cliente> ClientesFiltrados =>
-        clientes.Where(c =>
-            (string.IsNullOrEmpty(terminoBusqueda) ||
-             c.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase) ||
-             c.Email.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) &&
-            (filtroEstado == "todos" ||
-             (filtroEstado == "activos" && c.Activo) ||
-             (filtroEstado == "inactivos" && !c.Activo))
-        );
+    private IEnumerable<Cliente> ClientesFiltrados => clientes.Where(c =>
+        (string.IsNullOrEmpty(terminoBusqueda) ||
+         c.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+         (c.RFC?.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+        (filtroEstado == "todos" || (filtroEstado == "activos" && c.Activo) || (filtroEstado == "inactivos" && !c.Activo))
+    );
 
     protected override async Task OnInitializedAsync()
     {
@@ -191,23 +242,19 @@
         loading = false;
     }
 
-    private async Task CargarClientes()
-    {
-        try
-        {
-            clientes = await ClienteHttpService.GetClientesAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al cargar clientes: {ex.Message}");
-        }
-    }
+    private async Task CargarClientes() => clientes = await ClienteHttpService.GetClientesAsync();
 
     private void MostrarModalNuevo()
     {
         clienteActual = new Cliente { Activo = true };
         mensajeError = "";
         mostrarModal = true;
+    }
+
+    private void NormalizarRFC()
+    {
+        if (!string.IsNullOrEmpty(clienteActual.RFC))
+            clienteActual.RFC = clienteActual.RFC.ToUpper().Trim();
     }
 
     private void EditarCliente(Cliente cliente)
@@ -219,19 +266,14 @@
             Email = cliente.Email,
             Telefono = cliente.Telefono,
             RFC = cliente.RFC,
+            CodigoPostal = cliente.CodigoPostal,
+            RegimenFiscal = cliente.RegimenFiscal,
+            UsoCFDI = cliente.UsoCFDI,
             Direccion = cliente.Direccion,
             Activo = cliente.Activo,
             FechaRegistro = cliente.FechaRegistro
         };
-        mensajeError = "";
         mostrarModal = true;
-    }
-
-    private void CerrarModal()
-    {
-        mostrarModal = false;
-        clienteActual = new();
-        mensajeError = "";
     }
 
     private async Task GuardarCliente()
@@ -239,49 +281,23 @@
         try
         {
             guardando = true;
-            mensajeError = "";
-
-            if (clienteActual.Id == 0)
-            {
-                await ClienteHttpService.CreateClienteAsync(clienteActual);
-            }
-            else
-            {
-                await ClienteHttpService.UpdateClienteAsync(clienteActual);
-            }
-
+            if (clienteActual.Id == 0) await ClienteHttpService.CreateClienteAsync(clienteActual);
+            else await ClienteHttpService.UpdateClienteAsync(clienteActual);
             await CargarClientes();
             CerrarModal();
         }
-        catch (HttpRequestException ex)
-        {
-            mensajeError = $"Error de conexión: {ex.Message}";
-        }
-        catch (Exception ex)
-        {
-            mensajeError = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            guardando = false;
-        }
+        catch (Exception ex) { mensajeError = ex.Message; }
+        finally { guardando = false; }
     }
+
+    private void CerrarModal() => mostrarModal = false;
 
     private async Task EliminarCliente(int id)
     {
-        try
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "¿Eliminar cliente?"))
         {
-            var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", "¿Está seguro de eliminar este cliente?");
-            if (confirmado)
-            {
-                await ClienteHttpService.DeleteClienteAsync(id);
-                await CargarClientes();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al eliminar cliente: {ex.Message}");
-            mensajeError = $"Error al eliminar: {ex.Message}";
+            await ClienteHttpService.DeleteClienteAsync(id);
+            await CargarClientes();
         }
     }
 }

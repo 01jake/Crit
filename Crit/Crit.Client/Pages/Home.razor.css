@@ -1,30 +1,194 @@
-﻿.hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+﻿/* Globales y Variables */
+.home-wrapper {
+    overflow-x: hidden;
 }
 
-    .hover-lift:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
-    }
-
-.smooth-scroll {
-    scroll-behavior: smooth;
+.ls-2 {
+    letter-spacing: 2px;
 }
 
+.text-gradient {
+    background: linear-gradient(to right, #ffffff, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Hero Section */
 .hero-section {
+    background: #1F2A44;
+    min-height: 80vh;
+    padding: 40px 0 60px 0; /* Reducimos a la mitad para móvil */
     position: relative;
-    z-index: 1;
+    display: flex;
+    align-items: center; /* Centra el contenido verticalmente si sobra espacio */
 }
 
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-        opacity: 0.5;
-        /* 🔥 CLAVE */
-        pointer-events: none;
+.hero-bg-accent {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(31, 42, 68, 0) 0%, rgba(30, 64, 175, 0.2) 100%);
+    clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+.btn-main-action {
+    background-color: #3c3c3c; /* Color de tu Nav */
+    color: white;
+    border: none;
+    transition: all 0.3s;
+}
+
+    .btn-main-action:hover {
+        background-color: #ffffff;
+        color: #1F2A44;
+        transform: translateY(-3px);
     }
+
+/* Glass Card Hero */
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 24px;
+    max-width: 350px; 
+    margin-left: auto;
+    width: 100%; 
+}
+
+.mock-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 100px;
+    background: #f1f5f9;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+    .mock-chart .bar {
+        flex: 1;
+        background: #3b82f6;
+        border-radius: 4px;
+        animation: grow 2s ease-out;
+    }
+
+/* Stats Section */
+.stats-overlay {
+    margin-top: -60px;
+    position: relative;
+  
+}
+
+/* Feature Cards */
+.feature-card {
+    background: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+.separator {
+    width: 60px;
+    height: 4px;
+    background: #3b82f6;
+    border-radius: 2px;
+    margin-top: 15px;
+}
+
+/* Icon Boxes */
+[class^="icon-box-"] {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+}
+
+.icon-box-blue {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.icon-box-green {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.icon-box-info {
+    background: #e0f7fa;
+    color: #00acc1;
+}
+
+.icon-box-orange {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+.icon-box-purple {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.icon-box-dark {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.bg-dark-custom {
+    background-color: #111827;
+}
+
+/* Animaciones */
+@keyframes grow {
+    from {
+        height: 0;
+    }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@media (max-width: 991px) {
+    .hero-section {
+        text-align: center;
+        padding-top: 20px; /* Sube el contenido casi al tope del Nav */
+    }
+
+    .glass-card {
+        margin: 20px auto;
+        max-width: 90%; /* Ahora el cuadro abarca casi todo el ancho del cel */
+        padding: 10px;
+    }
+
+    .hero-bg-accent {
+        display: none;
+    }
+
+    /* Ajuste de textos para que no ocupen tanto espacio vertical */
+    .hero-section h1 {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-section p {
+        font-size: 1rem;
+        padding: 0 15px;
+    }
+}

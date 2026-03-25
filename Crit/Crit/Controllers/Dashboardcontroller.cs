@@ -21,13 +21,29 @@ namespace Crit.Controllers
         }
 
         [HttpGet("stats")]
-        public async Task<ActionResult<DashboardStatsDto>> GetStats()
+        public async Task<ActionResult<DashboardStatsDto>> GetStats([FromQuery] string? fechaInicio = null)
         {
             try
             {
                 var hoy = DateTime.Today;
-                var inicioMes = new DateTime(hoy.Year, hoy.Month, 1);
+                DateTime inicioFiltro;
 
+                // Si el cliente envía una fecha (7 días, hoy, etc.), la usamos.
+                // Si no envía nada o el formato es incorrecto, usamos el primero de mes por defecto.
+                if (string.IsNullOrEmpty(fechaInicio) || !DateTime.TryParse(fechaInicio, out inicioFiltro))
+                {
+                    inicioFiltro = new DateTime(hoy.Year, hoy.Month, 1);
+                }
+
+                // 1. VENTAS DEL PERIODO FILTRADO (Dinámico)
+                var ventasPeriodo = await _context.Ventas
+                    .AsNoTracking()
+                    .Include(v => v.Detalles)
+                        .ThenInclude(d => d.Producto)
+                    .Where(v => v.Fecha >= inicioFiltro)
+                    .ToListAsync();
+
+                // 2. VENTAS DE HOY (Estático, para el cuadro de "Hoy")
                 var ventasHoy = await _context.Ventas
                     .AsNoTracking()
                     .Include(v => v.Detalles)
@@ -35,64 +51,48 @@ namespace Crit.Controllers
                     .Where(v => v.Fecha.Date == hoy)
                     .ToListAsync();
 
-                var ventasMes = await _context.Ventas
-                    .AsNoTracking()
-                    .Include(v => v.Detalles)
-                        .ThenInclude(d => d.Producto)
-                    .Where(v => v.Fecha >= inicioMes)
-                    .ToListAsync();
+                var productos = await _context.Productos.AsNoTracking().ToListAsync();
 
-                var productos = await _context.Productos
-                    .AsNoTracking()
-                    .ToListAsync();
+                // CÁLCULOS DEL PERIODO (Los que cambian con el botón)
+                decimal ingresosPeriodo = ventasPeriodo.Sum(v => v.Total);
+                decimal costoVentasPeriodo = ventasPeriodo.Sum(v =>
+                    v.Detalles.Sum(d => d.Cantidad * (d.Producto?.PrecioCompra ?? 0m)));
+                decimal utilidadBrutaPeriodo = ingresosPeriodo - costoVentasPeriodo;
 
+                // CÁLCULOS DE HOY (Los que siempre muestran el día actual)
                 decimal ingresosHoy = ventasHoy.Sum(v => v.Total);
-                decimal ingresosMes = ventasMes.Sum(v => v.Total);
-
                 decimal costoVentasHoy = ventasHoy.Sum(v =>
                     v.Detalles.Sum(d => d.Cantidad * (d.Producto?.PrecioCompra ?? 0m)));
 
-                decimal costoVentasMes = ventasMes.Sum(v =>
-                    v.Detalles.Sum(d => d.Cantidad * (d.Producto?.PrecioCompra ?? 0m)));
-
-                decimal utilidadBrutaHoy = ingresosHoy - costoVentasHoy;
-                decimal utilidadBrutaMes = ingresosMes - costoVentasMes;
-
-                decimal margenBrutoHoy = ingresosHoy > 0 ? (utilidadBrutaHoy / ingresosHoy) * 100m : 0m;
-                decimal margenBrutoMes = ingresosMes > 0 ? (utilidadBrutaMes / ingresosMes) * 100m : 0m;
-
-                decimal ticketPromedioHoy = ventasHoy.Count > 0 ? ingresosHoy / ventasHoy.Count : 0m;
-                decimal ticketPromedioMes = ventasMes.Count > 0 ? ingresosMes / ventasMes.Count : 0m;
-
-                int productosBajoStock = productos.Count(p => p.Stock <= p.StockMinimo);
-
-                decimal valorInventario = productos.Sum(p => p.Stock * p.PrecioCompra);
-
                 var stats = new DashboardStatsDto
                 {
+                    // Mapeamos los datos filtrados a las propiedades que usa el Dash
+                    IngresosMes = ingresosPeriodo,
+                    CostoVentasMes = costoVentasPeriodo,
+                    UtilidadBrutaMes = utilidadBrutaPeriodo,
+                    MargenBrutoMes = ingresosPeriodo > 0 ? (utilidadBrutaPeriodo / ingresosPeriodo) * 100m : 0m,
+                    VentasMes = ventasPeriodo.Count,
+                    TicketPromedioMes = ventasPeriodo.Count > 0 ? ingresosPeriodo / ventasPeriodo.Count : 0m,
+
+                    // Datos de hoy
                     IngresosHoy = ingresosHoy,
-                    IngresosMes = ingresosMes,
                     CostoVentasHoy = costoVentasHoy,
-                    CostoVentasMes = costoVentasMes,
-                    UtilidadBrutaHoy = utilidadBrutaHoy,
-                    UtilidadBrutaMes = utilidadBrutaMes,
-                    MargenBrutoHoy = margenBrutoHoy,
-                    MargenBrutoMes = margenBrutoMes,
-                    TicketPromedioHoy = ticketPromedioHoy,
-                    TicketPromedioMes = ticketPromedioMes,
+                    UtilidadBrutaHoy = ingresosHoy - costoVentasHoy,
                     VentasHoy = ventasHoy.Count,
-                    VentasMes = ventasMes.Count,
+                    TicketPromedioHoy = ventasHoy.Count > 0 ? ingresosHoy / ventasHoy.Count : 0m,
+
+                    // Datos Globales
                     TotalClientes = await _context.Clientes.CountAsync(),
                     TotalProductos = productos.Count,
-                    ProductosBajoStock = productosBajoStock,
-                    ValorInventario = valorInventario
+                    ProductosBajoStock = productos.Count(p => p.Stock <= p.StockMinimo),
+                    ValorInventario = productos.Sum(p => p.Stock * p.PrecioCompra)
                 };
 
                 return Ok(stats);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener stats del dashboard");
+                _logger.LogError(ex, "Error al obtener stats unificados");
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -280,5 +280,6 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+       
     }
 }

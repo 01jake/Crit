@@ -1,0 +1,30 @@
+.auth-wrapper[b-mr2irxgfiq] {
+    background: linear-gradient(135deg, #1F2A44 0%, #111827 100%); /* Colores de tu sidebar */
+}
+
+.auth-card[b-mr2irxgfiq] {
+    max-width: 420px;
+    width: 100%;
+    border-radius: 1.5rem;
+    background: white;
+}
+
+.user-badge h5[b-mr2irxgfiq] {
+    color: #1F2A44;
+}
+
+.btn-primary[b-mr2irxgfiq] {
+    background-color: #0d6efd; /* Azul de tus botones de reporte */
+    border: none;
+    transition: transform 0.2s;
+}
+
+    .btn-primary:hover[b-mr2irxgfiq] {
+        background-color: #0b5ed7;
+        transform: translateY(-2px);
+    }
+
+.x-small[b-mr2irxgfiq] {
+    font-size: 0.75rem;
+    letter-spacing: 0.05rem;
+}

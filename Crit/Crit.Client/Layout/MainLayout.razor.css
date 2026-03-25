@@ -1,8 +1,12 @@
 .page {
-    position: relative;
     display: flex;
-    flex-direction: column;
-    height: 100vh;
+    flex-direction: row; /* Alineación horizontal para escritorio */
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+    background-color: #f8fafc;
 }
 
 .main-container {
@@ -75,7 +79,7 @@
     position: fixed;
     width: 100%;
     z-index: 1000;
-    color: #8b4513;
+    color: #d1d5db;
 }
 
     #blazor-error-ui .dismiss {
@@ -104,4 +108,45 @@
     .content {
         padding: 1rem;
     }
+}
+@media (max-width: 991.98px) {
+    .page {
+        flex-direction: column;
+    }
+
+    main {
+        margin-left: 0;
+        /* Ajusta este valor según la altura de tu mobile-top-bar */
+    }
+}
+@media (min-width: 992px) {
+    .page {
+        display: flex; /* Asegura que sidebar y main estén a la par */
+    }
+
+    .sidebar-container {
+        width: 260px;
+        position: fixed; /* Fija la barra a la izquierda */
+        height: 100vh;
+    }
+
+    main {
+        margin-left: 260px; /* Desplaza el contenido exactamente el ancho de la barra */
+        width: calc(100% - 260px); /* Evita que el contenido se desborde */
+        padding: 2rem;
+        min-height: 100vh;
+    }
+}
+/* Asegura que la barra móvil no flote sobre el contenido sin espacio */
+.mobile-top-bar {
+    height: 80px; /* Define una altura fija */
+    display: flex;
+    align-items: center;
+}
+
+.content {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 1.5rem;
 }

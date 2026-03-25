@@ -306,75 +306,183 @@ namespace Crit.Controllers
         {
             QuestPDF.Settings.License = LicenseType.Community;
 
+            // Definición de Colores e Identidad
+            var colorPrimario = Color.FromHex("#1F2A44");
+            var colorGrisClaro = Color.FromHex("#F8F9FA");
+            var colorTextoSuave = Color.FromHex("#4B5563");
+            var colorBorde = Color.FromHex("#E5E7EB");
+
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
                     page.Size(PageSizes.Letter);
-                    page.Margin(2, Unit.Centimetre);
-                    page.DefaultTextStyle(x => x.FontSize(11));
-
-                    // Header
+                    page.Margin(1, Unit.Centimetre);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Helvetica"));
+                    // --- CABECERA (EMISOR) ---
                     page.Header().Row(row =>
                     {
                         row.RelativeItem().Column(col =>
                         {
-                            col.Item().Text("POLYNEX").FontSize(24).Bold().FontColor(Colors.Blue.Darken2);
-                            col.Item().Text("Sistema de Ventas").FontSize(10);
+                            col.Item().Text("POLYNEX").FontSize(24).Bold().FontColor(colorPrimario);
+                            col.Item().Text("TU NOMBRE O RAZÓN SOCIAL").FontSize(10).SemiBold();
+                            col.Item().Text("RFC: XXXX000000XXX").FontSize(9);
+                            col.Item().Text("Calle Ejemplo #123, Col. Centro").FontSize(9);
+                            col.Item().Text("Hermosillo, Sonora, CP: 83000").FontSize(9);
                         });
 
                         row.RelativeItem().AlignRight().Column(col =>
                         {
-                            col.Item().Text($"VENTA #{venta.NumeroVenta}").FontSize(14).Bold();
-                            col.Item().Text($"Fecha: {venta.Fecha:dd/MM/yyyy}").FontSize(9);
+                            col.Item().Background(colorPrimario).Padding(5).Text("NOTA DE VENTA / PRE-FACTURA").FontColor(Colors.White).Bold().AlignCenter();
+                            col.Item().Border(1).BorderColor(colorPrimario).Padding(5).AlignCenter().Column(innerCol =>
+                            {
+                                innerCol.Item().Text("FOLIO").FontSize(8).Bold();
+                                innerCol.Item().Text($"{venta.NumeroVenta}").FontSize(14).Bold().FontColor(colorPrimario);
+                            });
+                            col.Item().PaddingTop(5).Text($"Fecha: {venta.Fecha:dd/MM/yyyy HH:mm}").FontSize(9);
                         });
                     });
 
-                    // Content
-                    page.Content().PaddingVertical(10).Column(column =>
+                    // --- DATOS DEL CLIENTE (RECEPTOR) ---
+                    page.Content().PaddingVertical(20).Column(column =>
                     {
-                        column.Item().Text("CLIENTE").FontSize(12).Bold();
-                        column.Item().Text($"{venta.Cliente?.Nombre ?? "N/A"}");
-                        column.Item().Text($"{venta.Cliente?.Email ?? ""}").FontSize(9);
+                        column.Item().Row(row =>
+                        {
+                            // --- BLOQUE IZQUIERDO: DATOS DEL CLIENTE ---
+                            row.RelativeItem().Border(1).BorderColor(colorBorde).Padding(10).Column(col =>
+                            {
+                                col.Item().Text("RECEPTOR (CLIENTE)").FontSize(8).Bold().FontColor(colorPrimario);
 
-                        column.Item().PaddingVertical(10).LineHorizontal(1);
+                                // Nombre del cliente
+                                col.Item().Text(venta.Cliente?.Nombre ?? "PÚBLICO EN GENERAL").FontSize(11).Bold();
 
+                                // RFC
+                                col.Item().Text($"RFC: {(string.IsNullOrEmpty(venta.Cliente?.RFC) ? "XAXX010101000" : venta.Cliente.RFC.ToUpper())}").FontSize(9);
+
+                                // Régimen Fiscal (Nuevo campo)
+                                if (!string.IsNullOrEmpty(venta.Cliente?.RegimenFiscal))
+                                {
+                                    col.Item().Text($"Régimen: {venta.Cliente.RegimenFiscal}").FontSize(8);
+                                }
+
+                                // Código Postal
+                                col.Item().Text($"CP: {venta.Cliente?.CodigoPostal ?? "S/N"}").FontSize(9);
+
+                                // Email
+                                col.Item().Text($"Email: {venta.Cliente?.Email ?? "N/A"}").FontSize(9).FontColor(colorTextoSuave);
+                            });
+
+                            row.ConstantItem(15);
+
+                            // --- BLOQUE DERECHO: DETALLES FISCALES DE LA OPERACIÓN ---
+                            row.RelativeItem().Border(1).BorderColor(colorBorde).Padding(10).Column(col =>
+                            {
+                                col.Item().Text("DETALLES DE PAGO / FISCALES").FontSize(8).Bold().FontColor(colorPrimario);
+
+                                // Método de Pago (Asegúrate de que venta.MetodoPago exista en el modelo)
+                                col.Item().Text($"Método: {(string.IsNullOrEmpty(venta.MetodoPago) ? "PUE - Pago en una sola exhibición" : venta.MetodoPago)}").FontSize(9);
+
+                                // Forma de Pago
+                                col.Item().Text($"Forma: {(string.IsNullOrEmpty(venta.FormaPago) ? "03 - Transferencia electrónica" : venta.FormaPago)}").FontSize(9);
+
+                                // Uso de CFDI corregido
+                                string usoCfdiFinal = !string.IsNullOrEmpty(venta.UsoCFDI) ? venta.UsoCFDI :
+                                                     (!string.IsNullOrEmpty(venta.Cliente?.UsoCFDI) ? venta.Cliente.UsoCFDI : "G03 - Gastos en general");
+
+                                col.Item().Text($"Uso CFDI: {usoCfdiFinal}").FontSize(9);
+
+                                col.Item().Text("Moneda: MXN - Peso Mexicano").FontSize(9);
+                            });
+                        });
+
+                        column.Item().PaddingVertical(15);
+
+                        // --- TABLA DE CONCEPTOS ---
                         column.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(1);
-                                columns.RelativeColumn(1);
-                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1); // Cantidad
+                                columns.RelativeColumn(4); // Descripción
+                                columns.RelativeColumn(1.5f); // Precio Unitario
+                                columns.RelativeColumn(1.5f); // Importe
                             });
 
                             table.Header(header =>
                             {
-                                header.Cell().Text("Producto").Bold();
-                                header.Cell().Text("Cant.").Bold();
-                                header.Cell().Text("Precio").Bold();
-                                header.Cell().Text("Subtotal").Bold();
+                                header.Cell().Element(CellStyle).Text("CANT.");
+                                header.Cell().Element(CellStyle).Text("DESCRIPCIÓN / PRODUCTO");
+                                header.Cell().Element(CellStyle).AlignRight().Text("P. UNITARIO");
+                                header.Cell().Element(CellStyle).AlignRight().Text("IMPORTE");
+
+                                static IContainer CellStyle(IContainer container) =>
+                                    container.DefaultTextStyle(x => x.SemiBold().FontColor(Colors.White))
+                                             .Background("#3c3c3c").PaddingVertical(5).PaddingHorizontal(5);
                             });
 
                             foreach (var detalle in venta.Detalles)
                             {
-                                table.Cell().Text(detalle.Producto?.Nombre ?? "");
-                                table.Cell().Text(detalle.Cantidad.ToString());
-                                table.Cell().Text($"${detalle.PrecioUnitario:N2}");
-                                table.Cell().Text($"${detalle.Subtotal:N2}");
+                                table.Cell().Element(RowStyle).AlignCenter().Text(detalle.Cantidad.ToString());
+                                table.Cell().Element(RowStyle).Text(detalle.Producto?.Nombre ?? "Sin nombre");
+                                table.Cell().Element(RowStyle).AlignRight().Text($"${detalle.PrecioUnitario:N2}");
+                                table.Cell().Element(RowStyle).AlignRight().Text($"${detalle.Subtotal:N2}");
+
+                                static IContainer RowStyle(IContainer container) =>
+                                    container.BorderBottom(1).BorderColor(Colors.Grey.Lighten3).PaddingVertical(8).PaddingHorizontal(5);
                             }
                         });
 
-                        column.Item().PaddingTop(15).AlignRight().Column(col =>
+                        // --- TOTALES ---
+                        column.Item().Row(row =>
                         {
-                            col.Item().Text($"Subtotal: ${venta.Subtotal:N2}");
-                            col.Item().Text($"IVA: ${venta.IVA:N2}");
-                            col.Item().Text($"TOTAL: ${venta.Total:N2}").FontSize(14).Bold();
+                            row.RelativeItem(); // Espacio vacío a la izquierda
+
+                            row.ConstantItem(200).PaddingTop(10).Column(col =>
+                            {
+                                col.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("SUBTOTAL").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"${venta.Subtotal:N2}");
+                                });
+                                col.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("IVA (16%)").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"${venta.IVA:N2}");
+                                });
+                                col.Item().PaddingTop(5).Background(colorGrisClaro).Padding(5).Row(r =>
+                                {
+                                    r.RelativeItem().Text("TOTAL").Bold().FontSize(12).FontColor(colorPrimario);
+                                    r.RelativeItem().AlignRight().Text($"${venta.Total:N2}").Bold().FontSize(12).FontColor(colorPrimario);
+                                });
+                            });
+                        });
+
+                        // --- TEXTO LEGAL Y FIRMA ---
+                        column.Item().PaddingTop(40).Row(row =>
+                        {
+                            row.RelativeItem().Column(col =>
+                            {
+                                col.Item().Text("ESTE DOCUMENTO NO ES UN COMPROBANTE FISCAL (CFDI)").FontSize(8).Bold().FontColor(Colors.Red.Medium);
+                                col.Item().Text("Favor de solicitar su factura en un lapso no mayor a 72 horas.").FontSize(8);
+                                col.Item().PaddingTop(10).Text("Cuentas Bancarias:").FontSize(8).Bold();
+                                col.Item().Text("Banco Ejemplo - CLABE: 0123 4567 8901 2345 67").FontSize(8);
+                            });
+
+                            row.ConstantItem(150).Column(col =>
+                            {
+                                col.Item().PaddingTop(20).LineHorizontal(0.5f);
+                                col.Item().AlignCenter().Text("Firma de Recibido").FontSize(8);
+                            });
                         });
                     });
 
-                    page.Footer().AlignCenter().Text($"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(8);
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.Span("Página ");
+                        x.CurrentPageNumber();
+                        x.Span(" de ");
+                        x.TotalPages();
+                    });
                 });
             });
 

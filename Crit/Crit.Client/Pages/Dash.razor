@@ -10,253 +10,244 @@
 
 <PageTitle>Dashboard</PageTitle>
 
-<div class="container-fluid dashboard">
+<PageTitle>Dashboard Financiero</PageTitle>
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<PageTitle>Dashboard Financiero</PageTitle>
+
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-            <h2 class="fw-bold mb-0">Dashboard Financiero</h2>
-            <small class="text-muted">Resumen general del negocio</small>
+            <h2 class="page-title mb-0">Dashboard Financiero</h2>
+            <p class="text-muted small">Resumen general del rendimiento de tu negocio</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <div class="dropdown">
+                <button class="btn btn-white shadow-sm dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false" disabled="@loading">
+                    <i class="bi bi-calendar3 text-primary me-2"></i> @RangoSeleccionadoTexto
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                    <li><h6 class="dropdown-header">Rango de datos</h6></li>
+                    <li><button class="dropdown-item @(rangoSeleccionado == "hoy" ? "active bg-primary-soft text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("hoy"))">Hoy</button></li>
+                    <li><button class="dropdown-item @(rangoSeleccionado == "7dias" ? "active bg-primary-soft text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("7dias"))">Últimos 7 días</button></li>
+                    <li><button class="dropdown-item @(rangoSeleccionado == "mes" ? "active bg-primary-soft text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("mes"))">Este Mes</button></li>
+                    <li><button class="dropdown-item @(rangoSeleccionado == "anio" ? "active bg-primary-soft text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("anio"))">Este Año</button></li>
+                </ul>
+            </div>
+
+            <button class="btn btn-primary shadow-sm d-none d-sm-block">
+                <i class="bi bi-download me-2"></i> Reporte
+            </button>
         </div>
     </div>
 
     @if (loading)
     {
-        <div class="text-center mt-5">
-            <div class="spinner-border text-primary"></div>
+        <div class="d-flex flex-column align-items-center justify-content-center py-5" style="min-height: 50vh;">
+            <div class="spinner-custom mb-3"></div>
+            <p class="text-muted fw-bold">Actualizando métricas...</p>
         </div>
     }
     else
     {
-        <!-- KPI -->
         <div class="row g-4 mb-4">
-
-            <div class="col-md-3">
-                <div class="card kpi-card">
-                    <div class="card-body">
-                        <small>Ingresos Mes</small>
-                        <h3>$@stats.IngresosMes.ToString("N0")</h3>
-                        <span class="text-success">Flujo positivo</span>
+            <div class="col-md-6 col-xl-3">
+                <div class="card kpi-card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted fw-bold mb-1 small text-uppercase">Ingresos (@RangoSeleccionadoTexto)</p>
+                                <h3 class="fw-black text-dark mb-2">$@stats.IngresosMes.ToString("N0")</h3>
+                            </div>
+                            <div class="icon-shape bg-primary-soft text-primary">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="badge bg-success-soft text-success fw-bold"><i class="bi bi-arrow-up-right"></i> Flujo Positivo</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card kpi-card">
-                    <div class="card-body">
-                        <small>Costos</small>
-                        <h3 class="text-danger">$@stats.CostoVentasMes.ToString("N0")</h3>
-                        <span class="text-muted">Mercancía</span>
+            <div class="col-md-6 col-xl-3">
+                <div class="card kpi-card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted fw-bold mb-1 small text-uppercase">Costo de Ventas</p>
+                                <h3 class="fw-black text-danger mb-2">$@stats.CostoVentasMes.ToString("N0")</h3>
+                            </div>
+                            <div class="icon-shape bg-danger-soft text-danger">
+                                <i class="bi bi-graph-down-arrow"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-muted small">Inversión en mercancía</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card kpi-card">
-                    <div class="card-body">
-                        <small>Utilidad</small>
-                        <h3 class="text-success">$@stats.UtilidadBrutaMes.ToString("N0")</h3>
-                        <span>@stats.MargenBrutoMes.ToString("N1")%</span>
+            <div class="col-md-6 col-xl-3">
+                <div class="card kpi-card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted fw-bold mb-1 small text-uppercase">Utilidad Bruta</p>
+                                <h3 class="fw-black text-success mb-2">$@stats.UtilidadBrutaMes.ToString("N0")</h3>
+                            </div>
+                            <div class="icon-shape bg-success-soft text-success">
+                                <i class="bi bi-piggy-bank"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="badge bg-light text-dark border fw-bold">Margen: @stats.MargenBrutoMes.ToString("N1")%</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card kpi-card">
-                    <div class="card-body">
-                        <small>Inventario</small>
-                        <h3>$@stats.ValorInventario.ToString("N0")</h3>
-                        <span>@stats.TotalProductos productos</span>
+            <div class="col-md-6 col-xl-3">
+                <div class="card kpi-card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted fw-bold mb-1 small text-uppercase">Valor Inventario Actual</p>
+                                <h3 class="fw-black text-dark mb-2">$@stats.ValorInventario.ToString("N0")</h3>
+                            </div>
+                            <div class="icon-shape bg-info-soft text-info">
+                                <i class="bi bi-boxes"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-muted small"><strong>@stats.TotalProductos</strong> productos registrados</span>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- GRÁFICAS -->
         <div class="row g-4 mb-4">
-
-            <!-- CASH FLOW -->
             <div class="col-lg-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white">
-                        <strong>Cash Flow (últimos 6 meses)</strong>
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-bar-chart-line text-primary me-2"></i> Cash Flow Histórico</h6>
                     </div>
-
-                    <div class="card-body">
-
+                    <div class="card-body px-4">
                         @if (cashFlow.Any())
                         {
-                            <ApexChart TItem="CashFlowDto"
-                                       Options="cashFlowOptions"
-                                       @key="cashFlow.Count">
-
-                                <ApexPointSeries TItem="CashFlowDto"
-                                                 Items="cashFlow"
-                                                 Name="Ingresos"
-                                                 SeriesType="SeriesType.Bar"
-                                                 XValue="@(e => e.Mes)"
-                                                 YValue="@(e => e.Ingresos)" />
-
-                                <ApexPointSeries TItem="CashFlowDto"
-                                                 Items="cashFlow"
-                                                 Name="Costos"
-                                                 SeriesType="SeriesType.Bar"
-                                                 XValue="@(e => e.Mes)"
-                                                 YValue="@(e => e.CostoMercancia)" />
-
-                                <ApexPointSeries TItem="CashFlowDto"
-                                                 Items="cashFlow"
-                                                 Name="Utilidad"
-                                                 SeriesType="SeriesType.Line"
-                                                 XValue="@(e => e.Mes)"
-                                                 YValue="@(e => e.UtilidadBruta)" />
-
+                            <ApexChart TItem="CashFlowDto" Options="cashFlowOptions" @key="cashFlow.Count">
+                                <ApexPointSeries TItem="CashFlowDto" Items="cashFlow" Name="Ingresos" SeriesType="SeriesType.Bar" XValue="@(e => e.Mes)" YValue="@(e => e.Ingresos)" />
+                                <ApexPointSeries TItem="CashFlowDto" Items="cashFlow" Name="Costos" SeriesType="SeriesType.Bar" XValue="@(e => e.Mes)" YValue="@(e => e.CostoMercancia)" />
+                                <ApexPointSeries TItem="CashFlowDto" Items="cashFlow" Name="Utilidad" SeriesType="SeriesType.Line" XValue="@(e => e.Mes)" YValue="@(e => e.UtilidadBruta)" />
                             </ApexChart>
                         }
                         else
                         {
-                            <p class="text-muted">No hay datos disponibles</p>
+                            <div class="empty-state">No hay datos suficientes para graficar en este periodo</div>
                         }
-
                     </div>
                 </div>
             </div>
 
-            <!-- TOP PRODUCTOS -->
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white">
-                        <strong>Top Productos</strong>
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-pie-chart text-primary me-2"></i> Top Vendidos (@RangoSeleccionadoTexto)</h6>
                     </div>
-
-                    <div class="card-body">
-
+                    <div class="card-body px-4 d-flex align-items-center justify-content-center">
                         @if (topProductos.Any())
                         {
-                            <ApexChart TItem="ProductoMasVendidoDto"
-                                       Options="topProductosOptions"
-                                       @key="topProductos.Count">
-
-                                <ApexPointSeries TItem="ProductoMasVendidoDto"
-                                                 Items="topProductos"
-                                                 Name="Cantidad"
-                                                 SeriesType="SeriesType.Donut"
-                                                 XValue="@(e => e.Nombre)"
-                                                 YValue="@(e => e.CantidadVendida)" />
-
-                            </ApexChart>
+                            <div class="w-100">
+                                <ApexChart TItem="ProductoMasVendidoDto" Options="topProductosOptions" @key="topProductos.Count">
+                                    <ApexPointSeries TItem="ProductoMasVendidoDto" Items="topProductos" Name="Cantidad" SeriesType="SeriesType.Donut" XValue="@(e => e.Nombre)" YValue="@(e => e.CantidadVendida)" />
+                                </ApexChart>
+                            </div>
                         }
                         else
                         {
-                            <p class="text-muted">Sin datos</p>
+                            <div class="empty-state">Aún no hay ventas registradas en este periodo</div>
                         }
-
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- TABLAS -->
         <div class="row g-4">
-
-            <!-- VENTAS -->
-            <div class="col-lg-6">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white">
-                        <strong>Ventas Recientes</strong>
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark">Últimas Ventas</h6>
+                        <a href="/ventas" class="text-primary text-decoration-none small fw-bold">Ver todas</a>
                     </div>
-
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th>Folio</th>
+                                    <th class="ps-4">Folio</th>
                                     <th>Cliente</th>
                                     <th>Fecha</th>
-                                    <th>Total</th>
+                                    <th class="text-end pe-4">Total</th>
                                 </tr>
                             </thead>
-
                             <tbody>
                                 @foreach (var v in ventasRecientes)
                                 {
                                     <tr>
-                                        <td>@v.NumeroVenta</td>
+                                        <td class="ps-4"><code class="text-dark fw-bold">@v.NumeroVenta</code></td>
                                         <td>@v.Cliente</td>
-                                        <td>@v.Fecha.ToString("dd/MM/yyyy")</td>
-                                        <td>$@v.Total.ToString("N2")</td>
+                                        <td class="text-muted small">@v.Fecha.ToString("dd MMM, yyyy")</td>
+                                        <td class="text-end pe-4 fw-bold text-primary">$@v.Total.ToString("N2")</td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             </div>
 
-            <!-- STOCK -->
-            <div class="col-lg-6">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white">
-                        <strong>Stock Bajo</strong>
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Alertas de Stock</h6>
+                        <a href="/productos" class="text-primary text-decoration-none small fw-bold">Ver inventario</a>
                     </div>
-
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th>Código</th>
-                                    <th>Producto</th>
-                                    <th>Stock</th>
-                                    <th>Mínimo</th>
+                                    <th class="ps-4">Producto</th>
+                                    <th class="text-center">Stock</th>
+                                    <th class="text-center pe-4">Mínimo</th>
                                 </tr>
                             </thead>
-
                             <tbody>
                                 @foreach (var p in productosBajoStock)
                                 {
                                     <tr>
-                                        <td><code>@p.Codigo</code></td>
-                                        <td>@p.Nombre</td>
-                                        <td class="text-danger">@p.Stock</td>
-                                        <td>@p.StockMinimo</td>
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">@p.Nombre</div>
+                                            <div class="text-muted extra-small">@p.Codigo</div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge @(p.Stock == 0 ? "bg-danger" : "bg-warning text-dark")">@p.Stock</span>
+                                        </td>
+                                        <td class="text-center pe-4 text-muted">@p.StockMinimo</td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             </div>
-
         </div>
     }
 </div>
-
-<style>
-    .kpi-card {
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-        transition: all 0.2s ease;
-    }
-
-        .kpi-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.1);
-        }
-
-    .card {
-        border-radius: 16px;
-    }
-</style>
-
 @code {
 
     private bool loading = true;
-
+    private string rangoSeleccionado = "mes";
     private DashboardStatsDto stats = new();
     private List<CashFlowDto> cashFlow = new();
     private List<ProductoMasVendidoDto> topProductos = new();
@@ -265,25 +256,25 @@
 
     private ApexChartOptions<CashFlowDto> cashFlowOptions = new()
     {
-        Chart = new Chart { Height = 340, Type = ChartType.Bar },
-        Colors = new List<string> { "#3B82F6", "#EF4444", "#10B981" },
-        Stroke = new Stroke { Width = new List<double> { 0, 0, 3 }, Curve = Curve.Smooth },
+        Chart = new Chart { Height = 340, Type = ChartType.Bar, Toolbar = new Toolbar { Show = false } }, // Ocultar toolbar para diseño más limpio
+        // Colores: Ingresos (Azul), Costos (Rojo suave), Utilidad (Verde)
+        Colors = new List<string> { "#4f46e5", "#f87171", "#10b981" },
+        Stroke = new Stroke { Width = new List<double> { 0, 0, 4 }, Curve = Curve.Smooth },
         PlotOptions = new PlotOptions
         {
-            Bar = new PlotOptionsBar
-            {
-                BorderRadius = 6,
-                ColumnWidth = "40%"
-            }
+            Bar = new PlotOptionsBar { BorderRadius = 4, ColumnWidth = "45%" }
         },
         DataLabels = new DataLabels { Enabled = false },
-        Legend = new Legend { Position = LegendPosition.Top }
+        Legend = new Legend { Position = LegendPosition.Top, HorizontalAlign = Align.Right }
     };
 
     private ApexChartOptions<ProductoMasVendidoDto> topProductosOptions = new()
     {
-        Chart = new Chart { Height = 300, Type = ChartType.Donut },
-        Legend = new Legend { Position = LegendPosition.Bottom }
+        Chart = new Chart { Height = 320, Type = ChartType.Donut },
+        // Paleta de azules/morados premium
+        Colors = new List<string> { "#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe" },
+        Legend = new Legend { Position = LegendPosition.Bottom },
+        Stroke = new Stroke { Show = false } // Quita el borde blanco entre rebanadas
     };
 
     protected override async Task OnInitializedAsync()
@@ -301,5 +292,58 @@
 
         var alertas = await DashboardService.GetAlertasAsync();
         productosBajoStock = alertas.ProductosBajoStock;
+    }
+    private string RangoSeleccionadoTexto => rangoSeleccionado switch
+    {
+        "hoy" => "Hoy",
+        "7dias" => "Últimos 7 días",
+        "mes" => "Este Mes",
+        "anio" => "Este Año",
+        _ => "Este Mes"
+    };
+    private async Task CambiarRango(string nuevoRango)
+    {
+        if (rangoSeleccionado == nuevoRango) return;
+
+        rangoSeleccionado = nuevoRango;
+        loading = true;
+
+        StateHasChanged();
+
+        await Task.Delay(50);
+
+        await CargarDatos(rangoSeleccionado);
+    }
+    private async Task CargarDatos(string rango)
+    {
+        DateTime? fechaFiltro = null;
+        DateTime hoy = DateTime.Today;
+
+        switch (rango)
+        {
+            case "hoy":
+                fechaFiltro = hoy;
+                break;
+            case "7dias":
+                fechaFiltro = hoy.AddDays(-7);
+                break;
+            case "mes":
+                fechaFiltro = new DateTime(hoy.Year, hoy.Month, 1);
+                break;
+        }
+
+        // DEPUREMOS: Mira esto en la consola del navegador (F12)
+        Console.WriteLine($"Cargando rango: {rango} - Fecha Inicio: {fechaFiltro?.ToString("yyyy-MM-dd")}");
+
+        stats = await DashboardService.GetStatsAsync(fechaFiltro);
+        cashFlow = await DashboardService.GetCashFlowAsync(6);
+        topProductos = await DashboardService.GetProductosMasVendidosAsync(5);
+        ventasRecientes = await DashboardService.GetVentasRecientesAsync(5);
+
+        var alertas = await DashboardService.GetAlertasAsync();
+        productosBajoStock = alertas.ProductosBajoStock;
+
+        loading = false;
+        StateHasChanged();
     }
 }

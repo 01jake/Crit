@@ -1,181 +1,182 @@
 ﻿@page "/compras"
 @using Crit.Client.Services
 @using Crit.Shared.Models
+@using System.Globalization
 @inject ProveedorHttpService ProveedorService
 @inject ProductoHttpService ProductoService
 @inject CompraHttpService CompraService
 @inject IJSRuntime JSRuntime
 
-<PageTitle>Compras</PageTitle>
+<PageTitle>Órdenes de Compra | Gestión</PageTitle>
 
-<div class="container-fluid">
-    <h2 class="mb-4">Órdenes de Compra</h2>
+<div class="pos-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="page-title">Órdenes de Compra</h2>
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" placeholder="Buscar producto (F4)..."
+                   @ref="searchBar" @bind="busquedaProducto" @bind:event="oninput" @onkeyup="BuscarProducto" />
+        </div>
+    </div>
 
-    <div class="row">
-
-        <!-- PRODUCTOS -->
-        <div class="col-md-8">
-            <div class="card mb-3">
-               @*  <div class="card-header">
-                    <input class="form-control"
-                           placeholder="Buscar producto..."
-                           @bind="busquedaProducto"
-                           @bind:event="oninput"
-                           @oninput="BuscarProducto" />
-                </div> *@
-
-                <div class="card-body" style="max-height:500px; overflow:auto;">
-                    <div class="row">
-                        @foreach (var p in productosFiltrados.Take(20))
-                        {
-                            <div class="col-md-3 mb-3">
-                                <div class="card producto-card"
-                                     @onclick="() => AgregarProducto(p)">
-                                    <div class="card-body text-center">
-                                        <h6>@p.Nombre</h6>
-                                        <small>@p.Codigo</small>
-                                        <p class="text-success">$@p.PrecioCompra</p>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="products-grid-container">
+                <div class="row row-cols-1 row-cols-md-3 row-cols-xl-4 g-3">
+                    @foreach (var p in productosFiltrados.Take(20))
+                    {
+                        <div class="col">
+                            <div class="card h-100 producto-card" @onclick="() => AgregarProducto(p)">
+                                <div class="card-body">
+                                    <div class="producto-icon bg-soft-primary">
+                                        <i class="bi bi-box-arrow-in-down"></i>
+                                    </div>
+                                    <h6 class="producto-nombre">@p.Nombre</h6>
+                                    <span class="producto-codigo">@p.Codigo</span>
+                                    <div class="d-flex justify-content-between align-items-end mt-3">
+                                        <span class="producto-precio text-dark">Ref: $@p.PrecioCompra.ToString("N2")</span>
+                                        <span class="badge-stock @(p.Stock > p.StockMinimo ? "stock-ok" : "stock-low")">
+                                            Stock: @p.Stock
+                                        </span>
                                     </div>
                                 </div>
                             </div>
-                        }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-4 shadow-sm border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Historial de Compras</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3">Proveedor</th>
+                                    <th>Factura</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var c in historial)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-bold">@c.Proveedor?.Nombre</td>
+                                        <td><span class="badge-status">@c.SerieFactura-@c.FolioFactura</span></td>
+                                        <td>@c.Fecha.ToString("dd/MM/yyyy")</td>
+                                        <td class="fw-bold text-primary">$@c.Total.ToString("N2")</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-icon-pdf">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- PANEL COMPRA -->
-        <div class="col-md-4">
-            <div class="card sticky-top" style="top:20px;">
-                <div class="card-header bg-dark text-white">
-                    Nueva Compra
+        <div class="col-lg-4">
+            <div class="card carrito-card shadow-lg border-0">
+                <div class="card-header text-white d-flex justify-content-between align-items-center bg-dark">
+                    <h5 class="mb-0"><i class="bi bi-journal-plus me-2"></i>Nueva Orden</h5>
+                    <span class="badge bg-primary">@compraActual.Detalles.Count SKU</span>
                 </div>
+                <div class="card-body d-flex flex-column" style="min-height: 550px;">
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">PROVEEDOR</label>
+                            <select class="form-select border-primary-subtle" @bind="compraActual.ProveedorId">
+                                <option value="0">Seleccionar Proveedor...</option>
+                                @foreach (var p in proveedores)
+                                {
+                                    <option value="@p.Id">@p.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <input class="form-control form-control-sm" placeholder="Serie" @bind="compraActual.SerieFactura" />
+                        </div>
+                        <div class="col-6">
+                            <input class="form-control form-control-sm" placeholder="Folio" @bind="compraActual.FolioFactura" />
+                        </div>
+                    </div>
 
-                <div class="card-body">
-
-                    <!-- PROVEEDOR -->
-                    <select class="form-select mb-2" @bind="compraActual.ProveedorId">
-                        <option value="0">Proveedor</option>
-                        @foreach (var p in proveedores)
+                    <div class="carrito-items-list flex-grow-1">
+                        @if (!compraActual.Detalles.Any())
                         {
-                            <option value="@p.Id">@p.Nombre</option>
-                        }
-                    </select>
-
-                    <!-- FACTURA -->
-                    <input class="form-control mb-2" placeholder="Serie"
-                           @bind="compraActual.SerieFactura" />
-                    <input class="form-control mb-2" placeholder="Folio"
-                           @bind="compraActual.FolioFactura" />
-
-                    <!-- DETALLES -->
-                    <div style="max-height:250px; overflow:auto;">
-                        @foreach (var d in compraActual.Detalles)
-                        {
-                            <div class="border p-2 mb-2" @key="d">
-                                <strong>@GetProductoNombre(d.ProductoId)</strong>
-
-                                <div class="d-flex gap-2 mt-1">
-                                    <input type="number"
-                                           class="form-control"
-                                           style="width:70px"
-                                           value="@d.Cantidad"
-                                           decimal.TryParse(e.Value?.ToString(),
-                                           NumberStyles.Any,
-                                           CultureInfo.InvariantCulture,
-                                           out var val);
-                                           @oninput="e => OnCantidadChanged(d, e)" />
-
-                                    <input type="number"
-                                           class="form-control"
-                                           style="width:100px"
-                                           value="@d.PrecioUnitario"
-                                           decimal.TryParse(e.Value?.ToString(),
-                                           NumberStyles.Any,
-                                           CultureInfo.InvariantCulture,
-                                           out var val);
-                                           @oninput="e => OnPrecioChanged(d, e)" />
-
-
-                                    <button class="btn btn-danger"
-                                            @onclick="() => Eliminar(d)">X</button>
-                                </div>
-
-                                <small>Subtotal: $@d.Subtotal</small>
+                            <div class="empty-cart">
+                                <i class="bi bi-truck"></i>
+                                <p>No hay productos en la orden</p>
                             </div>
                         }
+                        else
+                        {
+                            @foreach (var d in compraActual.Detalles)
+                            {
+                                <div class="item-compra-fila">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="item-name">@GetProductoNombre(d.ProductoId)</span>
+                                        <button class="btn-delete-item" @onclick="() => Eliminar(d)"><i class="bi bi-x"></i></button>
+                                    </div>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">Cant.</span>
+                                            <input type="number" class="form-control" value="@d.Cantidad" 
+                                                   @oninput="e => OnCantidadChanged(d, e)" />
+                                        </div>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" value="@d.PrecioUnitario" 
+                                                   @oninput="e => OnPrecioChanged(d, e)" />
+                                        </div>
+                                    </div>
+                                    <div class="text-end mt-1">
+                                        <small class="text-muted">Subtotal: <strong>$@d.Subtotal.ToString("N2")</strong></small>
+                                    </div>
+                                </div>
+                            }
+                        }
                     </div>
 
-                    <!-- TOTALES -->
-                    <div class="mt-3">
-                        <div>Subtotal: $@subtotal</div>
-                        <div>IVA: $@iva</div>
-                        <h5>Total: $@total</h5>
+                    <div class="ticket-summary mt-3">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>$@subtotal.ToString("N2")</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>IVA (16%)</span>
+                            <span>$@iva.ToString("N2")</span>
+                        </div>
+                        <div class="summary-total mt-2">
+                            <span>TOTAL COMPRA</span>
+                            <span>$@total.ToString("N2")</span>
+                        </div>
                     </div>
 
-                    <!-- BOTONES -->
-                    <div class="d-grid gap-2 mt-2">
-                        <button class="btn btn-success"
-                                @onclick="GuardarCompra"
+                    <div class="d-grid gap-2 mt-4">
+                        <button class="btn btn-primary btn-lg shadow-sm" @onclick="GuardarCompra"
                                 disabled="@(!PuedeGuardar)">
-                            Guardar Compra
+                            <i class="bi bi-cloud-arrow-up me-2"></i>PROCESAR ENTRADA
                         </button>
-
-                        <button class="btn btn-secondary"
-                                @onclick="Limpiar">
-                            Limpiar
+                        <button class="btn btn-link btn-sm text-muted" @onclick="Limpiar">
+                            Descartar orden
                         </button>
                     </div>
-
                 </div>
             </div>
         </div>
-
     </div>
-
-    <!-- 🔥 HISTORIAL -->
-    <div class="card mt-4">
-        <div class="card-header">
-            Historial de Compras
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Proveedor</th>
-                        <th>Fecha</th>
-                        <th>Total</th>
-                        <th>Factura</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var c in historial)
-                    {
-                        <tr>
-                            <td>@c.Proveedor?.Nombre</td>
-                            <td>@c.Fecha.ToString("dd/MM/yyyy")</td>
-                            <td>$@c.Total</td>
-                            <td>@c.SerieFactura-@c.FolioFactura</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-
 </div>
-
-<style>
-    .producto-card {
-        cursor: pointer;
-        transition: .2s;
-    }
-
-    .producto-card:hover {
-        transform: scale(1.03);
-    }
-</style>
 
 @code {
 
@@ -183,6 +184,7 @@
     private List<Producto> productos = new();
     private List<Producto> productosFiltrados = new();
     private List<Compra> historial = new();
+    private ElementReference searchBar;
 
     private Compra compraActual = new();
     private string busquedaProducto = "";
@@ -199,14 +201,30 @@
 
     private void OnCantidadChanged(DetalleCompra d, ChangeEventArgs e)
     {
-        d.Cantidad = int.TryParse(e.Value?.ToString(), out var val) ? val : 0;
-        Recalcular();
+        // Limpiamos el valor para evitar errores de parseo
+        var valString = e.Value?.ToString();
+        if (int.TryParse(valString, out var val))
+        {
+            d.Cantidad = val;
+            Recalcular();
+        }
     }
 
     private void OnPrecioChanged(DetalleCompra d, ChangeEventArgs e)
     {
-        d.PrecioUnitario = decimal.TryParse(e.Value?.ToString(), out var val) ? val : 0;
-        Recalcular();
+        var valString = e.Value?.ToString();
+        if (decimal.TryParse(valString, NumberStyles.Any, CultureInfo.InvariantCulture, out var val))
+        {
+            d.PrecioUnitario = val;
+            Recalcular();
+        }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await searchBar.FocusAsync();
+        }
     }
     protected override async Task OnInitializedAsync()
     {

@@ -1,93 +1,105 @@
-﻿
-.min-vh-100 {
+﻿/* Estructura Principal */
+.login-split-container {
+    display: flex;
     min-height: 100vh;
+    width: 100%;
 }
 
-.card {
-    border-radius: 1rem;
-    backdrop-filter: blur(10px);
-    background-color: rgba(255, 255, 255, 0.95);
+/* Panel Azul (Izquierda) */
+.brand-panel {
+    flex: 1;
+    background: linear-gradient(135deg, #3c3c3c 0%, #111827 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
-.form-control:focus {
-    border-color: var(--bs-primary);
-    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--bs-primary) 0%, #0056b3 100%);
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-    .btn-primary:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.4);
-    }
-
-.icon-container {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--bs-primary) 0%, #0056b3 100%);
+.logo-circle {
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(5px);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    margin: 0 auto;
+    border: 2px solid rgba(255,255,255,0.2);
 }
 
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* Panel Formulario (Derecha) */
+.form-panel {
+    flex: 1;
+    background-color: #fcfcfc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
 }
 
-.alert {
-    border-radius: 0.5rem;
+.form-wrapper {
+    max-width: 400px;
+    width: 100%;
+}
+
+/* Controles Personalizados */
+.custom-control {
+    border: 2px solid #f0f0f0;
+    background-color: #fff;
+    padding: 12px 15px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+    .custom-control:focus {
+        border-color: #1F2A44;
+        box-shadow: none;
+    }
+
+.pw-eye-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
     border: none;
+    color: #adb5bd;
 }
 
-.form-control {
-    border-radius: 0.5rem;
-    border: 1px solid #e0e6ed;
+/* Botón Principal usando el color del Nav */
+.btn-main-login {
+    background-color: #3c3c3c; /* Color de tu NAV */
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     transition: all 0.3s ease;
 }
 
-.form-check-input:checked {
-    background-color: var(--bs-primary);
-    border-color: var(--bs-primary);
-}
-
-a:hover {
-    color: var(--bs-primary) !important;
-}
-
-/* Animación de entrada */
-.card {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
+    .btn-main-login:hover {
+        background-color: #1F2A44; /* Cambia al azul del Dashboard al hover */
+        color: white;
+        transform: translateY(-2px);
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.alert-custom {
+    background-color: #fff5f5;
+    color: #e53e3e;
+    border-left: 4px solid #e53e3e;
+}
+
+.text-white-300 {
+    color: rgba(255,255,255,0.3);
 }
 
 /* Responsive */
-@media (max-width: 576px) {
-    .p-4 {
-        padding: 1rem !important;
+@media (max-width: 991px) {
+    .brand-panel {
+        display: none;
     }
 
-    .card-body {
-        padding: 1.5rem;
+    .form-panel {
+        background-color: #fff;
     }
 }
-

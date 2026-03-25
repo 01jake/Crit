@@ -1,86 +1,99 @@
-﻿.min-vh-100 {
+﻿.login-split-container {
+    display: flex;
     min-height: 100vh;
+    width: 100%;
 }
 
-.card {
-    border-radius: 1rem;
-    backdrop-filter: blur(10px);
-    background-color: rgba(255, 255, 255, 0.95);
-}
-
-.form-control:focus {
-    border-color: var(--bs-primary);
-    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--bs-primary) 0%, #0056b3 100%);
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-    .btn-primary:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.4);
-    }
-
-.icon-container {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--bs-primary) 0%, #0056b3 100%);
-    border-radius: 50%;
+/* Panel Azul (Identidad) */
+.brand-panel {
+    flex: 1;
+    background: linear-gradient(135deg, #3c3c3c 0%, #111827 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
 }
 
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+.logo-circle {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
-.alert {
-    border-radius: 0.5rem;
+/* Panel Formulario */
+.form-panel {
+    flex: 1;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.form-wrapper {
+    max-width: 400px;
+    width: 100%;
+}
+
+.custom-control {
+    border: 1px solid #e0e0e0;
+    background-color: #fdfdfd;
+    padding: 12px 15px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+    .custom-control:focus {
+        border-color: #1F2A44;
+        background-color: #fff;
+        box-shadow: 0 0 0 4px rgba(31, 42, 68, 0.05);
+    }
+
+.pw-eye-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
     border: none;
+    color: #adb5bd;
 }
 
-.form-control {
-    border-radius: 0.5rem;
-    border: 1px solid #e0e6ed;
+/* Botón usando el color del Nav (#3c3c3c) */
+.btn-main-login {
+    background-color: #3c3c3c;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
     transition: all 0.3s ease;
 }
 
-a:hover {
-    color: var(--bs-primary) !important;
-}
-
-/* Animación de entrada */
-.card {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
+    .btn-main-login:hover {
+        background-color: #1F2A44;
+        transform: translateY(-2px);
+        color: white;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.alert-custom {
+    background-color: #fff5f5;
+    color: #c53030;
+    border-left: 4px solid #c53030;
+    font-size: 0.85rem;
 }
 
-/* Responsive */
-@media (max-width: 576px) {
-    .p-4 {
-        padding: 1rem !important;
-    }
+.text-white-300 {
+    color: rgba(255,255,255,0.4);
+}
 
-    .card-body {
-        padding: 1.5rem;
+@@media (max-width: 991px) {
+    .brand-panel {
+        display: none;
     }
 }

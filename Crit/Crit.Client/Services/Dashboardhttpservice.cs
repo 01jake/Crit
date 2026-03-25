@@ -97,11 +97,41 @@ namespace Crit.Client.Services
                 return new List<VentaRecienteDto>();
             }
         }
+
+        public async Task<DashboardStatsDto> GetStatsAsync(DateTime? fechaInicio = null)
+        {
+            try
+            {
+                // Forzamos el formato yyyy-MM-dd para evitar confusiones entre día y mes
+                var url = fechaInicio.HasValue
+                    ? $"api/dashboard/stats?fechaInicio={fechaInicio.Value:yyyy-MM-dd}"
+                    : "api/dashboard/stats";
+
+                var response = await _httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<DashboardStatsDto>() ?? new DashboardStatsDto();
+                }
+
+                // Si hay error, leemos qué dice el servidor para depurar
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError($"Error del servidor: {errorContent}");
+                return new DashboardStatsDto();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error de conexión en GetStatsAsync");
+                return new DashboardStatsDto();
+            }
+        }
+
     }
     // DTO para alertas
     public class DashboardAlertasDto
     {
         public List<Producto> ProductosBajoStock { get; set; } = new();
     }
+
 }
 

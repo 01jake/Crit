@@ -1,176 +1,140 @@
 ﻿@page "/"
 
-<PageTitle>Sistema de Gestión Empresarial</PageTitle>
+<PageTitle>Sistema de Gestión - Polynex</PageTitle>
 
-<div class="min-vh-100 bg-light">
+<div class="home-wrapper">
 
-    <!-- HERO -->
-    <section class="hero-section position-relative" style="background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%); padding: 100px 0;">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6 text-white mb-5 mb-lg-0">
-                    <h1 class="display-4 fw-bold mb-4">Sistema de Gestión Empresarial</h1>
-                    <p class="lead mb-4">
-                        Administra tus <strong>clientes, productos, ventas y servicios</strong> en un solo lugar.
-                        Control total con reportes, cotizaciones en PDF e historial detallado.
+    <section class="hero-section text-white overflow-hidden">
+        <div class="container position-relative z-index-1">
+            <div class="row align-items-center min-vh-75 py-5">
+                <div class="col-lg-6 mb-5 mb-lg-0 animate-fade-in">
+                    <span class="badge rounded-pill bg-primary-light text-primary mb-3 px-3 py-2">Versión 2.0</span>
+                    <h1 class="display-3 fw-bold mb-3">Polynex <br><span class="text-gradient">Gestión Total</span></h1>
+                    <p class="lead mb-5 opacity-75">
+                        Administra clientes, productos, ventas y servicios en una plataforma unificada.
+                        Toma decisiones basadas en datos con reportes en tiempo real.
                     </p>
 
                     <AuthorizeView>
                         <Authorized>
-                            <div class="d-flex gap-3 flex-wrap">
-                                <a href="/clientes" class="btn btn-light btn-lg px-4">
-                                    <i class="bi bi-people me-2"></i>Clientes
+                            <div class="d-flex justify-content: center; gap-3 flex-wrap">
+                                <a href="/dash" class="btn btn-main-action btn-lg px-4 shadow">
+                                    <i class="bi bi-speedometer2 me-2"></i>Ir al Dashboard
                                 </a>
                                 <a href="/ventas" class="btn btn-outline-light btn-lg px-4">
-                                    <i class="bi bi-cash-stack me-2"></i>Ventas
+                                    <i class="bi bi-cart-plus me-2"></i>Nueva Venta
                                 </a>
                             </div>
                         </Authorized>
                         <NotAuthorized>
-                            <a href="/Account/Login" class="btn btn-light btn-lg px-4">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar sesión
-                            </a>
+                            <div class="d-flex gap-3 flex-wrap justify-content:center;
+">
+                                <a href="/Account/Login" class="btn btn-main-action btn-lg px-5 shadow">
+                                    <i class="bi bi-shield-lock me-2"></i>Acceder al Sistema
+                                </a>
+                            </div>
                         </NotAuthorized>
                     </AuthorizeView>
                 </div>
 
-                <!-- CARD DERECHA -->
                 <div class="col-lg-6">
-                    <div class="card border-0 shadow-lg">
-                        <div class="card-body p-5 text-center">
-                            <i class="bi bi-graph-up-arrow text-primary mb-4" style="font-size: 4rem;"></i>
-
-                            <h3 class="fw-bold mb-3">Control Total del Negocio</h3>
-                            <p class="text-muted mb-4">
-                                Visualiza, gestiona y optimiza todas tus operaciones desde un solo sistema.
-                            </p>
-
-                            <div class="row g-3 text-start">
-                                <div class="col-6">
-                                    <small><i class="bi bi-check-circle-fill text-success me-2"></i>Clientes</small>
+                    <div class="hero-image-container">
+                        <div class="abstract-shape"></div>
+                        <div class="glass-card shadow-lg p-4 animate-float">
+                            <div class="d-flex justify-content-between mb-4">
+                                <div class="bg-primary rounded-circle p-3 shadow-sm">
+                                    <i class="bi bi-graph-up text-white fs-3"></i>
                                 </div>
-                                <div class="col-6">
-                                    <small><i class="bi bi-check-circle-fill text-success me-2"></i>Productos</small>
-                                </div>
-                                <div class="col-6">
-                                    <small><i class="bi bi-check-circle-fill text-success me-2"></i>Ventas</small>
-                                </div>
-                                <div class="col-6">
-                                    <small><i class="bi bi-check-circle-fill text-success me-2"></i>Reportes</small>
+                                <div class="text-end">
+                                    <h4 class="mb-0 fw-bold">+24%</h4>
+                                    <small class="text-muted">Crecimiento mensual</small>
                                 </div>
                             </div>
+                            <div class="mock-chart mb-3">
+                                <div class="bar" style="height: 40%"></div>
+                                <div class="bar" style="height: 70%"></div>
+                                <div class="bar" style="height: 50%"></div>
+                                <div class="bar" style="height: 90%"></div>
+                                <div class="bar" style="height: 60%"></div>
+                            </div>
+                            <p class="mb-0 text-dark small fw-bold"><i class="bi bi-check-circle-fill text-success me-2"></i>Reportes listos para exportar</p>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="hero-bg-accent"></div>
+    </section>
 
+    <section class="stats-overlay">
+        <div class="container">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="row g-0 text-center">
+                    <div class="col-md-3 border-end p-4">
+                        <h2 class="fw-bold mb-0" style="color: #1F2A44;">500+</h2>
+                        <span class="text-muted small text-uppercase fw-bold">Clientes Activos</span>
+                    </div>
+                    <div class="col-md-3 border-end p-4">
+                        <h2 class="fw-bold mb-0" style="color: #1F2A44;">200+</h2>
+                        <span class="text-muted small text-uppercase fw-bold">Productos</span>
+                    </div>
+                    <div class="col-md-3 border-end p-4">
+                        <h2 class="fw-bold mb-0" style="color: #1F2A44;">1k+</h2>
+                        <span class="text-muted small text-uppercase fw-bold">Ventas Mes</span>
+                    </div>
+                    <div class="col-md-3 p-4">
+                        <h2 class="fw-bold mb-0 text-primary">Live</h2>
+                        <span class="text-muted small text-uppercase fw-bold">Soporte 24/7</span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- ESTADÍSTICAS -->
-    <section class="py-5 bg-white">
-        <div class="container">
-            <div class="row text-center g-4">
-                <div class="col-md-3 col-6">
-                    <i class="bi bi-people-fill text-primary mb-3" style="font-size: 3rem;"></i>
-                    <h3 class="fw-bold">+500</h3>
-                    <p class="text-muted">Clientes</p>
-                </div>
-                <div class="col-md-3 col-6">
-                    <i class="bi bi-box-seam text-success mb-3" style="font-size: 3rem;"></i>
-                    <h3 class="fw-bold">+200</h3>
-                    <p class="text-muted">Productos</p>
-                </div>
-                <div class="col-md-3 col-6">
-                    <i class="bi bi-cash text-warning mb-3" style="font-size: 3rem;"></i>
-                    <h3 class="fw-bold">+1,000</h3>
-                    <p class="text-muted">Ventas</p>
-                </div>
-                <div class="col-md-3 col-6">
-                    <i class="bi bi-file-earmark-bar-graph text-info mb-3" style="font-size: 3rem;"></i>
-                    <h3 class="fw-bold">Reportes</h3>
-                    <p class="text-muted">En tiempo real</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- MÓDULOS -->
-    <section class="py-5">
-        <div class="container">
+    <section class="py-5" style="background-color: #f8f9fa;">
+        <div class="container py-5">
             <div class="text-center mb-5">
-                <h2 class="fw-bold">Módulos del Sistema</h2>
-                <p class="text-muted">Todo lo que necesitas para tu negocio</p>
+                <h6 class="text-primary fw-bold text-uppercase ls-2">Ecosistema</h6>
+                <h2 class="display-5 fw-bold" style="color: #3c3c3c;">Todo bajo control</h2>
+                <div class="separator mx-auto"></div>
             </div>
 
             <div class="row g-4">
+                @{
+                    var modulos = new[] {
+                                (Icon: "people", Title: "Clientes", Desc: "Base de datos centralizada con historial de compras.", Color: "blue"),
+                                (Icon: "box-seam", Title: "Inventario", Desc: "Control de stock en tiempo real y alertas de bajas.", Color: "green"),
+                                (Icon: "file-earmark-pdf", Title: "Cotizaciones", Desc: "Genera PDF profesionales en segundos para tus clientes.", Color: "info"),
+                                (Icon: "cash-stack", Title: "Ventas", Desc: "Punto de venta intuitivo con múltiples formas de pago.", Color: "orange"),
+                                (Icon: "tools", Title: "Servicios", Desc: "Catálogo de servicios técnicos y mano de obra.", Color: "purple"),
+                                (Icon: "bar-chart-line", Title: "Reportes", Desc: "Análisis financiero y de rendimiento mensual.", Color: "dark")
+                                };
+                }
 
-                <!-- CLIENTES -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 text-center p-4">
-                        <i class="bi bi-people text-primary mb-3" style="font-size: 3rem;"></i>
-                        <h5 class="fw-bold">Clientes</h5>
-                        <p class="text-muted">Registro, historial y seguimiento completo de clientes.</p>
+                @foreach (var m in modulos)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100 shadow-hover border-0 card p-4 rounded-4 transition-all">
+                            <div class="icon-box-@m.Color mb-4">
+                                <i class="bi bi-@m.Icon fs-2"></i>
+                            </div>
+                            <h5 class="fw-bold" style="color: #3c3c3c;">@m.Title</h5>
+                            <p class="text-muted small">@m.Desc</p>
+                            <a href="#" class="text-decoration-none small fw-bold mt-auto text-primary">Saber más <i class="bi bi-chevron-right ms-1"></i></a>
+                        </div>
                     </div>
-                </div>
-
-                <!-- PRODUCTOS -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 text-center p-4">
-                        <i class="bi bi-box text-success mb-3" style="font-size: 3rem;"></i>
-                        <h5 class="fw-bold">Productos</h5>
-                        <p class="text-muted">Control de inventario, precios y categorías.</p>
-                    </div>
-                </div>
-
-                <!-- SERVICIOS -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 text-center p-4">
-                        <i class="bi bi-tools text-warning mb-3" style="font-size: 3rem;"></i>
-                        <h5 class="fw-bold">Servicios</h5>
-                        <p class="text-muted">Gestión de servicios ofrecidos y costos.</p>
-                    </div>
-                </div>
-
-                <!-- VENTAS -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 text-center p-4">
-                        <i class="bi bi-cash-stack text-danger mb-3" style="font-size: 3rem;"></i>
-                        <h5 class="fw-bold">Ventas</h5>
-                        <p class="text-muted">Registro de ventas y facturación.</p>
-                    </div>
-                </div>
-
-                <!-- COTIZACIONES -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 text-center p-4">
-                        <i class="bi bi-file-earmark-pdf text-info mb-3" style="font-size: 3rem;"></i>
-                        <h5 class="fw-bold">Cotizaciones PDF</h5>
-                        <p class="text-muted">Genera cotizaciones profesionales en PDF.</p>
-                    </div>
-                </div>
-
-                <!-- REPORTES -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 text-center p-4">
-                        <i class="bi bi-bar-chart text-dark mb-3" style="font-size: 3rem;"></i>
-                        <h5 class="fw-bold">Reportes</h5>
-                        <p class="text-muted">Análisis de ventas, clientes y productos.</p>
-                    </div>
-                </div>
-
+                }
             </div>
         </div>
     </section>
 
-    <!-- EXTRA -->
-    <section class="py-5 bg-dark text-white">
-        <div class="container text-center">
-            <h3 class="fw-bold mb-3">Historial y Facturación</h3>
-            <p class="text-white-50">
-                Consulta historial detallado de movimientos, ventas y facturas en cualquier momento.
+    <section class="py-5 bg-dark-custom text-white position-relative">
+        <div class="container text-center py-4">
+            <h3 class="fw-bold mb-4">¿Listo para optimizar tu negocio?</h3>
+            <p class="text-white-50 mb-5 mx-auto" style="max-width: 600px;">
+                Polynex es la herramienta diseñada para llevar la administración al siguiente nivel.
             </p>
+            <a href="Account/Register" class="btn btn-outline-light btn-lg px-5 rounded-pill">Empezar ahora</a>
         </div>
     </section>
-
 </div>

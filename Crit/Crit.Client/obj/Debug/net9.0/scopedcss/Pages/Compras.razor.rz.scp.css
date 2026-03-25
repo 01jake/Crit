@@ -1,0 +1,180 @@
+:root[b-ffap1g116b] {
+    --primary-color: #4f46e5;
+    --sidebar-bg: #1a1642;
+    --bg-light: #f8fafc;
+    --success-color: #22c55e;
+}
+
+.pos-container[b-ffap1g116b] {
+    padding: 1rem;
+    background-color: var(--bg-light);
+}
+
+.page-title[b-ffap1g116b] {
+    font-weight: 800;
+    color: var(--sidebar-bg);
+}
+
+.search-box[b-ffap1g116b] {
+    position: relative;
+    width: 350px;
+}
+
+    .search-box i[b-ffap1g116b] {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    .search-box .form-control[b-ffap1g116b] {
+        padding-left: 40px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+/* Cards */
+.producto-card[b-ffap1g116b] {
+    border: none;
+    border-radius: 12px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+    .producto-card:hover[b-ffap1g116b] {
+        transform: translateY(-4px);
+        border: 1px solid var(--primary-color);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+
+.producto-icon[b-ffap1g116b] {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.bg-soft-primary[b-ffap1g116b] {
+    background: #e0e7ff;
+    color: var(--primary-color);
+}
+
+.producto-nombre[b-ffap1g116b] {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+    font-size: 0.9rem;
+}
+
+.producto-codigo[b-ffap1g116b] {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.producto-precio[b-ffap1g116b] {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.badge-stock[b-ffap1g116b] {
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.stock-ok[b-ffap1g116b] {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.stock-low[b-ffap1g116b] {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Items Compra */
+.item-compra-fila[b-ffap1g116b] {
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #f1f5f9;
+}
+
+.btn-delete-item[b-ffap1g116b] {
+    background: none;
+    border: none;
+    color: #cbd5e1;
+}
+
+    .btn-delete-item:hover[b-ffap1g116b] {
+        color: #ef4444;
+    }
+
+/* Carrito / Panel */
+.carrito-card .card-header[b-ffap1g116b] {
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1rem;
+}
+
+.carrito-items-list[b-ffap1g116b] {
+    overflow-y: auto;
+    max-height: 350px;
+    padding-right: 5px;
+}
+
+.empty-cart[b-ffap1g116b] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #cbd5e1;
+    padding: 2rem 0;
+}
+
+    .empty-cart i[b-ffap1g116b] {
+        font-size: 3rem;
+    }
+
+.ticket-summary[b-ffap1g116b] {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.summary-row[b-ffap1g116b] {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
+
+.summary-total[b-ffap1g116b] {
+    border-top: 2px dashed #cbd5e1;
+    padding-top: 8px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--sidebar-bg);
+}
+
+/* Tabla */
+.badge-status[b-ffap1g116b] {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.btn-icon-pdf[b-ffap1g116b] {
+    background: none;
+    border: none;
+    color: #64748b;
+}
