@@ -8,10 +8,6 @@
 @inject Dashboardhttpservice DashboardService
 @attribute [Authorize]
 
-<PageTitle>Dashboard</PageTitle>
-
-<PageTitle>Dashboard Financiero</PageTitle>
-
 <PageTitle>Dashboard Financiero</PageTitle>
 
 <div class="admin-container">
@@ -126,6 +122,84 @@
                     </div>
                 </div>
             </div>
+            <div class="row g-4 mb-4">
+                <div class="col-md-6 col-xl-3">
+                    <div class="card kpi-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Por Cobrar</p>
+                                    <h3 class="fw-black text-primary mb-2">$@finanzas.TotalPorCobrar.ToString("N0")</h3>
+                                </div>
+                                <div class="icon-shape bg-primary-soft text-primary">
+                                    <i class="bi bi-cash-coin"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-muted small">@finanzas.CuentasPorCobrarPendientes cuenta(s) activas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-xl-3">
+                    <div class="card kpi-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Por Pagar</p>
+                                    <h3 class="fw-black text-danger mb-2">$@finanzas.TotalPorPagar.ToString("N0")</h3>
+                                </div>
+                                <div class="icon-shape bg-danger-soft text-danger">
+                                    <i class="bi bi-bank"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-muted small">@finanzas.CuentasPorPagarPendientes cuenta(s) activas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-xl-3">
+                    <div class="card kpi-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Cobrado este Mes</p>
+                                    <h3 class="fw-black text-success mb-2">$@finanzas.TotalCobradoMes.ToString("N0")</h3>
+                                </div>
+                                <div class="icon-shape bg-success-soft text-success">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-muted small">Cobranza confirmada</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-xl-3">
+                    <div class="card kpi-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Pagado este Mes</p>
+                                    <h3 class="fw-black text-warning mb-2">$@finanzas.TotalPagadoMes.ToString("N0")</h3>
+                                </div>
+                                <div class="icon-shape bg-warning-soft text-warning">
+                                    <i class="bi bi-credit-card-2-front"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-muted small">Egresos financieros del mes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <div class="row g-4 mb-4">
@@ -253,7 +327,7 @@
     private List<ProductoMasVendidoDto> topProductos = new();
     private List<VentaRecienteDto> ventasRecientes = new();
     private List<ProductoBajoStockDto> productosBajoStock = new();
-
+    private FinanzasResumenDto finanzas = new();
     private ApexChartOptions<CashFlowDto> cashFlowOptions = new()
     {
         Chart = new Chart { Height = 340, Type = ChartType.Bar, Toolbar = new Toolbar { Show = false } }, // Ocultar toolbar para diseño más limpio
@@ -289,7 +363,7 @@
         cashFlow = await DashboardService.GetCashFlowAsync(6);
         topProductos = await DashboardService.GetProductosMasVendidosAsync(5);
         ventasRecientes = await DashboardService.GetVentasRecientesAsync(5);
-
+        finanzas = await DashboardService.GetFinanzasResumenAsync();
         var alertas = await DashboardService.GetAlertasAsync();
         productosBajoStock = alertas.ProductosBajoStock;
     }
@@ -339,7 +413,7 @@
         cashFlow = await DashboardService.GetCashFlowAsync(6);
         topProductos = await DashboardService.GetProductosMasVendidosAsync(5);
         ventasRecientes = await DashboardService.GetVentasRecientesAsync(5);
-
+        finanzas = await DashboardService.GetFinanzasResumenAsync();
         var alertas = await DashboardService.GetAlertasAsync();
         productosBajoStock = alertas.ProductosBajoStock;
 

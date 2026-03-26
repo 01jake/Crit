@@ -1,0 +1,405 @@
+﻿@page "/clientes/{Id:int}"
+@using Crit.Client.Services
+@using Crit.Shared.Models
+@inject ClienteHttpService ClienteHttpService
+@inject VentaHttpService VentaHttpService
+@inject CuentaPorCobrarHttpService CuentaPorCobrarHttpService
+@inject NavigationManager Navigation
+
+<PageTitle>Detalle Cliente</PageTitle>
+
+<div class="pos-container">
+    @if (cargando)
+    {
+        <div class="d-flex flex-column align-items-center justify-content-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="text-muted">Cargando expediente del cliente...</p>
+        </div>
+    }
+    else if (cliente is null)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-person-x fs-1 text-warning mb-3"></i>
+            <h4 class="text-muted">Cliente no encontrado</h4>
+            <button class="btn btn-outline-primary mt-3" @onclick="Volver">Regresar al listado</button>
+        </div>
+    }
+    else
+    {
+        @* --- ENCABEZADO --- *@
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px; font-size: 1.5rem;">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div>
+                    <h2 class="page-title mb-0">@cliente.Nombre</h2>
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-envelope me-1"></i>@(string.IsNullOrWhiteSpace(cliente.Email) ? "Sin correo registrado" : cliente.Email)
+                    </p>
+                </div>
+            </div>
+
+            <button class="btn btn-light border shadow-sm" @onclick="Volver">
+                <i class="bi bi-arrow-left me-2"></i>Volver
+            </button>
+        </div>
+
+        @* --- INDICADORES (KPIs) --- *@
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-primary-subtle text-primary me-3">
+                                <i class="bi bi-currency-dollar"></i>
+                            </div>
+                            <span class="text-muted fw-bold small text-uppercase">Saldo por cobrar</span>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-primary">@saldoTotal.ToString("C")</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-info-subtle text-info me-3">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                            <span class="text-muted fw-bold small text-uppercase">Cuentas activas</span>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-info">@cuentasActivas</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-danger-subtle text-danger me-3">
+                                <i class="bi bi-exclamation-octagon"></i>
+                            </div>
+                            <span class="text-muted fw-bold small text-uppercase">Vencidas</span>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-danger">@cuentasVencidas</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-success-subtle text-success me-3">
+                                <i class="bi bi-cart-check"></i>
+                            </div>
+                            <span class="text-muted fw-bold small text-uppercase">Total Ventas</span>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-success">@ventas.Count</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* --- PESTAÑAS (TABS) --- *@
+        <ul class="nav nav-pills mb-4 gap-2">
+            <li class="nav-item">
+                <button class="nav-link @(tab == "datos" ? "active shadow-sm" : "bg-white text-dark border")" @onclick='() => tab = "datos"'>
+                    <i class="bi bi-card-text me-2"></i>Datos Generales
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(tab == "ventas" ? "active shadow-sm" : "bg-white text-dark border")" @onclick='() => tab = "ventas"'>
+                    <i class="bi bi-shop me-2"></i>Ventas
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(tab == "cxc" ? "active shadow-sm" : "bg-white text-dark border")" @onclick='() => tab = "cxc"'>
+                    <i class="bi bi-cash-stack me-2"></i>Cuentas por cobrar
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(tab == "pagos" ? "active shadow-sm" : "bg-white text-dark border")" @onclick='() => tab = "pagos"'>
+                    <i class="bi bi-check2-circle me-2"></i>Abonos Registrados
+                </button>
+            </li>
+        </ul>
+
+        @* --- CONTENIDO DE LAS PESTAÑAS --- *@
+        @if (tab == "datos")
+        {
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="mb-0 fw-bold text-muted"><i class="bi bi-info-circle me-2"></i>Información Fiscal y de Contacto</h6>
+                </div>
+                <div class="card-body row g-4">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="p-3 bg-light rounded-3 h-100 border">
+                            <div class="small text-muted mb-1 text-uppercase">RFC</div>
+                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(cliente.RFC) ? "N/A" : cliente.RFC)</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="p-3 bg-light rounded-3 h-100 border">
+                            <div class="small text-muted mb-1 text-uppercase">Teléfono</div>
+                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(cliente.Telefono) ? "N/A" : cliente.Telefono)</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="p-3 bg-light rounded-3 h-100 border">
+                            <div class="small text-muted mb-1 text-uppercase">Código Postal</div>
+                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(cliente.CodigoPostal) ? "N/A" : cliente.CodigoPostal)</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="p-3 bg-light rounded-3 h-100 border">
+                            <div class="small text-muted mb-1 text-uppercase">Uso CFDI</div>
+                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(cliente.UsoCFDI) ? "N/A" : cliente.UsoCFDI)</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="small text-muted mb-1 text-uppercase">Dirección Completa</div>
+                            <div class="fw-semibold">
+                                <i class="bi bi-geo-alt text-primary me-2"></i>@(string.IsNullOrWhiteSpace(cliente.Direccion) ? "Sin dirección registrada" : cliente.Direccion)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (tab == "ventas")
+        {
+            <div class="card shadow-sm border-0">
+                @if (!ventas.Any())
+                {
+                    <div class="text-center py-5">
+                        <p class="text-muted mb-0">No hay ventas registradas para este cliente.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="small text-uppercase text-muted">
+                                    <th class="ps-4">Folio Venta</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var venta in ventas)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <span class="badge bg-light text-dark border fw-bold">
+                                                <i class="bi bi-hash text-primary me-1"></i>@venta.NumeroVenta
+                                            </span>
+                                        </td>
+                                        <td class="small">@venta.Fecha.ToString("dd MMM yyyy")</td>
+                                        <td class="fw-semibold">@venta.Total.ToString("C")</td>
+                                        <td>
+                                            <span class="badge rounded-pill text-bg-light border">@venta.Estado</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (tab == "cxc")
+        {
+            <div class="card shadow-sm border-0">
+                @if (!cuentas.Any())
+                {
+                    <div class="text-center py-5">
+                        <p class="text-muted mb-0">No hay cuentas por cobrar registradas.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="small text-uppercase text-muted">
+                                    <th class="ps-4">Folio</th>
+                                    <th>Emisión</th>
+                                    <th>Vencimiento</th>
+                                    <th>Total</th>
+                                    <th>Pagado</th>
+                                    <th>Saldo</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cuenta in cuentas)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <a class="text-decoration-none fw-bold" href="/cuentas-por-cobrar/@cuenta.Id">
+                                                <i class="bi bi-box-arrow-up-right me-1 small"></i>@cuenta.Folio
+                                            </a>
+                                        </td>
+                                        <td class="small">@cuenta.FechaEmision.ToString("dd/MM/yyyy")</td>
+                                        <td class="small @(cuenta.EstaVencida ? "text-danger fw-bold" : "")">
+                                            @(cuenta.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "-")
+                                        </td>
+                                        <td class="fw-semibold">@cuenta.Total.ToString("C")</td>
+                                        <td class="text-success">@cuenta.TotalPagado.ToString("C")</td>
+                                        <td>
+                                            <span class="fw-bold @(cuenta.Saldo > 0 ? "text-primary" : "text-muted")">
+                                                @cuenta.Saldo.ToString("C")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge rounded-pill text-bg-light border">@cuenta.Estado</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (tab == "pagos")
+        {
+            <div class="card shadow-sm border-0">
+                @if (!pagosCliente.Any())
+                {
+                    <div class="text-center py-5">
+                        <p class="text-muted mb-0">Este cliente aún no tiene abonos registrados.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="small text-uppercase text-muted">
+                                    <th class="ps-4">Fecha y Hora</th>
+                                    <th>Método</th>
+                                    <th>Referencia</th>
+                                    <th>Monto</th>
+                                    <th>ID Cuenta (CXC)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pago in pagosCliente)
+                                {
+                                    <tr>
+                                        <td class="ps-4 small">
+                                            <i class="bi bi-calendar-check text-success me-2"></i>@pago.FechaPago.ToString("dd/MM/yyyy HH:mm")
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">@pago.MetodoPago</span>
+                                        </td>
+                                        <td class="text-muted small">
+                                            @(string.IsNullOrWhiteSpace(pago.Referencia) ? "Sin referencia" : pago.Referencia)
+                                        </td>
+                                        <td class="text-success fw-bold">@pago.Monto.ToString("C")</td>
+                                        <td>
+                                            <a href="/cuentas-por-cobrar/@pago.CuentaPorCobrarId" class="text-decoration-none">
+                                                <i class="bi bi-link-45deg"></i> Ver CXC
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+<style>
+    .pos-container {
+        padding: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.4rem;
+    }
+
+    .stat-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.06) !important;
+        }
+
+    .nav-pills .nav-link {
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+        .nav-pills .nav-link:hover:not(.active) {
+            background-color: #f8f9fa !important;
+        }
+
+    .table thead th {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-top: none;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+</style>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Cliente? cliente;
+    private List<Venta> ventas = new();
+    private List<CuentaPorCobrar> cuentas = new();
+    private List<PagoCliente> pagosCliente = new();
+    private bool cargando = true;
+    private string tab = "datos";
+
+    private decimal saldoTotal => cuentas.Where(x => x.Activa && x.Saldo > 0).Sum(x => x.Saldo);
+    private int cuentasActivas => cuentas.Count(x => x.Activa && x.Saldo > 0);
+    private int cuentasVencidas => cuentas.Count(x => x.Activa && x.EstaVencida && x.Saldo > 0);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        cargando = true;
+
+        cliente = await ClienteHttpService.GetClienteAsync(Id);
+        ventas = await VentaHttpService.GetVentasPorClienteAsync(Id);
+        cuentas = await CuentaPorCobrarHttpService.GetByClienteAsync(Id);
+
+        pagosCliente = cuentas
+            .SelectMany(x => x.Pagos ?? new List<PagoCliente>())
+            .Where(x => x.Activo)
+            .OrderByDescending(x => x.FechaPago)
+            .ToList();
+
+        cargando = false;
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/clientes");
+    }
+}

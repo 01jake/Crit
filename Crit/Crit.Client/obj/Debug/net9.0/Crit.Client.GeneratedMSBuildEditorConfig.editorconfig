@@ -68,6 +68,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXNpZ25hclF1ZWphcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/ClienteDetalle.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50ZURldGFsbGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Clientes.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50ZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -78,6 +82,22 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/CuentaPorCobrarDetalle.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ3VlbnRhUG9yQ29icmFyRGV0YWxsZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/CuentaPorPagarDetalle.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ3VlbnRhUG9yUGFnYXJEZXRhbGxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/CuentasPorCobrar.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ3VlbnRhc1BvckNvYnJhci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/CuentasPorPagar.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ3VlbnRhc1BvclBhZ2FyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Dashboard.razor]
@@ -94,6 +114,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/MisQuejasAsignadas.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWlzUXVlamFzQXNpZ25hZGFzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/ProveedorDetalle.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvdmVlZG9yRGV0YWxsZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/QuejaPublicaForm.razor]

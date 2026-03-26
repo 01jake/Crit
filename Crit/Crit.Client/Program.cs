@@ -20,6 +20,8 @@ builder.Services.AddScoped<VentaHttpService>();
 builder.Services.AddScoped<ProductoHttpService>();
 builder.Services.AddScoped<PdfHttpService>();
 builder.Services.AddScoped<CompraHttpService>();
+builder.Services.AddScoped<CuentaPorCobrarHttpService>();
+builder.Services.AddScoped<CuentaPorPagarHttpService>();
 //builder.Services.AddScoped<KardexHttpService>(); 
 builder.Services.AddScoped<Dashboardhttpservice>();
 builder.Services.AddScoped<AdminService>();

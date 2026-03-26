@@ -36,6 +36,8 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<QuejaService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<CompraHttpService>();
+builder.Services.AddScoped<CuentaPorCobrarHttpService>();
+builder.Services.AddScoped<CuentaPorPagarHttpService>();
 //builder.Services.AddScoped<KardexHttpService>();
 builder.Services.AddScoped<QuejaPublicaService>();
 builder.Services.AddScoped<ArticuloService>();

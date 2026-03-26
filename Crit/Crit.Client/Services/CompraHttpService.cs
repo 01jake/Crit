@@ -73,5 +73,18 @@ namespace Crit.Client.Services
         {
             return await _http.GetFromJsonAsync<Compra>($"api/compras/{id}");
         }
+        public async Task<List<Compra>> GetByProveedorAsync(int proveedorId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<Compra>>($"api/compras/proveedor/{proveedorId}")
+                       ?? new List<Compra>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener compras del proveedor {ProveedorId}", proveedorId);
+                return new List<Compra>();
+            }
+        }
     }
 }

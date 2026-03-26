@@ -25,8 +25,13 @@ namespace Crit.Shared.Models
         public string? MetodoPago { get; set; } 
         public string? FormaPago { get; set; }  
         public string? UsoCFDI { get; set; }
+        public bool EsCredito { get; set; } = false;
+        public int? DiasCredito { get; set; }
+
         // Navegación
         public Cliente? Cliente { get; set; }
         public List<DetalleVenta> Detalles { get; set; } = new();
+        public CuentaPorCobrar? CuentaPorCobrar { get; set; }
+
     }
 }

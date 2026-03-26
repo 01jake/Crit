@@ -3,6 +3,7 @@
 @using Crit.Shared.Models
 @inject ProveedorHttpService ProveedorHttpService
 @inject IJSRuntime JSRuntime
+@inject CuentaPorPagarHttpService CuentaPorPagarHttpService
 
 <PageTitle>Directorio de Proveedores</PageTitle>
 
@@ -81,17 +82,47 @@
                                         @(p.Activo ? "Activo" : "Inactivo")
                                     </span>
                                 </td>
+
                                 <td class="text-muted small">@p.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @{
+                                        var saldo = ObtenerSaldoProveedor(p.Id);
+                                        var pendientes = ObtenerPendientesProveedor(p.Id);
+                                        var vencida = TieneVencidasProveedor(p.Id);
+                                    }
+
+                                    @if (saldo > 0)
+                                    {
+                                        <div class="fw-bold @(vencida ? "text-danger" : "text-primary")">@saldo.ToString("C")</div>
+                                        <div class="extra-small text-muted">@pendientes cuenta(s)</div>
+                                        @if (vencida)
+                                        {
+                                            <div class="extra-small text-danger">Con vencidas</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Sin deuda</span>
+                                    }
+                                </td>
+
                                 <td class="text-end pe-4">
                                     <div class="btn-group shadow-sm">
                                         <button class="btn btn-white btn-sm" title="Editar" @onclick="() => Editar(p)">
                                             <i class="bi bi-pencil-square text-primary"></i>
                                         </button>
+                                        <a class="btn btn-white btn-sm" href="/cuentas-por-pagar?proveedorId=@p.Id" title="Ver cuentas por pagar del proveedor">
+                                            <i class="bi bi-wallet2 text-warning"></i>
+                                        </a>
                                         <button class="btn btn-white btn-sm" title="Eliminar" @onclick="() => Eliminar(p.Id)">
                                             <i class="bi bi-trash3 text-danger"></i>
                                         </button>
+                                        <a class="btn btn-white btn-sm" href="/proveedores/@p.Id" title="Ver ficha del proveedor">
+                                            <i class="bi bi-building text-dark"></i>
+                                        </a>
                                     </div>
                                 </td>
+                               
                             </tr>
                         }
                     </tbody>
@@ -204,14 +235,21 @@
 @code {
     private List<Proveedor> proveedores = new();
     private Proveedor proveedorActual = new();
-
     private bool loading = true;
     private bool mostrarModal = false;
     private bool guardando = false;
-
+    private List<CuentaPorPagar> cuentasPorPagar = new();
+    private Dictionary<int, List<CuentaPorPagar>> cuentasPorProveedor = new();
     private string terminoBusqueda = "";
     private string filtroEstado = "todos";
     private string mensajeError = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+        await CargarCuentasPorPagar();
+        loading = false;
+    }
 
     private IEnumerable<Proveedor> ProveedoresFiltrados =>
         proveedores.Where(p =>
@@ -228,12 +266,7 @@
             )
         );
 
-    protected override async Task OnInitializedAsync()
-    {
-        await Cargar();
-        loading = false;
-    }
-
+  
     private async Task Cargar()
     {
         try
@@ -321,5 +354,37 @@
         {
             mensajeError = ex.Message;
         }
+    }
+    private async Task CargarCuentasPorPagar()
+    {
+        cuentasPorPagar = await CuentaPorPagarHttpService.GetAsync();
+
+        cuentasPorProveedor = cuentasPorPagar
+            .Where(x => x.ProveedorId > 0)
+            .GroupBy(x => x.ProveedorId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+    }
+    private decimal ObtenerSaldoProveedor(int proveedorId)
+    {
+        if (!cuentasPorProveedor.TryGetValue(proveedorId, out var cuentas))
+            return 0m;
+
+        return cuentas.Where(x => x.Activa && x.Saldo > 0).Sum(x => x.Saldo);
+    }
+
+    private int ObtenerPendientesProveedor(int proveedorId)
+    {
+        if (!cuentasPorProveedor.TryGetValue(proveedorId, out var cuentas))
+            return 0;
+
+        return cuentas.Count(x => x.Activa && x.Saldo > 0);
+    }
+
+    private bool TieneVencidasProveedor(int proveedorId)
+    {
+        if (!cuentasPorProveedor.TryGetValue(proveedorId, out var cuentas))
+            return false;
+
+        return cuentas.Any(x => x.Activa && x.EstaVencida && x.Saldo > 0);
     }
 }

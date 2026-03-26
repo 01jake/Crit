@@ -98,7 +98,32 @@ namespace Crit.Controllers
 
                 _context.Compra.Add(compra);
                 await _context.SaveChangesAsync();
+                if (compra.EsCredito)
+                {
+                    var cuentaPorPagar = new CuentaPorPagar
+                    {
+                        ProveedorId = compra.ProveedorId,
+                        CompraId = compra.Id,
+                        FolioFactura = string.IsNullOrWhiteSpace(compra.FolioFactura)
+                            ? $"{compra.SerieFactura}-{compra.Id}"
+                            : compra.FolioFactura,
+                        FechaEmision = compra.Fecha,
+                        FechaVencimiento = compra.EsCredito
+                        ? compra.Fecha.AddDays(compra.DiasCredito ?? 30)
+                        : null,
+                        Subtotal = compra.Subtotal,
+                        Descuento = 0m,
+                        IVA = compra.IVA,
+                        Total = compra.Total,
+                        TotalPagado = 0m,
+                        Estado = "Pendiente",
+                        Observaciones = "Generada automáticamente desde compra a crédito",
+                        Activa = true
+                    };
 
+                    _context.CuentasPorPagar.Add(cuentaPorPagar);
+                    await _context.SaveChangesAsync();
+                }
                 await transaction.CommitAsync();
 
                 return Ok(compra);
@@ -175,6 +200,27 @@ namespace Crit.Controllers
                 return NotFound();
 
             return Ok(compra);
+        }
+        [HttpGet("proveedor/{proveedorId}")]
+        public async Task<ActionResult<IEnumerable<Compra>>> GetComprasPorProveedor(int proveedorId)
+        {
+            try
+            {
+                var compras = await _context.Compra
+                    .Include(c => c.Proveedor)
+                    .Include(c => c.Detalles)
+                        .ThenInclude(d => d.Producto)
+                    .Where(c => c.ProveedorId == proveedorId)
+                    .OrderByDescending(c => c.Fecha)
+                    .ToListAsync();
+
+                return Ok(compras);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener compras del proveedor {ProveedorId}", proveedorId);
+                return StatusCode(500, "Error interno del servidor");
+            }
         }
 
     }

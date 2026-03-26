@@ -191,9 +191,34 @@ namespace Crit.Controllers
                 _logger.LogInformation("Guardando cambios en la base de datos...");
 
                 await _context.SaveChangesAsync();
+                if (venta.EsCredito)
+                {
+                    var cuentaPorCobrar = new CuentaPorCobrar
+                    {
+                        ClienteId = venta.ClienteId,
+                        VentaId = venta.Id,
+                        Folio = venta.NumeroVenta,
+                        FechaEmision = venta.Fecha,
+                        FechaVencimiento = venta.EsCredito
+                        ? venta.Fecha.AddDays(venta.DiasCredito ?? 30)
+                        : null,
+                        Subtotal = venta.Subtotal,
+                        Descuento = venta.Descuento,
+                        IVA = venta.IVA,
+                        Total = venta.Total,
+                        TotalPagado = 0m,
+                        Estado = "Pendiente",
+                        Observaciones = "Generada automáticamente desde venta a crédito",
+                        Activa = true
+                    };
+
+                    _context.CuentasPorCobrar.Add(cuentaPorCobrar);
+                    await _context.SaveChangesAsync();
+                }
                 await transaction.CommitAsync();
 
                 _logger.LogInformation($"✅ Venta creada exitosamente con ID: {venta.Id}");
+               
 
                 // ✅ Retornar solo datos básicos sin navegaciones complejas
                 return Ok(new
@@ -207,7 +232,8 @@ namespace Crit.Controllers
                     IVA = venta.IVA,
                     Total = venta.Total,
                     Estado = venta.Estado,
-                    Notas = venta.Notas
+                    Notas = venta.Notas,
+                    EsCredito = venta.EsCredito
                 });
             }
             catch (DbUpdateException dbEx)

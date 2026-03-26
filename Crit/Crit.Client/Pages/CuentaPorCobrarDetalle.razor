@@ -1,0 +1,359 @@
+﻿@page "/cuentas-por-cobrar/{Id:int}"
+@using Crit.Client.Services
+@using Crit.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject CuentaPorCobrarHttpService CuentaPorCobrarService
+@inject NavigationManager Navigation
+
+<PageTitle>Detalle Cuenta · @(cuenta?.Folio ?? "Cargando...")</PageTitle>
+
+<div class="pos-container">
+    @if (cargando)
+    {
+        <div class="vh-100 d-flex flex-column justify-content-center align-items-center">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="text-muted">Cargando detalles de la cuenta...</p>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger shadow-sm border-start border-4 border-danger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @error
+            <button class="btn btn-sm btn-outline-danger ms-3" @onclick="Volver">Regresar</button>
+        </div>
+    }
+    else if (cuenta is not null)
+    {
+        @* --- ENCABEZADO --- *@
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item"><a href="/cuentas-por-cobrar" class="text-decoration-none">Cuentas por Cobrar</a></li>
+                        <li class="breadcrumb-item active">Detalle</li>
+                    </ol>
+                </nav>
+                <h2 class="page-title mb-0">
+                    <i class="bi bi-file-earmark-medical me-2 text-primary"></i>
+                    @(string.IsNullOrWhiteSpace(cuenta.Folio) ? "Sin Folio" : cuenta.Folio)
+                </h2>
+                <span class="text-muted">@cuenta.Cliente?.Nombre</span>
+            </div>
+            <button class="btn btn-light border shadow-sm" @onclick="Volver">
+                <i class="bi bi-arrow-left me-2"></i>Volver al Listado
+            </button>
+        </div>
+
+        <div class="row g-4">
+            @* --- COLUMNA IZQUIERDA: INFORMACIÓN Y PAGOS --- *@
+            <div class="col-12 col-xl-8">
+                @* CARD: RESUMEN DE LA CUENTA *@
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="card-title mb-0 fw-bold">Resumen de Cuenta</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-6 col-md-3">
+                                <label class="extra-small text-uppercase fw-bold text-muted d-block">Emisión</label>
+                                <span class="fw-semibold">@cuenta.FechaEmision.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="extra-small text-uppercase fw-bold text-muted d-block">Vencimiento</label>
+                                <span class="fw-semibold @(cuenta.EstaVencida ? "text-danger" : "")">
+                                    @(cuenta.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "N/A")
+                                </span>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="extra-small text-uppercase fw-bold text-muted d-block">Estado</label>
+                                <span class="@ObtenerBadgeEstado(cuenta.Estado)">@cuenta.Estado</span>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="extra-small text-uppercase fw-bold text-muted d-block">Días Vencidos</label>
+                                <span class="fw-bold @(cuenta.EstaVencida ? "text-danger" : "text-success")">
+                                    @(cuenta.EstaVencida? cuenta.DiasVencidos: 0) días
+                                </span>
+                            </div>
+
+                            <div class="col-12 mt-2">
+                                <hr class="text-secondary opacity-25" />
+                            </div>
+
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3 text-center">
+                                    <label class="extra-small text-uppercase fw-bold text-muted d-block">Total Factura</label>
+                                    <span class="fs-5 fw-bold text-dark">@cuenta.Total.ToString("C")</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-success-subtle rounded-3 text-center border border-success-subtle">
+                                    <label class="extra-small text-uppercase fw-bold text-success d-block">Abonado</label>
+                                    <span class="fs-5 fw-bold text-success">@cuenta.TotalPagado.ToString("C")</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-primary-subtle rounded-3 text-center border border-primary-subtle">
+                                    <label class="extra-small text-uppercase fw-bold text-primary d-block">Saldo Pendiente</label>
+                                    <span class="fs-5 fw-bold text-primary">@cuenta.Saldo.ToString("C")</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (cuenta.EstaVencida)
+                        {
+                            <div class="alert alert-warning mt-4 mb-0 border-0 shadow-sm d-flex align-items-center">
+                                <i class="bi bi-clock-history fs-4 me-3"></i>
+                                <div>
+                                    <strong>Atención:</strong> Esta cuenta superó su fecha límite de pago por @cuenta.DiasVencidos días.
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @* CARD: HISTORIAL DE PAGOS *@
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0 fw-bold">Historial de Abonos</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (cuenta.Pagos is null || !cuenta.Pagos.Any(p => p.Activo))
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-wallet2 fs-1 text-muted opacity-25"></i>
+                                <p class="text-muted mt-2">No se han registrado pagos para esta cuenta.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr class="extra-small text-uppercase text-muted">
+                                            <th class="ps-4">Fecha y Hora</th>
+                                            <th>Método</th>
+                                            <th>Referencia</th>
+                                            <th class="text-end">Monto</th>
+                                            <th class="text-end pe-4">Saldo Restante</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var pago in cuenta.Pagos.Where(x => x.Activo).OrderByDescending(x => x.FechaPago))
+                                        {
+                                            <tr>
+                                                <td class="ps-4">
+                                                    <div class="fw-bold">@pago.FechaPago.ToString("dd/MM/yyyy")</div>
+                                                    <div class="extra-small text-muted">@pago.FechaPago.ToString("HH:mm") hrs</div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border fw-normal">@pago.MetodoPago</span>
+                                                </td>
+                                                <td class="small text-muted">@(pago.Referencia ?? "-")</td>
+                                                <td class="text-end fw-bold text-success">@pago.Monto.ToString("C")</td>
+                                                <td class="text-end pe-4 text-muted small">@pago.SaldoPosterior.ToString("C")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @* --- COLUMNA DERECHA: REGISTRO DE PAGO --- *@
+            <div class="col-12 col-xl-4">
+                <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary py-3">
+                        <h5 class="card-title mb-0 fw-bold text-white">Registrar Nuevo Abono</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrWhiteSpace(mensaje))
+                        {
+                            <div class="alert alert-success border-0 shadow-sm mb-3">
+                                <i class="bi bi-check-circle-fill me-2"></i> @mensaje
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(errorPago))
+                        {
+                            <div class="alert alert-danger border-0 shadow-sm mb-3">
+                                <i class="bi bi-x-circle-fill me-2"></i> @errorPago
+                            </div>
+                        }
+
+                        @if (cuenta.Estado == "Pagada" || cuenta.Estado == "Cancelada")
+                        {
+                            <div class="text-center py-4">
+                                <div class="display-6 text-muted mb-2"><i class="bi bi-lock-fill"></i></div>
+                                <p class="text-muted fw-bold">Esta cuenta está @cuenta.Estado.ToLower() y no admite más abonos.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <EditForm Model="nuevoPago" OnValidSubmit="RegistrarPagoAsync">
+                                <DataAnnotationsValidator />
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Fecha del Pago</label>
+                                    <InputDate class="form-control bg-light" @bind-Value="nuevoPago.FechaPago" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Monto a Abonar</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-success fw-bold">$</span>
+                                        <InputNumber class="form-control border-start-0 ps-0 fs-5 fw-bold" @bind-Value="nuevoPago.Monto" placeholder="0.00" />
+                                    </div>
+                                    <div class="form-text extra-small text-end">Saldo pendiente: <strong>@cuenta.Saldo.ToString("C")</strong></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Método de Pago</label>
+                                    <InputSelect class="form-select bg-light" @bind-Value="nuevoPago.MetodoPago">
+                                        <option value="">Seleccione...</option>
+                                        <option value="Efectivo">Efectivo</option>
+                                        <option value="Transferencia">Transferencia</option>
+                                        <option value="Tarjeta">Tarjeta de Crédito/Débito</option>
+                                        <option value="Cheque">Cheque</option>
+                                    </InputSelect>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Referencia / Folio Pago</label>
+                                    <InputText class="form-control bg-light" @bind-Value="nuevoPago.Referencia" placeholder="Opcional..." />
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold small">Observaciones</label>
+                                    <InputTextArea class="form-control bg-light" @bind-Value="nuevoPago.Observaciones" rows="2" />
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm fw-bold" disabled="@guardandoPago">
+                                    @if (guardandoPago)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        <span>Procesando...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check2-circle me-2"></i>
+                            
+                                        <span>Confirmar Abono</span>
+                                    }
+                                </button>
+                            </EditForm>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.72rem;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        font-size: 1.2rem;
+        line-height: 1;
+        vertical-align: middle;
+    }
+
+    .card {
+        border-radius: 12px;
+    }
+
+    .card-header:first-child {
+        border-radius: 12px 12px 0 0;
+    }
+
+    .table thead th {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+        border-color: #0d6efd;
+    }
+</style>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CuentaPorCobrar? cuenta;
+    private bool cargando = true;
+    private bool guardandoPago;
+    private string? error;
+    private string? errorPago;
+    private string? mensaje;
+
+    private PagoCliente nuevoPago = new() { FechaPago = DateTime.Today };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await CargarCuentaAsync();
+    }
+
+    private async Task CargarCuentaAsync()
+    {
+        cargando = true;
+        error = null;
+        mensaje = null;
+        errorPago = null;
+
+        try
+        {
+            cuenta = await CuentaPorCobrarService.GetByIdAsync(Id);
+            if (cuenta is null) error = "La cuenta no fue encontrada.";
+        }
+        catch (Exception ex)
+        {
+            error = $"Error al cargar: {ex.Message}";
+        }
+        finally { cargando = false; }
+    }
+
+    private async Task RegistrarPagoAsync()
+    {
+        if (cuenta is null) return;
+
+        errorPago = null;
+        mensaje = null;
+
+        if (nuevoPago.Monto <= 0) { errorPago = "El monto debe ser mayor a cero."; return; }
+        if (nuevoPago.Monto > cuenta.Saldo) { errorPago = "El abono excede el saldo pendiente."; return; }
+        if (string.IsNullOrWhiteSpace(nuevoPago.MetodoPago)) { errorPago = "Seleccione un método de pago."; return; }
+
+        try
+        {
+            guardandoPago = true;
+            var ok = await CuentaPorCobrarService.RegistrarPagoAsync(cuenta.Id, nuevoPago);
+
+            if (!ok) { errorPago = "No se pudo procesar el pago."; return; }
+
+            mensaje = "¡Abono registrado con éxito!";
+            nuevoPago = new PagoCliente { FechaPago = DateTime.Today };
+            await CargarCuentaAsync();
+        }
+        catch (Exception ex) { errorPago = $"Error: {ex.Message}"; }
+        finally { guardandoPago = false; }
+    }
+
+    private void Volver() => Navigation.NavigateTo("/cuentas-por-cobrar");
+
+    private static string ObtenerBadgeEstado(string? estado) => estado switch
+    {
+        "Pagada" => "badge rounded-pill text-bg-success-subtle text-success border border-success",
+        "Parcial" => "badge rounded-pill text-bg-warning-subtle text-warning-emphasis border border-warning",
+        "Vencida" => "badge rounded-pill text-bg-danger-subtle text-danger border border-danger",
+        "Cancelada" => "badge rounded-pill text-bg-secondary-subtle text-secondary border border-secondary",
+        _ => "badge rounded-pill text-bg-primary-subtle text-primary border border-primary"
+    };
+}

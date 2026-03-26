@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject CuentaPorCobrarHttpService CuentaPorCobrarHttpService
 @inject ClienteHttpService ClienteHttpService
 @inject IJSRuntime JSRuntime
 
@@ -27,7 +28,6 @@
             <div class="row g-3">
                 <div class="col-md-8">
                     <div class="search-box-container">
-                        <i class="bi bi-search"></i>
                         <input type="text" class="form-control" placeholder="Buscar por nombre, email o RFC..."
                                @bind="terminoBusqueda" @bind:event="oninput" />
                     </div>
@@ -60,6 +60,7 @@
                             <th>Contacto</th>
                             <th>Datos Fiscales</th>
                             <th>Estado</th>
+                            <th>Resumen CxC</th>
                             <th class="text-end pe-4">Acciones</th>
                         </tr>
                     </thead>
@@ -78,32 +79,76 @@
                                         </div>
                                     </div>
                                 </td>
+
                                 <td>
-                                    <div class="small"><i class="bi bi-envelope me-1 text-muted"></i> @cliente.Email</div>
-                                    <div class="small"><i class="bi bi-telephone me-1 text-muted"></i> @(cliente.Telefono ?? "S/N")</div>
+                                    <div class="small">
+                                        <i class="bi bi-envelope me-1 text-muted"></i> @cliente.Email
+                                    </div>
+                                    <div class="small">
+                                        <i class="bi bi-telephone me-1 text-muted"></i> @(cliente.Telefono ?? "S/N")
+                                    </div>
                                 </td>
+
                                 <td>
-                                    <div class="small fw-bold text-secondary">RFC: @(string.IsNullOrEmpty(cliente.RFC) ? "XAXX010101000" : cliente.RFC)</div>
+                                    <div class="small fw-bold text-secondary">
+                                        RFC: @(string.IsNullOrEmpty(cliente.RFC) ? "XAXX010101000" : cliente.RFC)
+                                    </div>
                                     <div class="extra-small text-muted">CP: @(cliente.CodigoPostal ?? "S/N")</div>
                                 </td>
+
                                 <td>
                                     <span class="status-badge @(cliente.Activo ? "status-active" : "status-inactive")">
                                         @(cliente.Activo ? "Activo" : "Inactivo")
                                     </span>
                                 </td>
+
+                                <td>
+                                    @{
+                                        var saldo = ObtenerSaldoCliente(cliente.Id);
+                                        var pendientes = ObtenerPendientesCliente(cliente.Id);
+                                        var vencida = TieneVencidasCliente(cliente.Id);
+                                    }
+
+                                    @if (saldo > 0)
+                                    {
+                                        <div class="fw-bold @(vencida ? "text-danger" : "text-primary")">
+                                            @saldo.ToString("C")
+                                        </div>
+                                        <div class="extra-small text-muted">@pendientes cuenta(s)</div>
+
+                                        @if (vencida)
+                                        {
+                                            <div class="extra-small text-danger">Con vencidas</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Sin saldo</span>
+                                    }
+                                </td>
+
                                 <td class="text-end pe-4">
                                     <div class="btn-group shadow-sm">
-                                        <button class="btn btn-white btn-sm" @onclick="() => EditarCliente(cliente)">
+                                        <button class="btn btn-white btn-sm" @onclick="() => EditarCliente(cliente)" title="Editar cliente">
                                             <i class="bi bi-pencil-square text-primary"></i>
                                         </button>
-                                        <button class="btn btn-white btn-sm" @onclick="() => EliminarCliente(cliente.Id)">
+
+                                        <a class="btn btn-white btn-sm" href="/cuentas-por-cobrar?clienteId=@cliente.Id" title="Ver cuentas por cobrar del cliente">
+                                            <i class="bi bi-cash-coin text-success"></i>
+                                        </a>
+
+                                        <button class="btn btn-white btn-sm" @onclick="() => EliminarCliente(cliente.Id)" title="Eliminar cliente">
                                             <i class="bi bi-trash3 text-danger"></i>
                                         </button>
+                                        <a class="btn btn-white btn-sm" href="/clientes/@cliente.Id" title="Ver ficha del cliente">
+                                            <i class="bi bi-person-vcard text-dark"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
                         }
                     </tbody>
+
                 </table>
             </div>
         </div>
@@ -228,6 +273,8 @@
     private string terminoBusqueda = "";
     private string filtroEstado = "todos";
     private string mensajeError = "";
+    private List<CuentaPorCobrar> cuentasPorCobrar = new();
+    private Dictionary<int, List<CuentaPorCobrar>> cuentasPorCliente = new();
 
     private IEnumerable<Cliente> ClientesFiltrados => clientes.Where(c =>
         (string.IsNullOrEmpty(terminoBusqueda) ||
@@ -239,6 +286,7 @@
     protected override async Task OnInitializedAsync()
     {
         await CargarClientes();
+        await CargarCuentasPorCobrar();
         loading = false;
     }
 
@@ -299,5 +347,37 @@
             await ClienteHttpService.DeleteClienteAsync(id);
             await CargarClientes();
         }
+    }
+    private async Task CargarCuentasPorCobrar()
+    {
+        cuentasPorCobrar = await CuentaPorCobrarHttpService.GetAsync();
+
+        cuentasPorCliente = cuentasPorCobrar
+            .Where(x => x.ClienteId > 0)
+            .GroupBy(x => x.ClienteId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+    }
+    private decimal ObtenerSaldoCliente(int clienteId)
+    {
+        if (!cuentasPorCliente.TryGetValue(clienteId, out var cuentas))
+            return 0m;
+
+        return cuentas.Where(x => x.Activa && x.Saldo > 0).Sum(x => x.Saldo);
+    }
+
+    private int ObtenerPendientesCliente(int clienteId)
+    {
+        if (!cuentasPorCliente.TryGetValue(clienteId, out var cuentas))
+            return 0;
+
+        return cuentas.Count(x => x.Activa && x.Saldo > 0);
+    }
+
+    private bool TieneVencidasCliente(int clienteId)
+    {
+        if (!cuentasPorCliente.TryGetValue(clienteId, out var cuentas))
+            return false;
+
+        return cuentas.Any(x => x.Activa && x.EstaVencida && x.Saldo > 0);
     }
 }

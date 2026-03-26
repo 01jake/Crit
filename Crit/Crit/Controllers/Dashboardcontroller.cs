@@ -280,6 +280,54 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
-       
+
+        [HttpGet("finanzas-resumen")]
+        public async Task<ActionResult<FinanzasResumenDto>> GetFinanzasResumen()
+        {
+            try
+            {
+                var inicioMes = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+                var cuentasCobrar = await _context.CuentasPorCobrar
+                    .AsNoTracking()
+                    .Where(x => x.Activa)
+                    .ToListAsync();
+
+                var cuentasPagar = await _context.CuentasPorPagar
+                    .AsNoTracking()
+                    .Where(x => x.Activa)
+                    .ToListAsync();
+
+                var pagosClienteMes = await _context.PagosCliente
+                    .AsNoTracking()
+                    .Where(x => x.Activo && x.FechaPago >= inicioMes)
+                    .SumAsync(x => (decimal?)x.Monto) ?? 0m;
+
+                var pagosProveedorMes = await _context.PagosProveedor
+                    .AsNoTracking()
+                    .Where(x => x.Activo && x.FechaPago >= inicioMes)
+                    .SumAsync(x => (decimal?)x.Monto) ?? 0m;
+
+                var resumen = new FinanzasResumenDto
+                {
+                    TotalPorCobrar = cuentasCobrar.Where(x => x.Saldo > 0).Sum(x => x.Saldo),
+                    TotalPorPagar = cuentasPagar.Where(x => x.Saldo > 0).Sum(x => x.Saldo),
+                    TotalCobradoMes = pagosClienteMes,
+                    TotalPagadoMes = pagosProveedorMes,
+                    CarteraVencidaClientes = cuentasCobrar.Where(x => x.EstaVencida).Sum(x => x.Saldo),
+                    CarteraVencidaProveedores = cuentasPagar.Where(x => x.EstaVencida).Sum(x => x.Saldo),
+                    CuentasPorCobrarPendientes = cuentasCobrar.Count(x => x.Saldo > 0),
+                    CuentasPorPagarPendientes = cuentasPagar.Count(x => x.Saldo > 0)
+                };
+
+                return Ok(resumen);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener resumen financiero");
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
+
     }
 }

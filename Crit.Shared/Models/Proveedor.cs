@@ -40,5 +40,7 @@ namespace Crit.Shared.Models
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
 
         public bool Activo { get; set; } = true;
+        public ICollection<CuentaPorPagar>? CuentasPorPagar { get; set; }
+
     }
 }

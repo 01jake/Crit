@@ -71,5 +71,17 @@ namespace Crit.Client.Services
                 return false;
             }
         }
+        public async Task<Proveedor?> GetByIdAsync(int id)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<Proveedor>($"api/proveedores/{id}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener proveedor {Id}", id);
+                return null;
+            }
+        }
     }
 }

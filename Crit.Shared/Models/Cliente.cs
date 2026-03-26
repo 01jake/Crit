@@ -49,5 +49,8 @@ namespace Crit.Shared.Models
         // Relaciones
         public ICollection<Venta>? Ventas { get; set; }
         public ICollection<Cotizacion>? Cotizaciones { get; set; }
+        public ICollection<CuentaPorCobrar>? CuentasPorCobrar { get; set; }
+        
+
     }
 }

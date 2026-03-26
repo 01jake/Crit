@@ -169,7 +169,66 @@ namespace Crit.Shared.DTOs
         public decimal Total { get; set; }
         public string Estado { get; set; } = string.Empty;
     }
+    public class CuentaPorCobrarResumenDto
+    {
+        public int Id { get; set; }
+        public string Cliente { get; set; } = string.Empty;
+        public string? Folio { get; set; }
+        public DateTime FechaEmision { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public decimal Total { get; set; }
+        public decimal TotalPagado { get; set; }
+        public decimal Saldo { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public bool EstaVencida { get; set; }
+        public int DiasVencidos { get; set; }
+    }
 
+    public class CuentaPorPagarResumenDto
+    {
+        public int Id { get; set; }
+        public string Proveedor { get; set; } = string.Empty;
+        public string? FolioFactura { get; set; }
+        public DateTime FechaEmision { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public decimal Total { get; set; }
+        public decimal TotalPagado { get; set; }
+        public decimal Saldo { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public bool EstaVencida { get; set; }
+        public int DiasVencidos { get; set; }
+    }
+
+    public class RegistrarPagoClienteDto
+    {
+        public DateTime FechaPago { get; set; } = DateTime.Now;
+        public decimal Monto { get; set; }
+        public string? MetodoPago { get; set; }
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public class RegistrarPagoProveedorDto
+    {
+        public DateTime FechaPago { get; set; } = DateTime.Now;
+        public decimal Monto { get; set; }
+        public string? MetodoPago { get; set; }
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public class FinanzasResumenDto
+    {
+        public decimal TotalPorCobrar { get; set; }
+        public decimal TotalPorPagar { get; set; }
+        public decimal TotalCobradoMes { get; set; }
+        public decimal TotalPagadoMes { get; set; }
+        public decimal CarteraVencidaClientes { get; set; }
+        public decimal CarteraVencidaProveedores { get; set; }
+        public int CuentasPorCobrarPendientes { get; set; }
+        public int CuentasPorPagarPendientes { get; set; }
+
+    }
     //public class DashboardStatsDto
     //{
     //    public decimal TotalVentasMes { get; set; }

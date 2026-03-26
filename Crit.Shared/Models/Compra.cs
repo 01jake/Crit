@@ -18,6 +18,8 @@ namespace Crit.Shared.Models
         public string? FolioFactura { get; set; }
         public string? RFCProveedor { get; set; }
         public DateTime FechaFactura { get; set; }
+        public bool EsCredito { get; set; } = false;
+        public int? DiasCredito { get; set; }
 
         public decimal Subtotal { get; set; }
         public decimal IVA { get; set; }
@@ -25,5 +27,8 @@ namespace Crit.Shared.Models
         public string Estado { get; set; } = "Completada";
       
         public List<DetalleCompra> Detalles { get; set; } = new();
+        public CuentaPorPagar? CuentaPorPagar { get; set; }
+
+
     }
 }

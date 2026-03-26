@@ -125,6 +125,20 @@ namespace Crit.Client.Services
                 return new DashboardStatsDto();
             }
         }
+        public async Task<FinanzasResumenDto> GetFinanzasResumenAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<FinanzasResumenDto>("api/dashboard/finanzas-resumen")
+                       ?? new FinanzasResumenDto();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener resumen financiero");
+                return new FinanzasResumenDto();
+            }
+        }
+
 
     }
     // DTO para alertas

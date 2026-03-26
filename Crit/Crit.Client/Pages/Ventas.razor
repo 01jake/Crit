@@ -74,6 +74,24 @@
                             </select>
                         </div>
 
+                        <div class="row g-2 mb-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Tipo de venta</label>
+                                <select class="form-select form-select-sm" value="@tipoVenta" @onchange="OnTipoVentaChanged">
+                                    <option value="Contado">Contado</option>
+                                    <option value="Credito">Crédito</option>
+                                </select>
+                            </div>
+
+                            @if (ventaActual.EsCredito)
+                            {
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Días de crédito</label>
+                                    <input type="number" min="1" class="form-control form-control-sm" @bind="ventaActual.DiasCredito" />
+                                </div>
+                            }
+                        </div>
+
                         <div class="carrito-items-list flex-grow-1 overflow-auto" style="max-height: 350px;">
                             @if (!ventaActual.Detalles.Any())
                             {
@@ -182,7 +200,7 @@
     private List<Venta> ventasRecientes = new();
     private Venta ventaActual = new();
     private ElementReference searchBar;
-
+    private string tipoVenta = "Contado";
     private string busquedaProducto = "";
     private string busquedaVenta = ""; // Variable para el buscador de folios
     private bool procesando = false;
@@ -218,12 +236,17 @@
 
     private void InicializarVenta()
     {
+
+        tipoVenta = "Contado";
+
         ventaActual = new Venta
         {
             Fecha = DateTime.Now,
             Estado = "Completada",
             Detalles = new List<DetalleVenta>(),
-            Descuento = 0
+            Descuento = 0,
+            EsCredito = false,
+            DiasCredito = null
         };
     }
 
@@ -273,7 +296,21 @@
         }
         RecalcularTotales();
     }
+    
+    private void OnTipoVentaChanged(ChangeEventArgs e)
+    {
+        tipoVenta = e.Value?.ToString() ?? "Contado";
+        ventaActual.EsCredito = tipoVenta == "Credito";
 
+        if (!ventaActual.EsCredito)
+        {
+            ventaActual.DiasCredito = null;
+        }
+        else if (!ventaActual.DiasCredito.HasValue || ventaActual.DiasCredito <= 0)
+        {
+            ventaActual.DiasCredito = 30;
+        }
+    }
     private void AumentarCantidad(DetalleVenta detalle)
     {
         var producto = productos.FirstOrDefault(p => p.Id == detalle.ProductoId);
@@ -323,7 +360,23 @@
     {
         try
         {
-            if (!ventaActual.Detalles.Any()) return;
+            if (!ventaActual.Detalles.Any())
+                return;
+
+            if (ventaActual.EsCredito)
+            {
+                if (ventaActual.ClienteId == 0)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Debes seleccionar un cliente para una venta a crédito.");
+                    return;
+                }
+
+                if (!ventaActual.DiasCredito.HasValue || ventaActual.DiasCredito <= 0)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Debes indicar los días de crédito.");
+                    return;
+                }
+            }
 
             procesando = true;
             ventaActual.Subtotal = subtotal;
@@ -332,6 +385,7 @@
             ventaActual.Fecha = DateTime.Now;
 
             var result = await VentaHttpService.CreateVentaAsync(ventaActual);
+
             if (result != null)
             {
                 await CargarDatos();
@@ -340,9 +394,16 @@
                 await searchBar.FocusAsync();
             }
         }
-        catch (Exception ex) { await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}"); }
-        finally { procesando = false; }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+        finally
+        {
+            procesando = false;
+        }
     }
+
 
     private void LimpiarCarrito() => InicializarVenta();
 

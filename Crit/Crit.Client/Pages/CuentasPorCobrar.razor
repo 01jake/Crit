@@ -1,0 +1,360 @@
+﻿@page "/cuentas-por-cobrar"
+@using Crit.Client.Services
+@using Crit.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Crit.Shared.DTOs
+@attribute [StreamRendering(true)]
+@inject Dashboardhttpservice Dashboardhttpservice
+@inject NavigationManager Navigation
+
+@inject IJSRuntime JSRuntime
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject CuentaPorCobrarHttpService CuentaPorCobrarHttpService
+
+<PageTitle>Cuentas por Cobrar</PageTitle>
+
+<div class="pos-container">
+    @* --- ENCABEZADO --- *@
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="page-title mb-0">Cuentas por Cobrar</h2>
+            <p class="text-muted small mb-0">Gestión de créditos y saldos pendientes de clientes</p>
+        </div>
+        <button class="btn btn-light border shadow-sm" @onclick="CargarDatos">
+            <i class="bi bi-arrow-clockwise me-2 text-primary"></i>Actualizar Datos
+        </button>
+    </div>
+
+    @* --- INDICADORES (KPIs) --- *@
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-primary-subtle text-primary me-3">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Total por Cobrar</span>
+                    </div>
+                    <h3 class="fw-bold mb-0">@totalPorCobrar.ToString("C")</h3>
+                    <div class="text-muted extra-small mt-1">@pendientesCount facturas pendientes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-danger-subtle text-danger me-3">
+                            <i class="bi bi-exclamation-octagon"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Cartera Vencida</span>
+                    </div>
+                    <h3 class="fw-bold mb-0 text-danger">@carteraVencida.ToString("C")</h3>
+                    <div class="text-danger extra-small mt-1">@vencidasCount facturas fuera de plazo</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-success-subtle text-success me-3">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Cobrado este Mes</span>
+                    </div>
+                    <h3 class="fw-bold mb-0 text-success">
+                        @(clienteId.HasValue? cobradoEsteMesFiltrado.ToString("C") : resumenFinanzas.TotalCobradoMes.ToString("C"))
+                    </h3>
+                    <div class="text-muted extra-small mt-1">
+                        @(clienteId.HasValue ? "Abonos del cliente en el mes" : $"{resumenFinanzas.CuentasPorCobrarPendientes} cuenta(s) activas")
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-warning-subtle text-warning me-3">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Días Promedio Cobro</span>
+                    </div>
+                    <h3 class="fw-bold mb-0 text-warning">15 d</h3>
+                    <div class="text-muted extra-small mt-1">Eficiencia de cobranza</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- FILTROS Y TABLA --- *@
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="row g-3">
+                <div class="col-12 col-md-5">
+                    <div class="search-box m-0">
+                        <input type="text" class="form-control" placeholder="Buscar cliente o folio..."
+                               @bind="busqueda" @bind:event="oninput" />
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <select class="form-select" @bind="filtroEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Parcial">Parcial</option>
+                        <option value="Pagada">Pagada</option>
+                        <option value="Vencida">Vencida</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-4">
+                    <select class="form-select" @bind="filtroVencimiento">
+                        <option value="">Todas las fechas</option>
+                        <option value="vigentes">Solo Vigentes</option>
+                        <option value="vencidas">Solo Vencidas</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            @if (cargando)
+            {
+                <div class="py-5 text-center">
+                    <div class="spinner-border text-primary mb-2"></div>
+                    <p class="text-muted">Sincronizando cuentas...</p>
+                </div>
+            }
+            else if (!CuentasFiltradas.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-clipboard-x fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">No se encontraron registros con los filtros aplicados.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="small text-uppercase text-muted">
+                                <th class="ps-4">Cliente</th>
+                                <th>Folio</th>
+                                <th>Emisión</th>
+                                <th>Vencimiento</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Abonado</th>
+                                <th class="text-end">Saldo</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cuenta in CuentasFiltradas)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">@cuenta.Cliente?.Nombre</div>
+                                        <span class="extra-small text-muted">ID: @cuenta.ClienteId</span>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi bi-hash me-1"></i>
+                                            @(string.IsNullOrWhiteSpace(cuenta.Folio) ? "S/F" : cuenta.Folio)
+                                        </span>
+                                    </td>
+
+                                    <td class="small">@cuenta.FechaEmision.ToString("dd MMM yyyy")</td>
+
+                                    <td>
+                                        @if (cuenta.FechaVencimiento.HasValue)
+                                        {
+                                            <span class="small @(cuenta.EstaVencida ? "text-danger fw-bold" : "")">
+                                                @cuenta.FechaVencimiento.Value.ToString("dd/MM/yyyy")
+                                            </span>
+
+                                            @if (cuenta.EstaVencida)
+                                            {
+                                                <div class="extra-small text-danger">(@cuenta.DiasVencidos días)</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">-</span>
+                                        }
+                                    </td>
+
+                                    <td class="text-end fw-semibold">@cuenta.Total.ToString("C")</td>
+                                    <td class="text-end text-success">@cuenta.TotalPagado.ToString("C")</td>
+
+                                    <td class="text-end">
+                                        <span class="fw-bold text-primary">@cuenta.Saldo.ToString("C")</span>
+                                    </td>
+
+                                    <td class="text-center">
+                                        <span class="@ObtenerBadgeEstado(cuenta.Estado) py-2 px-3">
+                                            @cuenta.Estado
+                                        </span>
+                                    </td>
+
+                                    <td class="text-center">
+                                        <div class="d-inline-flex gap-2">
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               href="/cuentas-por-cobrar/@cuenta.Id"
+                                               title="Registrar abono">
+                                                <i class="bi bi-plus-circle"></i>
+                                            </a>
+
+                                            <a class="btn btn-sm btn-outline-secondary"
+                                               href="/cuentas-por-cobrar/@cuenta.Id"
+                                               title="Ver detalle">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+
+                                            <button class="btn btn-sm btn-outline-dark"
+                                                    title="Ver comprobante del último abono"
+                                                    @onclick="@(() => VerUltimoComprobante(cuenta))"
+                                                    disabled="@(cuenta.TotalPagado <= 0)">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 1.2rem;
+    }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .stat-card {
+        transition: transform 0.2s;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+</style>
+
+@code {
+    // ... Mantenemos la lógica de C# igual, ya que es funcional y correcta ...
+    private List<CuentaPorCobrar> cuentas = new();
+    private bool cargando = true;
+    private string? error;
+    private FinanzasResumenDto resumenFinanzas = new();
+    [SupplyParameterFromQuery]
+    public int? clienteId { get; set; }
+    private string busqueda = string.Empty;
+    private string filtroEstado = string.Empty;
+    private string filtroVencimiento = string.Empty;
+    private decimal totalPorCobrar;
+    private decimal carteraVencida;
+    private int pendientesCount;
+    private int vencidasCount;
+    private decimal cobradoEsteMesFiltrado;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        cargando = true;
+        error = null;
+
+        try
+        {
+            cuentas = await CuentaPorCobrarHttpService.GetAsync();
+            resumenFinanzas = await Dashboardhttpservice.GetFinanzasResumenAsync();
+
+            if (clienteId.HasValue && clienteId.Value > 0)
+            {
+                cuentas = cuentas.Where(x => x.ClienteId == clienteId.Value).ToList();
+            }
+
+            ActualizarResumen();
+        }
+        catch (Exception ex)
+        {
+            error = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+    private void ActualizarResumen()
+    {
+        totalPorCobrar = cuentas.Where(x => x.Activa && x.Saldo > 0).Sum(x => x.Saldo);
+        carteraVencida = cuentas.Where(x => x.Activa && x.EstaVencida && x.Saldo > 0).Sum(x => x.Saldo);
+        pendientesCount = cuentas.Count(x => x.Activa && x.Saldo > 0);
+        vencidasCount = cuentas.Count(x => x.Activa && x.EstaVencida && x.Saldo > 0);
+
+        var inicioMes = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+        cobradoEsteMesFiltrado = cuentas
+            .SelectMany(x => x.Pagos ?? Enumerable.Empty<PagoCliente>())
+            .Where(p => p.Activo && p.FechaPago >= inicioMes)
+            .Sum(p => p.Monto);
+    }
+
+    private IEnumerable<CuentaPorCobrar> CuentasFiltradas =>
+        cuentas
+            .Where(x => string.IsNullOrWhiteSpace(busqueda) ||
+                   (x.Cliente?.Nombre?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (x.Folio?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Where(x => string.IsNullOrWhiteSpace(filtroEstado) || x.Estado.Equals(filtroEstado, StringComparison.OrdinalIgnoreCase))
+            .Where(x => string.IsNullOrWhiteSpace(filtroVencimiento) ||
+                   (filtroVencimiento == "vigentes" && !x.EstaVencida) ||
+                   (filtroVencimiento == "vencidas" && x.EstaVencida))
+            .OrderByDescending(x => x.FechaEmision);
+
+    private static string ObtenerBadgeEstado(string? estado) => estado switch
+    {
+        "Pagada" => "badge rounded-pill text-bg-success-subtle text-success border border-success",
+        "Parcial" => "badge rounded-pill text-bg-warning-subtle text-warning-emphasis border border-warning",
+        "Vencida" => "badge rounded-pill text-bg-danger-subtle text-danger border border-danger",
+        "Cancelada" => "badge rounded-pill text-bg-secondary-subtle text-secondary border border-secondary",
+        _ => "badge rounded-pill text-bg-primary-subtle text-primary border border-primary"
+    };
+    private async Task VerUltimoComprobante(CuentaPorCobrar cuenta)
+    {
+        var ultimoPago = cuenta.Pagos?
+            .Where(p => p.Activo)
+            .OrderByDescending(p => p.FechaPago)
+            .FirstOrDefault();
+
+        if (ultimoPago != null)
+        {
+            var url = $"/api/CuentasPorCobrar/{cuenta.Id}/pagos/{ultimoPago.Id}/comprobante";
+            await JSRuntime.InvokeVoidAsync("open", url, "_blank");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Esta cuenta aún no tiene abonos registrados.");
+        }
+    }
+}

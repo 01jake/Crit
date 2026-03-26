@@ -117,6 +117,25 @@ namespace Crit.Controllers
                 return StatusCode(500);
             }
         }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Proveedor>> GetById(int id)
+        {
+            try
+            {
+                var proveedor = await _context.Proveedores.FirstOrDefaultAsync(p => p.Id == id);
+
+                if (proveedor == null)
+                    return NotFound();
+
+                return Ok(proveedor);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener proveedor {Id}", id);
+                return StatusCode(500);
+            }
+        }
     }
 
 }

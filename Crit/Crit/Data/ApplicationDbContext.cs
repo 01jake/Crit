@@ -1,4 +1,5 @@
-﻿using Crit.Data;
+﻿using System.Reflection.Emit;
+using Crit.Data;
 using Crit.Server.Data;
 using Crit.Shared.Models;
 using Microsoft.AspNetCore.Identity;
@@ -25,6 +26,11 @@ namespace Crit.Server.Data
         public DbSet<ArticuloEntity> Articulos { get; set; }
         public DbSet<QuejaEntity> Quejas { get; set; }
         public DbSet<Proveedor> Proveedores { get; set; }
+        public DbSet<CuentaPorCobrar> CuentasPorCobrar { get; set; }
+        public DbSet<CuentaPorPagar> CuentasPorPagar { get; set; }
+        public DbSet<PagoCliente> PagosCliente { get; set; }
+        public DbSet<PagoProveedor> PagosProveedor { get; set; }
+
         //public DbSet<Kardex> Kardex { get; set; }
 
 
@@ -191,6 +197,109 @@ namespace Crit.Server.Data
                 .WithMany(p => p.DetallesCotizacion)
                 .HasForeignKey(dc => dc.ProductoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+
+            base.OnModelCreating(builder);
+
+            builder.Entity<CuentaPorCobrar>()
+                .HasOne(c => c.Cliente)
+                .WithMany(c => c.CuentasPorCobrar)
+                .HasForeignKey(c => c.ClienteId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<CuentaPorCobrar>()
+                .HasOne(c => c.Venta)
+                .WithOne(v => v.CuentaPorCobrar)
+                .HasForeignKey<CuentaPorCobrar>(c => c.VentaId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PagoCliente>()
+                .HasOne(p => p.CuentaPorCobrar)
+                .WithMany(c => c.Pagos)
+                .HasForeignKey(p => p.CuentaPorCobrarId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<CuentaPorPagar>()
+                .HasOne(c => c.Proveedor)
+                .WithMany(p => p.CuentasPorPagar)
+                .HasForeignKey(c => c.ProveedorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<CuentaPorPagar>()
+                .HasOne(c => c.Compra)
+                .WithOne(cmp => cmp.CuentaPorPagar)
+                .HasForeignKey<CuentaPorPagar>(c => c.CompraId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PagoProveedor>()
+                .HasOne(p => p.CuentaPorPagar)
+                .WithMany(c => c.Pagos)
+                .HasForeignKey(p => p.CuentaPorPagarId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+                builder.Entity<CuentaPorCobrar>()
+                .Property(x => x.Subtotal)
+                .HasColumnType("decimal(18,2)");
+
+                                builder.Entity<CuentaPorCobrar>()
+                .Property(x => x.Descuento)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<CuentaPorCobrar>()
+                .Property(x => x.IVA)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<CuentaPorCobrar>()
+                .Property(x => x.Total)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<CuentaPorCobrar>()
+                .Property(x => x.TotalPagado)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<CuentaPorPagar>()
+                .Property(x => x.Subtotal)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<CuentaPorPagar>()
+                .Property(x => x.Descuento)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<CuentaPorPagar>()
+                .Property(x => x.IVA)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<CuentaPorPagar>()
+                .Property(x => x.Total)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<CuentaPorPagar>()
+                .Property(x => x.TotalPagado)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<PagoCliente>()
+                .Property(x => x.Monto)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<PagoCliente>()
+                .Property(x => x.SaldoAnterior)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<PagoCliente>()
+                .Property(x => x.SaldoPosterior)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<PagoProveedor>()
+                .Property(x => x.Monto)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<PagoProveedor>()
+                .Property(x => x.SaldoAnterior)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<PagoProveedor>()
+                .Property(x => x.SaldoPosterior)
+                .HasColumnType("decimal(18,2)");
         }
         //public DbSet<Producto> Producto { get; set; } = default!;
         public DbSet<Queja> Queja { get; set; } = default!;
