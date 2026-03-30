@@ -6,6 +6,8 @@
 @attribute [StreamRendering(false)]
 @rendermode InteractiveWebAssembly
 @inject Dashboardhttpservice DashboardService
+@inject CajaHttpService CajaHttpService
+
 @attribute [Authorize]
 
 <PageTitle>Dashboard Financiero</PageTitle>
@@ -199,6 +201,85 @@
                     </div>
                 </div>
             </div>
+            <div class="row g-4 mb-4">
+                <div class="col-md-6 col-xl-3">
+                    <div class="card kpi-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Caja</p>
+                                    <h3 class="fw-black @(cajaResumen.CajaAbierta ? "text-success" : "text-danger") mb-2">
+                                        @(cajaResumen.CajaAbierta ? "Abierta" : "Cerrada")
+                                    </h3>
+                                </div>
+                                <div class="icon-shape @(cajaResumen.CajaAbierta ? "bg-success-soft text-success" : "bg-danger-soft text-danger")">
+                                    <i class="bi bi-safe2"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-muted small">Estado operativo de caja</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-xl-3">
+                    <div class="card kpi-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Saldo Actual Caja</p>
+                                    <h3 class="fw-black text-primary mb-2">$@cajaResumen.SaldoActual.ToString("N0")</h3>
+                                </div>
+                                <div class="icon-shape bg-primary-soft text-primary">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-muted small">Incluye apertura, ingresos y egresos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-xl-3">
+                    <div class="card kpi-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Ingresos Hoy</p>
+                                    <h3 class="fw-black text-success mb-2">$@cajaResumen.IngresosHoy.ToString("N0")</h3>
+                                </div>
+                                <div class="icon-shape bg-success-soft text-success">
+                                    <i class="bi bi-arrow-down-circle"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-muted small">Cobros y ventas de contado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-xl-3">
+                    <div class="card kpi-card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Egresos Hoy</p>
+                                    <h3 class="fw-black text-danger mb-2">$@cajaResumen.EgresosHoy.ToString("N0")</h3>
+                                </div>
+                                <div class="icon-shape bg-danger-soft text-danger">
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-muted small">Gastos y pagos a proveedores</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </div>
 
@@ -251,6 +332,31 @@
         <div class="row g-4">
             <div class="col-lg-7">
                 <div class="card shadow-sm border-0 h-100">
+                    <div class="row g-4 mb-4">
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold mb-0 text-dark">
+                                        <i class="bi bi-cash-coin text-success me-2"></i> Cash Flow Real
+                                    </h6>
+                                </div>
+                                <div class="card-body px-4">
+                                    @if (cashFlowReal.Any())
+                                    {
+                                        <ApexChart TItem="FlujoCajaRealDto" Options="cashFlowRealOptions" @key="cashFlowReal.Count">
+                                            <ApexPointSeries TItem="FlujoCajaRealDto" Items="cashFlowReal" Name="Ingresos" SeriesType="SeriesType.Bar" XValue="@(e => e.Periodo)" YValue="@(e => e.Ingresos)" />
+                                            <ApexPointSeries TItem="FlujoCajaRealDto" Items="cashFlowReal" Name="Egresos" SeriesType="SeriesType.Bar" XValue="@(e => e.Periodo)" YValue="@(e => e.Egresos)" />
+                                            <ApexPointSeries TItem="FlujoCajaRealDto" Items="cashFlowReal" Name="Neto" SeriesType="SeriesType.Line" XValue="@(e => e.Periodo)" YValue="@(e => e.Neto)" />
+                                        </ApexChart>
+                                    }
+                                    else
+                                    {
+                                        <div class="empty-state">No hay movimientos suficientes para calcular flujo de efectivo real.</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
                         <h6 class="fw-bold mb-0 text-dark">Últimas Ventas</h6>
                         <a href="/ventas" class="text-primary text-decoration-none small fw-bold">Ver todas</a>
@@ -328,6 +434,9 @@
     private List<VentaRecienteDto> ventasRecientes = new();
     private List<ProductoBajoStockDto> productosBajoStock = new();
     private FinanzasResumenDto finanzas = new();
+    private CajaResumenDto cajaResumen = new();
+    private List<FlujoCajaRealDto> cashFlowReal = new();
+
     private ApexChartOptions<CashFlowDto> cashFlowOptions = new()
     {
         Chart = new Chart { Height = 340, Type = ChartType.Bar, Toolbar = new Toolbar { Show = false } }, // Ocultar toolbar para diseño más limpio
@@ -351,6 +460,19 @@
         Stroke = new Stroke { Show = false } // Quita el borde blanco entre rebanadas
     };
 
+    private ApexChartOptions<FlujoCajaRealDto> cashFlowRealOptions = new()
+    {
+        Chart = new Chart { Height = 340, Type = ChartType.Bar, Toolbar = new Toolbar { Show = false } },
+        Colors = new List<string> { "#10b981", "#ef4444", "#0ea5e9" },
+        Stroke = new Stroke { Width = new List<double> { 0, 0, 4 }, Curve = Curve.Smooth },
+        PlotOptions = new PlotOptions
+        {
+            Bar = new PlotOptionsBar { BorderRadius = 4, ColumnWidth = "45%" }
+        },
+        DataLabels = new DataLabels { Enabled = false },
+        Legend = new Legend { Position = LegendPosition.Top, HorizontalAlign = Align.Right }
+    };
+
     protected override async Task OnInitializedAsync()
     {
         await CargarDatos();
@@ -363,6 +485,8 @@
         cashFlow = await DashboardService.GetCashFlowAsync(6);
         topProductos = await DashboardService.GetProductosMasVendidosAsync(5);
         ventasRecientes = await DashboardService.GetVentasRecientesAsync(5);
+        cajaResumen = await CajaHttpService.GetResumenAsync();
+        cashFlowReal = await CajaHttpService.GetCashFlowRealAsync(6);
         finanzas = await DashboardService.GetFinanzasResumenAsync();
         var alertas = await DashboardService.GetAlertasAsync();
         productosBajoStock = alertas.ProductosBajoStock;
@@ -392,7 +516,8 @@
     {
         DateTime? fechaFiltro = null;
         DateTime hoy = DateTime.Today;
-
+        cajaResumen = await CajaHttpService.GetResumenAsync();
+        cashFlowReal = await CajaHttpService.GetCashFlowRealAsync(6);
         switch (rango)
         {
             case "hoy":

@@ -367,13 +367,12 @@ a.app-mobile-brand:visited[b-vmfwnc5aaa] {
     border-radius: 999px;
     background: transparent;
     color: var(--sidebar-muted);
+    text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
     line-height: 1;
     white-space: nowrap;
     transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
-    text-decoration: none !important; /* Añade !important aquí */
-    color: #64748b !important;
 }
 
     :host[b-vmfwnc5aaa]  .saas-nav-link i {
@@ -397,16 +396,14 @@ a.app-mobile-brand:visited[b-vmfwnc5aaa] {
     :host[b-vmfwnc5aaa]  .saas-nav-link:hover {
         background: var(--sidebar-hover);
         border-color: var(--sidebar-hover-border);
+        color: var(--sidebar-text);
         transform: translateX(1px);
-        text-decoration: none !important;
-        color: var(--sidebar-active-text) !important;
     }
 
     :host[b-vmfwnc5aaa]  .saas-nav-link.active {
         background: var(--sidebar-active);
         border-color: #cfe0ff;
-        text-decoration: none !important;
-        color: var(--sidebar-active-text) !important;
+        color: var(--sidebar-active-text);
     }
 
 .saas-sidebar-footer[b-vmfwnc5aaa] {

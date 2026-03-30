@@ -59,7 +59,7 @@
                                     <th>Factura</th>
                                     <th>Fecha</th>
                                     <th>Total</th>
-                                    <th class="text-center">Acciones</th>
+                                    <th class="text-center">Detalle</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -67,13 +67,21 @@
                                 {
                                     <tr>
                                         <td class="ps-3 fw-bold">@c.Proveedor?.Nombre</td>
-                                        <td><span class="badge-status">@c.SerieFactura-@c.FolioFactura</span></td>
+
+                                        <td>
+                                            <a href="/compras/@c.Id" class="text-decoration-none">
+                                                <span class="badge-status">@c.SerieFactura-@c.FolioFactura</span>
+                                            </a>
+                                        </td>
+
                                         <td>@c.Fecha.ToString("dd/MM/yyyy")</td>
+
                                         <td class="fw-bold text-primary">$@c.Total.ToString("N2")</td>
+
                                         <td class="text-center">
-                                            <button class="btn btn-icon-pdf">
-                                                <i class="bi bi-file-earmark-text"></i>
-                                            </button>
+                                            <a class="btn btn-sm btn-outline-primary" href="/compras/@c.Id" title="Ver detalle">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 }
@@ -110,7 +118,7 @@
                             }
                         <div class="col-12">
                             <label class="form-label small fw-bold text-muted">PROVEEDOR</label>
-                            <select class="form-select border-primary-subtle" @bind="compraActual.ProveedorId">
+                            <select class="form-select border-primary-subtle" value="@compraActual.ProveedorId" @onchange="OnProveedorChanged">
                                 <option value="0">Seleccionar Proveedor...</option>
                                 @foreach (var p in proveedores)
                                 {
@@ -123,6 +131,15 @@
                         </div>
                         <div class="col-6">
                             <input class="form-control form-control-sm" placeholder="Folio" @bind="compraActual.FolioFactura" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted">RFC PROVEEDOR</label>
+                            <input class="form-control form-control-sm" @bind="compraActual.RFCProveedor" placeholder="RFC proveedor" />
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted">FECHA FACTURA</label>
+                            <input type="date" class="form-control form-control-sm" @bind="compraActual.FechaFactura" />
                         </div>
                     </div>
 
@@ -224,6 +241,20 @@
             Recalcular();
         }
     }
+    private void OnProveedorChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var proveedorId))
+        {
+            compraActual.ProveedorId = proveedorId;
+
+            var proveedor = proveedores.FirstOrDefault(p => p.Id == proveedorId);
+            if (proveedor is not null)
+            {
+                compraActual.RFCProveedor = proveedor.RFC;
+            }
+        }
+    }
+
 
     private void OnPrecioChanged(DetalleCompra d, ChangeEventArgs e)
     {
@@ -263,6 +294,7 @@
         compraActual = new Compra
         {
             Fecha = DateTime.Now,
+            FechaFactura = DateTime.Today,
             Detalles = new List<DetalleCompra>(),
             EsCredito = false,
             DiasCredito = null

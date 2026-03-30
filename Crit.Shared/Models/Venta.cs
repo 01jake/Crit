@@ -27,6 +27,10 @@ namespace Crit.Shared.Models
         public string? UsoCFDI { get; set; }
         public bool EsCredito { get; set; } = false;
         public int? DiasCredito { get; set; }
+        public int? AlmacenId { get; set; }
+        public Almacen? Almacen { get; set; }
+
+
 
         // Navegación
         public Cliente? Cliente { get; set; }

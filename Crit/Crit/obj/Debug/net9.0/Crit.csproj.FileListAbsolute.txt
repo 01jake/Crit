@@ -476,4 +476,4 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\refint\Crit.dll
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.pdb
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.genruntimeconfig.cache
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\ref\Crit.dll
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-r3pvdqh29i.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-6aq1h9pdh2.gz

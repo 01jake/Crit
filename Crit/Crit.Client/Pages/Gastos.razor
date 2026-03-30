@@ -1,0 +1,310 @@
+﻿@page "/gastos"
+@using Crit.Client.Services
+@using Crit.Shared.DTOs
+@using Crit.Shared.Models
+@inject GastoHttpService GastoHttpService
+@inject ProveedorHttpService ProveedorHttpService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Control de Gastos</PageTitle>
+
+<div class="pos-container px-3 py-4">
+    @* --- ENCABEZADO --- *@
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-danger text-white rounded-3 p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                <i class="bi bi-receipt-cutoff fs-3"></i>
+            </div>
+            <div>
+                <h2 class="page-title mb-0 fw-bold">Egresos Operativos</h2>
+                <p class="text-muted small mb-0">Registro de compras, servicios y costos fijos</p>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-light border shadow-sm fw-bold" @onclick="CargarDatos">
+                <i class="bi bi-arrow-clockwise me-2"></i>Sincronizar
+            </button>
+        </div>
+    </div>
+
+    @* --- RESUMEN RÁPIDO (KPIs) --- *@
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stat-icon bg-danger-subtle text-danger me-3">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small fw-bold text-uppercase d-block">Gastos del Mes</span>
+                        <h4 class="fw-bold mb-0">@gastos.Where(g => g.Fecha.Month == DateTime.Now.Month).Sum(g => g.Monto).ToString("C")</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stat-icon bg-warning-subtle text-warning me-3">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small fw-bold text-uppercase d-block">Gasto más Alto</span>
+                        <h4 class="fw-bold mb-0">@(gastos.Any() ? gastos.Max(g => g.Monto).ToString("C") : "$0.00")</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stat-icon bg-success-subtle text-success me-3">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small fw-bold text-uppercase d-block">Total Registros</span>
+                        <h4 class="fw-bold mb-0">@gastos.Count Operaciones</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- FORMULARIO DE REGISTRO --- *@
+    <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-plus-circle-dotted me-2 text-danger"></i>Registrar Nuevo Egreso</h5>
+        </div>
+        <div class="card-body p-4 bg-light-subtle">
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                    <label class="form-label small fw-bold text-muted">CONCEPTO / DESCRIPCIÓN</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-pencil-square"></i></span>
+                        <input class="form-control border-start-0" placeholder="Ej. Compra de aditivos..." @bind="nuevoGasto.Concepto" />
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-lg-2">
+                    <label class="form-label small fw-bold text-muted">MONTO</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 fw-bold">$</span>
+                        <input type="number" class="form-control border-start-0 fw-bold text-danger fs-5" @bind="nuevoGasto.Monto" />
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-lg-3">
+                    <label class="form-label small fw-bold text-muted">CATEGORÍA</label>
+                    <select class="form-select" @bind="nuevoGasto.Categoria">
+                        <option value="">Seleccione...</option>
+                        <option value="Renta">🏠 Renta</option>
+                        <option value="Nómina">👤 Nómina</option>
+                        <option value="Servicios">⚡ Servicios</option>
+                        <option value="Transporte">🚚 Transporte</option>
+                        <option value="Papelería">📝 Papelería</option>
+                        <option value="Viáticos">✈️ Viáticos</option>
+                        <option value="Mantenimiento">🛠️ Mantenimiento</option>
+                        <option value="Otros">📦 Otros</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 col-lg-3">
+                    <label class="form-label small fw-bold text-muted">MÉTODO DE PAGO</label>
+                    <select class="form-select" @bind="nuevoGasto.MetodoPago">
+                        <option value="">Seleccione...</option>
+                        <option value="Efectivo">💵 Efectivo</option>
+                        <option value="Transferencia">🏦 Transferencia</option>
+                        <option value="Tarjeta">💳 Tarjeta</option>
+                        <option value="Cheque">📄 Cheque</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">PROVEEDOR ASOCIADO</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-truck"></i></span>
+                        <select class="form-select border-start-0" @bind="nuevoGasto.ProveedorId">
+                            <option value="">Sin proveedor específico</option>
+                            @foreach (var p in proveedores)
+                            {
+                                <option value="@p.Id">@p.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">REFERENCIA / FOLIO</label>
+                    <input class="form-control" placeholder="Núm. Factura o Ticket" @bind="nuevoGasto.Referencia" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">FECHA DEL GASTO</label>
+                    <input type="datetime-local" class="form-control" @bind="nuevoGasto.Fecha" />
+                </div> 
+
+                <div class="col-12">
+                    <label class="form-label small fw-bold text-muted">OBSERVACIONES ADICIONALES</label>
+                    <textarea class="form-control" rows="2" placeholder="Detalles extra del gasto..." @bind="nuevoGasto.Observaciones"></textarea>
+                </div>
+
+                <div class="col-12 text-end mt-4">
+                    <button class="btn btn-danger btn-lg px-5 shadow-sm fw-bold" @onclick="GuardarGasto">
+                        <i class="bi bi-check-circle me-2"></i>REGISTRAR GASTO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- TABLA DE HISTORIAL --- *@
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center px-4">
+            <h5 class="mb-0 fw-bold text-dark">Historial de Egresos</h5>
+            <span class="badge bg-light text-dark border">Mostrando últimos registros</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3">Fecha</th>
+                        <th>Concepto / Proveedor</th>
+                        <th>Categoría</th>
+                        <th>Método</th>
+                        <th class="text-end">Monto</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var gasto in gastos)
+                    {
+                        <tr class="border-bottom">
+                            <td class="ps-4">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold text-dark">@gasto.Fecha.ToString("dd MMM yyyy")</span>
+                                    <span class="text-muted x-small">@gasto.Fecha.ToString("HH:mm") hrs</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark text-truncate" style="max-width: 250px;">@gasto.Concepto</div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-person me-1"></i>@(gasto.Proveedor?.Nombre ?? "S/P") 
+                                    @if(!string.IsNullOrEmpty(gasto.Referencia)){ <span class="ms-2 badge bg-light text-muted fw-normal">#@gasto.Referencia</span> }
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge @ObtenerClaseCategoria(gasto.Categoria) px-3 py-2 rounded-pill">
+                                    @gasto.Categoria
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi @(gasto.MetodoPago == "Efectivo" ? "bi-cash-coin text-success" : "bi-credit-card text-primary")"></i>
+                                    <span class="small">@gasto.MetodoPago</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <span class="fw-black text-danger fs-6">@gasto.Monto.ToString("C")</span>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-light border text-danger rounded-circle shadow-sm" 
+                                        title="Cancelar Gasto" @onclick="() => CancelarGasto(gasto.Id)">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pos-container { background-color: #f8f9fa; min-height: 100vh; }
+    .stat-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; font-size: 1.5rem; }
+    .fw-black { font-weight: 800; }
+    .x-small { font-size: 0.75rem; }
+    
+    .stat-card { transition: all 0.3s; }
+    .stat-card:hover { transform: translateY(-5px); }
+
+    .input-group-text { border-color: #dee2e6; color: #6c757d; }
+    .form-control:focus, .form-select:focus { border-color: #dc3545; box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.1); }
+    
+    /* Categorías Colors */
+    .cat-nomina { background-color: #e7f1ff; color: #0d6efd; border: 1px solid #0d6efd; }
+    .cat-servicios { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .cat-otros { background-color: #f8f9fa; color: #343a40; border: 1px solid #dee2e6; }
+</style>
+
+@code {
+    private List<Gasto> gastos = new();
+    private List<Proveedor> proveedores = new();
+    private RegistrarGastoDto nuevoGasto = new() { Fecha = DateTime.Now };
+    private string fechaGastoTexto = DateTime.Now.ToString("yyyy-MM-ddTHH:mm");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try {
+            gastos = await GastoHttpService.GetGastosAsync();
+            proveedores = await ProveedorHttpService.GetAsync();
+        } catch(Exception ex) {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private async Task GuardarGasto()
+    {
+        if (string.IsNullOrEmpty(nuevoGasto.Concepto) || nuevoGasto.Monto <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor ingresa un concepto y un monto válido.");
+            return;
+        }
+
+        if (DateTime.TryParse(fechaGastoTexto, out var fecha))
+        {
+            nuevoGasto.Fecha = fecha;
+        }
+
+        var ok = await GastoHttpService.CrearGastoAsync(nuevoGasto);
+
+        if (!ok)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "No se pudo registrar el gasto.");
+            return;
+        }
+
+        nuevoGasto = new RegistrarGastoDto { Fecha = DateTime.Now };
+        fechaGastoTexto = DateTime.Now.ToString("yyyy-MM-ddTHH:mm");
+        await CargarDatos();
+    }
+
+    private async Task CancelarGasto(int id)
+    {
+        bool confirm = await JSRuntime.InvokeAsync<bool>("confirm", "¿Estás seguro de que deseas eliminar este registro de gasto?");
+        if (!confirm) return;
+
+        var ok = await GastoHttpService.CancelarGastoAsync(id);
+        if (ok) await CargarDatos();
+    }
+
+    private string ObtenerClaseCategoria(string categoria)
+    {
+        return categoria switch
+        {
+            "Nómina" => "cat-nomina",
+            "Servicios" => "cat-servicios",
+            "Renta" => "bg-primary-subtle text-primary border border-primary",
+            "Mantenimiento" => "bg-info-subtle text-info border border-info",
+            _ => "cat-otros"
+        };
+    }
+}

@@ -168,7 +168,35 @@ namespace Crit.Controllers
                 cuenta.TotalPagado += pago.Monto;
                 cuenta.FechaUltimoPago = pago.FechaPago;
                 cuenta.Estado = CalcularEstado(cuenta.Total, cuenta.TotalPagado, cuenta.FechaVencimiento, cuenta.Activa);
+                var caja = await _context.CajaSesiones
+                .OrderByDescending(x => x.FechaApertura)
+                .FirstOrDefaultAsync(x => x.Estado == "Abierta");
 
+                if (caja == null)
+                    return BadRequest("No hay una caja abierta para registrar el abono.");
+
+                var saldoAnteriorCaja = caja.SaldoCalculado;
+                var saldoPosteriorCaja = saldoAnteriorCaja + pago.Monto;
+
+                var movimientoCaja = new CajaMovimiento
+                {
+                    CajaSesionId = caja.Id,
+                    Fecha = pago.FechaPago,
+                    Tipo = "Ingreso",
+                    Origen = "AbonoCliente",
+                    Monto = pago.Monto,
+                    SaldoAnterior = saldoAnteriorCaja,
+                    SaldoPosterior = saldoPosteriorCaja,
+                    CuentaPorCobrarId = cuenta.Id,
+                    Referencia = pago.Referencia,
+                    Concepto = $"Abono de cliente a cuenta {cuenta.Folio ?? cuenta.Id.ToString()}",
+                    MetodoPago = pago.MetodoPago,
+                    UsuarioId = pago.UsuarioId,
+                    Activo = true
+                };
+
+                _context.CajaMovimientos.Add(movimientoCaja);
+                caja.TotalIngresos += pago.Monto;
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 

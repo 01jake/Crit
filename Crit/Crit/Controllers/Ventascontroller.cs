@@ -191,28 +191,41 @@ namespace Crit.Controllers
                 _logger.LogInformation("Guardando cambios en la base de datos...");
 
                 await _context.SaveChangesAsync();
-                if (venta.EsCredito)
+                if (!venta.EsCredito)
                 {
-                    var cuentaPorCobrar = new CuentaPorCobrar
+                    var caja = await _context.CajaSesiones
+                        .OrderByDescending(x => x.FechaApertura)
+                        .FirstOrDefaultAsync(x => x.Estado == "Abierta");
+
+                    if (caja == null)
                     {
-                        ClienteId = venta.ClienteId,
+                        await transaction.RollbackAsync();
+                        return BadRequest("No hay una caja abierta para registrar la venta de contado.");
+                    }
+
+                    var saldoAnterior = caja.SaldoCalculado;
+                    var saldoPosterior = saldoAnterior + venta.Total;
+
+                    var movimientoCaja = new CajaMovimiento
+                    {
+                        CajaSesionId = caja.Id,
+                        Fecha = venta.Fecha,
+                        Tipo = "Ingreso",
+                        Origen = "VentaContado",
+                        Monto = venta.Total,
+                        SaldoAnterior = saldoAnterior,
+                        SaldoPosterior = saldoPosterior,
                         VentaId = venta.Id,
-                        Folio = venta.NumeroVenta,
-                        FechaEmision = venta.Fecha,
-                        FechaVencimiento = venta.EsCredito
-                        ? venta.Fecha.AddDays(venta.DiasCredito ?? 30)
-                        : null,
-                        Subtotal = venta.Subtotal,
-                        Descuento = venta.Descuento,
-                        IVA = venta.IVA,
-                        Total = venta.Total,
-                        TotalPagado = 0m,
-                        Estado = "Pendiente",
-                        Observaciones = "Generada automáticamente desde venta a crédito",
-                        Activa = true
+                        Referencia = venta.NumeroVenta,
+                        Concepto = $"Venta de contado {venta.NumeroVenta}",
+                        MetodoPago = venta.FormaPago,
+                        UsuarioId = venta.UsuarioId,
+                        Activo = true
                     };
 
-                    _context.CuentasPorCobrar.Add(cuentaPorCobrar);
+                    _context.CajaMovimientos.Add(movimientoCaja);
+                    caja.TotalIngresos += venta.Total;
+
                     await _context.SaveChangesAsync();
                 }
                 await transaction.CommitAsync();

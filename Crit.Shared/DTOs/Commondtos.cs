@@ -229,12 +229,46 @@ namespace Crit.Shared.DTOs
         public int CuentasPorPagarPendientes { get; set; }
 
     }
-    //public class DashboardStatsDto
-    //{
-    //    public decimal TotalVentasMes { get; set; }
-    //    public int TotalClientes { get; set; }
-    //    public int TotalProductos { get; set; }
-    //    public int ProductosBajoStock { get; set; }
-    //}
+    public class CajaResumenDto
+    {
+        public bool CajaAbierta { get; set; }
+        public decimal MontoInicial { get; set; }
+        public decimal IngresosHoy { get; set; }
+        public decimal EgresosHoy { get; set; }
+        public decimal SaldoActual { get; set; }
+    }
+
+    public class FlujoCajaRealDto
+    {
+        public string Periodo { get; set; } = string.Empty;
+        public decimal Ingresos { get; set; }
+        public decimal Egresos { get; set; }
+        public decimal Neto { get; set; }
+    }
+
+    public class RegistrarGastoDto
+    {
+        public DateTime Fecha { get; set; } = DateTime.Now;
+        public string Concepto { get; set; } = string.Empty;
+        public string? Categoria { get; set; }
+        public decimal Monto { get; set; }
+        public string? MetodoPago { get; set; }
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
+        public int? ProveedorId { get; set; }
+    }
+
+    public class AperturaCajaDto
+    {
+        public decimal MontoInicial { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public class CierreCajaDto
+    {
+        public decimal MontoFinal { get; set; }
+        public string? Observaciones { get; set; }
+    }
+    
 
 }

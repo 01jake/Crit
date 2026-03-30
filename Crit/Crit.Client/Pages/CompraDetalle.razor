@@ -1,61 +1,305 @@
-﻿@page "/compras/{id:int}"
+﻿@page "/compras/{Id:int}"
+@using Crit.Client.Services
 @using Crit.Shared.Models
 @inject CompraHttpService CompraHttpService
+@inject NavigationManager Navigation
+@inject PdfHttpService PdfHttpService
 
-<h3>Detalle de Compra</h3>
+@inject IJSRuntime JSRuntime
 
-@if (compra == null)
-{
-    <p>Cargando...</p>
-}
-else
-{
-    <div class="card mb-3">
-        <div class="card-body">
+<PageTitle>Detalle de Compra</PageTitle>
 
-            <h5>@compra.Proveedor?.Nombre</h5>
-
-            <p>
-                Factura: <strong>@compra.SerieFactura-@compra.FolioFactura</strong><br />
-                Fecha: @compra.Fecha.ToString("dd/MM/yyyy")
-            </p>
-
+<div class="pos-container">
+    @if (cargando)
+    {
+        <div class="d-flex flex-column align-items-center justify-content-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="text-muted">Cargando detalle de la compra...</p>
         </div>
-    </div>
+    }
+    else if (compra is null)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-cart-x fs-1 text-warning mb-3"></i>
+            <h4 class="text-muted">Compra no encontrada</h4>
+            <button class="btn btn-outline-primary mt-3" @onclick="Volver">Regresar al listado</button>
+        </div>
+    }
+    else
+    {
+        @* --- ENCABEZADO --- *@
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px; font-size: 1.5rem;">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+                <div>
+                    <h2 class="page-title mb-0">Compra @((compra.SerieFactura ?? "") + " " + (compra.FolioFactura ?? ""))</h2>
+                    <p class="text-muted small mb-0">Registro de entrada de mercancía / insumos</p>
+                </div>
+            </div>
 
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Precio</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var d in compra.Detalles)
-            {
-                <tr>
-                    <td>@d.Producto?.Nombre</td>
-                    <td>@d.Cantidad</td>
-                    <td>$@d.PrecioUnitario</td>
-                    <td>$@d.Subtotal</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light border shadow-sm" @onclick="Volver">
+                    <i class="bi bi-arrow-left me-2"></i>Volver
+                </button>
+                <button class="btn btn-danger shadow-sm" @onclick="DescargarPdf">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF
+                </button>
+            </div>
+        </div>
 
-    <div class="text-end">
-        <h5>Total: $@compra.Total</h5>
-    </div>
-}
+        @* --- INDICADORES (KPIs) --- *@
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-primary-subtle text-primary me-3">
+                                <i class="bi bi-truck"></i>
+                            </div>
+                            <span class="text-muted fw-bold small text-uppercase">Proveedor</span>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-truncate fs-5" title="@(compra.Proveedor?.Nombre)">
+                            @(compra.Proveedor?.Nombre ?? "N/A")
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-info-subtle text-info me-3">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                            <span class="text-muted fw-bold small text-uppercase">Fecha Registro</span>
+                        </div>
+                        <h4 class="fw-bold mb-0 fs-5">@compra.Fecha.ToString("dd/MM/yyyy")</h4>
+                        <div class="text-muted small">@compra.Fecha.ToString("HH:mm") hrs</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-secondary-subtle text-secondary me-3">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <span class="text-muted fw-bold small text-uppercase">Estado</span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="@ObtenerBadgeEstado(compra.Estado) px-3 py-2 fs-6">@compra.Estado</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-success-subtle text-success me-3">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                            <span class="text-muted fw-bold small text-uppercase">Total Compra</span>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-success">@compra.Total.ToString("C")</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* --- CONTENIDO PRINCIPAL --- *@
+        <div class="row g-4">
+            @* COLUMNA IZQUIERDA: PRODUCTOS *@
+            <div class="col-12 col-lg-8">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-muted"><i class="bi bi-list-task me-2"></i>Artículos Recibidos</h6>
+                    </div>
+
+                    @if (compra.Detalles == null || !compra.Detalles.Any())
+                    {
+                        <div class="text-center py-5">
+                            <p class="text-muted mb-0">No hay artículos registrados en esta compra.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr class="small text-uppercase text-muted">
+                                        <th class="ps-4">Producto</th>
+                                        <th class="text-center">Cant.</th>
+                                        <th class="text-end">Costo Unit.</th>
+                                        <th class="text-end pe-4">Importe</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var detalle in compra.Detalles)
+                                    {
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-bold text-dark">@detalle.Producto?.Nombre</div>
+                                                <div class="text-muted small"><i class="bi bi-upc-scan me-1"></i>@detalle.Producto?.Codigo</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark border px-2 py-1">@detalle.Cantidad</span>
+                                            </td>
+                                            <td class="text-end text-muted">@detalle.PrecioUnitario.ToString("C")</td>
+                                            <td class="text-end pe-4 fw-bold text-dark">@detalle.Subtotal.ToString("C")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* COLUMNA DERECHA: RESUMEN Y FISCALES *@
+            <div class="col-12 col-lg-4">
+
+                @* RESUMEN FINANCIERO *@
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-muted"><i class="bi bi-calculator me-2"></i>Resumen de Costos</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">Subtotal</span>
+                            <span class="fw-semibold">@compra.Subtotal.ToString("C")</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">I.V.A. (16%)</span>
+                            <span class="fw-semibold">@compra.IVA.ToString("C")</span>
+                        </div>
+                        <hr class="text-muted" />
+                        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 border">
+                            <span class="fw-bold text-uppercase">Total</span>
+                            <span class="fw-bold text-primary fs-4 mb-0">@compra.Total.ToString("C")</span>
+                        </div>
+                    </div>
+                </div>
+
+                @* DATOS FISCALES (ADAPTADO) *@
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-muted"><i class="bi bi-file-earmark-medical me-2"></i>Información Fiscal</h6>
+                    </div>
+                    <div class="card-body g-3 row">
+                        <div class="col-6">
+                            <div class="p-2 bg-light rounded-3 h-100 border text-center">
+                                <div class="text-muted small text-uppercase mb-1" style="font-size: 0.7rem;">Serie</div>
+                                <div class="fw-semibold">@((compra.SerieFactura) ?? "-")</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-light rounded-3 h-100 border text-center">
+                                <div class="text-muted small text-uppercase mb-1" style="font-size: 0.7rem;">Folio</div>
+                                <div class="fw-semibold">@((compra.FolioFactura) ?? "-")</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-2 bg-light rounded-3 border">
+                                <div class="text-muted small text-uppercase mb-1" style="font-size: 0.7rem;">RFC Proveedor</div>
+                                <div class="fw-semibold">@((compra.RFCProveedor) ?? "-")</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-2 bg-light rounded-3 border">
+                                <div class="text-muted small text-uppercase mb-1" style="font-size: 0.7rem;">Emisión Factura</div>
+                                <div class="fw-semibold">@compra.FechaFactura.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .pos-container {
+        padding: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.4rem;
+    }
+
+    .stat-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.06) !important;
+        }
+
+    .table thead th {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-top: none;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+</style>
 
 @code {
-    [Parameter] public int id { get; set; }
-    private Compra? compra;
+    [Parameter] public int Id { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    private Compra? compra;
+    private bool cargando = true;
+
+    protected override async Task OnParametersSetAsync()
     {
-        compra = await CompraHttpService.GetCompraAsync(id);
+        cargando = true;
+        try
+        {
+            compra = await CompraHttpService.GetCompraAsync(Id);
+        }
+        finally
+        {
+            cargando = false;
+        }
     }
+    private async Task DescargarPdf()
+    {
+        if (compra is null)
+            return;
+
+        try
+        {
+            await PdfHttpService.DescargarCompraPdfAsync(compra.Id);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error al descargar PDF: {ex.Message}");
+        }
+    }
+
+
+    private void Volver() => Navigation.NavigateTo("/compras");
+
+    private static string ObtenerBadgeEstado(string? estado) => estado switch
+    {
+        "Completada" => "badge rounded-pill text-bg-success-subtle text-success border border-success",
+        "Pendiente" => "badge rounded-pill text-bg-warning-subtle text-warning-emphasis border border-warning",
+        "Cancelada" => "badge rounded-pill text-bg-danger-subtle text-danger border border-danger",
+        _ => "badge rounded-pill text-bg-primary-subtle text-primary border border-primary"
+    };
 }

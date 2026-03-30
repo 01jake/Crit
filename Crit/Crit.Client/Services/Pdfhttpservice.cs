@@ -64,6 +64,18 @@ namespace Crit.Client.Services
                 throw;
             }
         }
+        public async Task DescargarCompraPdfAsync(int compraId)
+        {
+            var response = await _httpClient.GetAsync($"api/compras/{compraId}/pdf");
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception("No se pudo generar el PDF de la compra.");
+
+            var fileBytes = await response.Content.ReadAsByteArrayAsync();
+            var base64 = Convert.ToBase64String(fileBytes);
+
+            await _jsRuntime.InvokeVoidAsync("downloadFileFromBytes", $"Compra-{compraId}.pdf", base64);
+        }
         public async Task GenerarVentaPdfAsync(int ventaId)
         {
             try

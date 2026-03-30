@@ -39,6 +39,9 @@ builder.Services.AddScoped<CompraHttpService>();
 builder.Services.AddScoped<CuentaPorCobrarHttpService>();
 builder.Services.AddScoped<CuentaPorPagarHttpService>();
 //builder.Services.AddScoped<KardexHttpService>();
+builder.Services.AddScoped<CajaHttpService>();
+builder.Services.AddScoped<GastoHttpService>();
+
 builder.Services.AddScoped<QuejaPublicaService>();
 builder.Services.AddScoped<ArticuloService>();
 builder.Services.AddScoped<Dashboardhttpservice>();

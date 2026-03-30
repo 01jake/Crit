@@ -1,0 +1,345 @@
+﻿@page "/caja"
+@using Crit.Client.Services
+@using Crit.Shared.DTOs
+@using Crit.Shared.Models
+@inject CajaHttpService CajaHttpService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Control de Caja</PageTitle>
+
+<div class="pos-container px-3 py-4">
+    @* --- ENCABEZADO --- *@
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-white text-white rounded-3 p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                <i class="bi bi-safe2-fill fs-3 text-black"></i>
+            </div>
+            <div>
+                <h2 class="page-title mb-0 fw-bold">Gestión de Caja Chica</h2>
+                <p class="text-muted small mb-0">Monitoreo de apertura, cierre y flujo de efectivo diario</p>
+            </div>
+        </div>
+
+        <button class="btn btn-primary shadow-sm px-4 fw-bold" @onclick="CargarDatos">
+            <i class="bi bi-arrow-clockwise me-2"></i>Actualizar Panel
+        </button>
+    </div>
+
+    @* --- INDICADORES (KPIs) --- *@
+    <div class="row g-3 mb-4">
+        @* Estado de Caja *@
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+                <div class="card-body position-relative z-1">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon @(resumen.CajaAbierta ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger") me-3">
+                            <i class="bi @(resumen.CajaAbierta ? "bi-unlock-fill" : "bi-lock-fill")"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Estado Actual</span>
+                    </div>
+                    <h3 class="fw-black mb-0 @(resumen.CajaAbierta ? "text-success" : "text-danger")">
+                        @(resumen.CajaAbierta ? "Abierta" : "Cerrada")
+                    </h3>
+                    <p class="text-muted small mb-0 mt-1">Usuario: Administración</p>
+                </div>
+                <i class="bi bi-key-fill position-absolute text-light" style="font-size: 7rem; right: -15px; bottom: -30px; opacity: 0.1; z-index: 0;"></i>
+            </div>
+        </div>
+
+        @* Monto Inicial *@
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-primary-subtle text-primary me-3">
+                            <i class="bi bi-cash"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Monto Inicial</span>
+                    </div>
+                    <h3 class="fw-bold mb-0 text-dark">@resumen.MontoInicial.ToString("C")</h3>
+                    <p class="text-muted small mb-0 mt-1">Fondo fijo asignado</p>
+                </div>
+            </div>
+        </div>
+
+        @* Ingresos *@
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-success-subtle text-success me-3">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Ingresos (Hoy)</span>
+                    </div>
+                    <h3 class="fw-bold mb-0 text-success">@resumen.IngresosHoy.ToString("C")</h3>
+                    <p class="text-muted small mb-0 mt-1">Total ventas en efectivo</p>
+                </div>
+            </div>
+        </div>
+
+        @* Egresos *@
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-danger-subtle text-danger me-3">
+                            <i class="bi bi-graph-down-arrow"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Egresos (Hoy)</span>
+                    </div>
+                    <h3 class="fw-bold mb-0 text-warning">@resumen.EgresosHoy.ToString("C")</h3>
+                    <p class="text-muted small mb-0 mt-1">Pagos y salidas de efectivo</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- ACCIONES PRINCIPALES (Apertura/Cierre) --- *@
+    <div class="card action-card shadow border-0 mb-4 rounded-4 @(resumen.CajaAbierta ? "border-danger-subtle" : "border-success-subtle")" style="border-width: 2px !important;">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="rounded-3 p-2 d-flex align-items-center justify-content-center @(resumen.CajaAbierta ? "bg-danger text-white" : "bg-success text-white")" style="width: 40px; height: 40px;">
+                    <i class="bi @(resumen.CajaAbierta ? "bi-lock" : "bi-unlock") fs-5"></i>
+                </div>
+                <h5 class="mb-0 fw-bold text-dark">
+                    @(resumen.CajaAbierta ? "Panel de Cierre de Caja" : "Panel de Apertura de Turno")
+                </h5>
+            </div>
+
+            @if (!resumen.CajaAbierta)
+            {
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-4 col-lg-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-1">Monto inicial de fondo</label>
+                        <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                            <span class="input-group-text bg-white text-muted border-end-0 fs-5 p-3">$</span>
+                            <input type="number" class="form-control form-control-lg border-start-0 ps-0 fw-bold text-dark fs-5 py-3"
+                                   placeholder="0.00" @bind="apertura.MontoInicial" />
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-8 col-lg-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-1">Observaciones / Novedades</label>
+                        <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                            <span class="input-group-text bg-white text-muted border-end-0 p-3"><i class="bi bi-chat-text"></i></span>
+                            <input class="form-control form-control-lg border-start-0 ps-0 py-3"
+                                   placeholder="Ej: Billete de $500 para cambio..." @bind="apertura.Observaciones" />
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-3 d-grid">
+                        <button class="btn btn-success btn-lg py-3 fw-bold shadow-sm" @onclick="AbrirCaja" style="border-radius: 12px;">
+                            <i class="bi bi-unlock-fill me-2 fs-5"></i>REGISTRAR APERTURA
+                        </button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-4 col-lg-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-1">Efectivo Final Contado</label>
+                        <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                            <span class="input-group-text bg-white text-muted border-end-0 fs-5 p-3">$</span>
+                            <input type="number" class="form-control form-control-lg border-start-0 ps-0 fw-bold text-dark fs-5 py-3"
+                                   placeholder="0.00" @bind="cierre.MontoFinal" />
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-8 col-lg-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-1">Observaciones de arqueo</label>
+                        <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                            <span class="input-group-text bg-white text-muted border-end-0 p-3"><i class="bi bi-exclamation-octagon"></i></span>
+                            <input class="form-control form-control-lg border-start-0 ps-0 py-3"
+                                   placeholder="Ej: Faltante de $10 pesos por redondeo..." @bind="cierre.Observaciones" />
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-3 d-grid">
+                        <button class="btn btn-danger btn-lg py-3 fw-bold shadow-sm" @onclick="CerrarCaja" style="border-radius: 12px;">
+                            <i class="bi bi-lock-fill me-2 fs-5"></i>REALIZAR CIERRE
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* --- TABLA DE MOVIMIENTOS --- *@
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-journal-text text-primary fs-5"></i>
+                <h5 class="mb-0 fw-bold text-dark">Movimientos de Efectivo (Turno Actual)</h5>
+            </div>
+            <div class="text-muted small">Última actualización: @DateTime.Now.ToString("HH:mm") hrs</div>
+        </div>
+
+        @if (movimientos == null || !movimientos.Any())
+        {
+            <div class="card-body text-center py-5">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3 p-3" style="width: 70px; height: 70px;">
+                    <i class="bi bi-cash-stack fs-2 text-muted"></i>
+                </div>
+                <p class="text-muted mb-0 fw-bold">No hay movimientos registrados el día de hoy.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="ps-4 py-3">Fecha / Hora</th>
+                            <th>Tipo</th>
+                            <th>Origen</th>
+                            <th>Concepto</th>
+                            <th class="text-end">Monto</th>
+                            <th class="text-end pe-4">Saldo en Caja</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mov in movimientos)
+                        {
+                            <tr class="border-bottom">
+                                <td class="ps-4 small text-dark">
+                                    <i class="bi bi-calendar3 me-2 text-muted"></i>@mov.Fecha.ToString("dd/MM/yyyy") <span class="fw-normal text-muted ms-1">@mov.Fecha.ToString("HH:mm")</span>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill fw-bold @(mov.Tipo == "Ingreso" ? "text-bg-success-subtle text-success border border-success" : "text-bg-danger-subtle text-danger border border-danger") px-3">
+                                        <i class="bi @(mov.Tipo == "Ingreso" ? "bi-arrow-down-left-circle-fill" : "bi-arrow-up-right-circle-fill") me-1"></i>
+                                        @mov.Tipo
+                                    </span>
+                                </td>
+                                <td class="small fw-medium text-dark">@mov.Origen</td>
+                                <td class="small text-muted text-wrap" style="max-width: 300px;">@mov.Concepto</td>
+                                <td class="text-end fw-bold font-monospace @(mov.Tipo == "Ingreso" ? "text-success" : "text-danger") fs-6">
+                                    @(mov.Tipo == "Ingreso" ? "+" : "-")@mov.Monto.ToString("N2")
+                                </td>
+                                <td class="text-end pe-4 fw-bold font-monospace text-dark fs-6">@mov.SaldoPosterior.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .pos-container {
+        padding: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.4rem;
+    }
+
+    .stat-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.06) !important;
+        }
+
+    .table thead th {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-top: none;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .fw-black {
+        font-weight: 900;
+    }
+
+    /* Input Group styling */
+    .input-group-text {
+        border-right: none;
+    }
+
+    .form-control-lg:focus {
+        border-color: #dee2e6;
+        box-shadow: none;
+    }
+
+    /* Badges Subtle */
+    .text-bg-success-subtle {
+        background-color: #d1e7dd;
+    }
+
+    .text-bg-danger-subtle {
+        background-color: #f8d7da;
+    }
+</style>
+
+@code {
+    private CajaResumenDto resumen = new();
+    private List<CajaMovimiento> movimientos = new();
+    private AperturaCajaDto apertura = new();
+    private CierreCajaDto cierre = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            resumen = await CajaHttpService.GetResumenAsync();
+            movimientos = await CajaHttpService.GetMovimientosAsync();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error al cargar datos: {ex.Message}");
+        }
+    }
+
+    private async Task AbrirCaja()
+    {
+        if (apertura.MontoInicial <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "El monto inicial debe ser mayor a cero.");
+            return;
+        }
+
+        var ok = await CajaHttpService.AbrirCajaAsync(apertura);
+
+        if (!ok)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "No se pudo abrir caja.");
+            return;
+        }
+
+        apertura = new AperturaCajaDto();
+        await CargarDatos();
+    }
+
+    private async Task CerrarCaja()
+    {
+        if (cierre.MontoFinal < 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "El monto final no puede ser negativo.");
+            return;
+        }
+
+        var ok = await CajaHttpService.CerrarCajaAsync(cierre);
+
+        if (!ok)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "No se pudo cerrar caja.");
+            return;
+        }
+
+        cierre = new CierreCajaDto();
+        await CargarDatos();
+    }
+}

@@ -25,7 +25,11 @@ namespace Crit.Shared.Models
         public decimal IVA { get; set; }
         public decimal Total { get; set; }
         public string Estado { get; set; } = "Completada";
-      
+
+        public int? AlmacenId { get; set; }
+        public Almacen? Almacen { get; set; }
+
+
         public List<DetalleCompra> Detalles { get; set; } = new();
         public CuentaPorPagar? CuentaPorPagar { get; set; }
 
