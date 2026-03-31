@@ -116,12 +116,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcR2FzdG9zLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/InventarioPorAlmacenPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW52ZW50YXJpb1BvckFsbWFjZW5QYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Kardex.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcS2FyZGV4LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/MisQuejasAsignadas.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWlzUXVlamFzQXNpZ25hZGFzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/ProductoDetalle.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdG9EZXRhbGxlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/ProveedorDetalle.razor]
@@ -138,6 +146,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/QuejasPublicas.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUXVlamFzUHVibGljYXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Reabastecimiento.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVhYmFzdGVjaW1pZW50by5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Traspasos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVHJhc3Bhc29zLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/VentaDetalle.razor]

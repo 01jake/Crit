@@ -981,6 +981,64 @@ namespace Crit.Migrations
                     b.ToTable("MovimientosInventario");
                 });
 
+            modelBuilder.Entity("Crit.Shared.Models.OrdenReabastecimiento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlmacenId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("CantidadSugerida")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("CompraId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("StockActual")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("StockMinimo")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TipoSugerido")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("TraspasoAlmacenId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenId");
+
+                    b.HasIndex("CompraId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("TraspasoAlmacenId");
+
+                    b.ToTable("OrdenesReabastecimiento");
+                });
+
             modelBuilder.Entity("Crit.Shared.Models.PagoCliente", b =>
                 {
                     b.Property<int>("Id")
@@ -1273,6 +1331,49 @@ namespace Crit.Migrations
                     b.HasIndex("ServicioId");
 
                     b.ToTable("ServiciosCliente");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.TraspasoAlmacen", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlmacenDestinoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AlmacenOrigenId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenDestinoId");
+
+                    b.HasIndex("AlmacenOrigenId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("TraspasosAlmacen");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.UbicacionAlmacen", b =>
@@ -1809,6 +1910,39 @@ namespace Crit.Migrations
                     b.Navigation("UbicacionAlmacen");
                 });
 
+            modelBuilder.Entity("Crit.Shared.Models.OrdenReabastecimiento", b =>
+                {
+                    b.HasOne("Crit.Shared.Models.Almacen", "Almacen")
+                        .WithMany()
+                        .HasForeignKey("AlmacenId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Crit.Shared.Models.Compra", "Compra")
+                        .WithMany()
+                        .HasForeignKey("CompraId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Crit.Shared.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Crit.Shared.Models.TraspasoAlmacen", "TraspasoAlmacen")
+                        .WithMany()
+                        .HasForeignKey("TraspasoAlmacenId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Almacen");
+
+                    b.Navigation("Compra");
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("TraspasoAlmacen");
+                });
+
             modelBuilder.Entity("Crit.Shared.Models.PagoCliente", b =>
                 {
                     b.HasOne("Crit.Shared.Models.CuentaPorCobrar", "CuentaPorCobrar")
@@ -1848,6 +1982,33 @@ namespace Crit.Migrations
                     b.Navigation("Cliente");
 
                     b.Navigation("Servicio");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.TraspasoAlmacen", b =>
+                {
+                    b.HasOne("Crit.Shared.Models.Almacen", "AlmacenDestino")
+                        .WithMany()
+                        .HasForeignKey("AlmacenDestinoId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Crit.Shared.Models.Almacen", "AlmacenOrigen")
+                        .WithMany()
+                        .HasForeignKey("AlmacenOrigenId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Crit.Shared.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("AlmacenDestino");
+
+                    b.Navigation("AlmacenOrigen");
+
+                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.UbicacionAlmacen", b =>

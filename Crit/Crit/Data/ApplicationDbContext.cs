@@ -36,6 +36,8 @@ namespace Crit.Server.Data
         public DbSet<Almacen> Almacenes { get; set; }
         public DbSet<InventarioPorAlmacen> InventarioPorAlmacen { get; set; }
         public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
+        public DbSet<TraspasoAlmacen> TraspasosAlmacen { get; set; }
+        public DbSet<OrdenReabastecimiento> OrdenesReabastecimiento { get; set; }
 
 
 
@@ -273,8 +275,8 @@ namespace Crit.Server.Data
                 .HasForeignKey(x => x.ProveedorId)
                 .OnDelete(DeleteBehavior.NoAction);
             builder.Entity<InventarioPorAlmacen>()
-    .HasIndex(x => new { x.ProductoId, x.AlmacenId })
-    .IsUnique();
+                .HasIndex(x => new { x.ProductoId, x.AlmacenId })
+                .IsUnique();
 
             builder.Entity<InventarioPorAlmacen>()
                 .HasOne(x => x.Producto)
@@ -287,7 +289,45 @@ namespace Crit.Server.Data
                 .WithMany()
                 .HasForeignKey(x => x.AlmacenId)
                 .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<TraspasoAlmacen>()
+                .HasOne(x => x.AlmacenOrigen)
+                .WithMany()
+                .HasForeignKey(x => x.AlmacenOrigenId)
+                .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<TraspasoAlmacen>()
+                .HasOne(x => x.AlmacenDestino)
+                .WithMany()
+                .HasForeignKey(x => x.AlmacenDestinoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<TraspasoAlmacen>()
+                .HasOne(x => x.Producto)
+                .WithMany()
+                .HasForeignKey(x => x.ProductoId)
+                .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<OrdenReabastecimiento>()
+                .HasOne(x => x.Producto)
+                .WithMany()
+                .HasForeignKey(x => x.ProductoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<OrdenReabastecimiento>()
+                .HasOne(x => x.Almacen)
+                .WithMany()
+                .HasForeignKey(x => x.AlmacenId)
+                .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<OrdenReabastecimiento>()
+                .HasOne(x => x.Compra)
+                .WithMany()
+                .HasForeignKey(x => x.CompraId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<OrdenReabastecimiento>()
+                .HasOne(x => x.TraspasoAlmacen)
+                .WithMany()
+                .HasForeignKey(x => x.TraspasoAlmacenId)
+                .OnDelete(DeleteBehavior.NoAction);
             builder.Entity<CuentaPorCobrar>()
                 .Property(x => x.Subtotal)
                 .HasColumnType("decimal(18,2)");
@@ -387,6 +427,22 @@ namespace Crit.Server.Data
             builder.Entity<InventarioPorAlmacen>()
                 .Property(x => x.StockMaximo)
                 .HasColumnType("decimal(18,2)");
+            builder.Entity<TraspasoAlmacen>()
+                .Property(x => x.Cantidad)
+                .HasColumnType("decimal(18,2)");
+            builder.Entity<OrdenReabastecimiento>()
+                .Property(x => x.StockActual)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<OrdenReabastecimiento>()
+                .Property(x => x.StockMinimo)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<OrdenReabastecimiento>()
+                .Property(x => x.CantidadSugerida)
+                .HasColumnType("decimal(18,2)");
+
+
         }
         //public DbSet<Producto> Producto { get; set; } = default!;
         public DbSet<Queja> Queja { get; set; } = default!;

@@ -38,10 +38,13 @@ builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<CompraHttpService>();
 builder.Services.AddScoped<CuentaPorCobrarHttpService>();
 builder.Services.AddScoped<CuentaPorPagarHttpService>();
-//builder.Services.AddScoped<KardexHttpService>();
+builder.Services.AddScoped<KardexHttpService>();
+builder.Services.AddScoped<ReabastecimientoHttpService>();
+builder.Services.AddScoped<TraspasoHttpService>();
+builder.Services.AddScoped<InventarioAlmacenHttpService>();
 builder.Services.AddScoped<CajaHttpService>();
 builder.Services.AddScoped<GastoHttpService>();
-
+builder.Services.AddScoped<AlmacenHttpService>();
 builder.Services.AddScoped<QuejaPublicaService>();
 builder.Services.AddScoped<ArticuloService>();
 builder.Services.AddScoped<Dashboardhttpservice>();

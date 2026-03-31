@@ -28,26 +28,21 @@ namespace Crit.Client.Services
             }
         }
 
-        public async Task<bool> CrearAsync(Compra compra)
+        public async Task<Compra?> CrearAsync(Compra compra)
         {
             try
             {
                 var response = await _http.PostAsJsonAsync("api/compras", compra);
-                response.EnsureSuccessStatusCode();
 
                 if (!response.IsSuccessStatusCode)
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning("Error al crear compra: {Error}", error);
-                    return false;
-                }
+                    return null;
 
-                return true;
+                return await response.Content.ReadFromJsonAsync<Compra>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear compra");
-                return false;
+                return null;
             }
         }
 

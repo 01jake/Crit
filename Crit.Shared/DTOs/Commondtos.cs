@@ -269,6 +269,32 @@ namespace Crit.Shared.DTOs
         public decimal MontoFinal { get; set; }
         public string? Observaciones { get; set; }
     }
-    
+    public class CrearCompraDesdeReabastecimientoDto
+    {
+        public int OrdenReabastecimientoId { get; set; }
+        public int ProveedorId { get; set; }
+        public int AlmacenId { get; set; }
+        public decimal Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public string? SerieFactura { get; set; }
+        public string? FolioFactura { get; set; }
+        public string? RFCProveedor { get; set; }
+        public DateTime FechaFactura { get; set; } = DateTime.Today;
+        public bool EsCredito { get; set; }
+        public int? DiasCredito { get; set; }
+    }
+    public class KardexMovimientoDto
+    {
+        public DateTime Fecha { get; set; }
+        public string Producto { get; set; } = string.Empty;
+        public string? CodigoProducto { get; set; }
+        public string Almacen { get; set; } = string.Empty;
+        public string TipoMovimiento { get; set; } = string.Empty;
+        public decimal Cantidad { get; set; }
+        public decimal StockAnterior { get; set; }
+        public decimal StockNuevo { get; set; }
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
+    }
 
 }

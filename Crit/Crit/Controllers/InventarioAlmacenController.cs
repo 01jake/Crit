@@ -39,7 +39,7 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener inventario por almacén");
+                _logger.LogError(ex, "Error al obtener inventario por almacen");
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -60,7 +60,7 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener inventario del almacén {AlmacenId}", almacenId);
+                _logger.LogError(ex, "Error al obtener inventario del almacen {AlmacenId}", almacenId);
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -102,7 +102,7 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener alertas de stock mínimo");
+                _logger.LogError(ex, "Error al obtener alertas de stock minimo");
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -121,13 +121,13 @@ namespace Crit.Controllers
 
                 var almacenExiste = await _context.Almacenes.AnyAsync(a => a.Id == item.AlmacenId);
                 if (!almacenExiste)
-                    return BadRequest("El almacén no existe");
+                    return BadRequest("El almacen no existe");
 
                 var existeRegistro = await _context.InventarioPorAlmacen
                     .AnyAsync(x => x.ProductoId == item.ProductoId && x.AlmacenId == item.AlmacenId);
 
                 if (existeRegistro)
-                    return BadRequest("Ya existe inventario para ese producto en ese almacén");
+                    return BadRequest("Ya existe inventario para ese producto en ese almacen");
 
                 _context.InventarioPorAlmacen.Add(item);
                 await _context.SaveChangesAsync();
@@ -136,7 +136,7 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear inventario por almacén");
+                _logger.LogError(ex, "Error al crear inventario por almacen");
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -166,7 +166,7 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar inventario por almacén {Id}", id);
+                _logger.LogError(ex, "Error al actualizar inventario por almacen {Id}", id);
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -190,7 +190,7 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al eliminar inventario por almacén {Id}", id);
+                _logger.LogError(ex, "Error al eliminar inventario por almacen {Id}", id);
                 return StatusCode(500, "Error interno del servidor");
             }
         }

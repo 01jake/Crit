@@ -158,37 +158,67 @@ namespace Crit.Controllers
                 var numero = ultimaVenta != null ? ultimaVenta.Id + 1 : 1;
                 venta.NumeroVenta = $"V-{DateTime.Now:yyyyMMdd}-{numero:D6}";
                 venta.Fecha = DateTime.Now;
+                var almacenExiste = await _context.Almacenes.AnyAsync(a => a.Id == venta.AlmacenId && a.Activo);
+                if (!almacenExiste)
+                    return BadRequest("Debes seleccionar un almacén válido para la venta.");
+
+                var movimientosPendientes = new List<MovimientoInventario>();
+
 
                 _logger.LogInformation($"Número de venta generado: {venta.NumeroVenta}");
 
                 // Validar y descontar stock
-                foreach (var detalle in venta.Detalles)
+                foreach (var d in venta.Detalles)
                 {
-                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                    var producto = await _context.Productos.FindAsync(d.ProductoId);
 
                     if (producto == null)
+                        return BadRequest($"Producto con ID {d.ProductoId} no encontrado");
+
+                    var inventarioAlmacen = await _context.InventarioPorAlmacen
+                        .FirstOrDefaultAsync(x => x.ProductoId == d.ProductoId && x.AlmacenId == venta.AlmacenId);
+
+                    if (inventarioAlmacen == null)
+                        return BadRequest($"El producto {producto.Nombre} no tiene inventario en el almacén seleccionado.");
+
+                    if (inventarioAlmacen.Stock < d.Cantidad)
+                        return BadRequest($"Stock insuficiente en almacén para el producto {producto.Nombre}. Disponible: {inventarioAlmacen.Stock}");
+
+                    if (producto.Stock < d.Cantidad)
+                        return BadRequest($"Stock global insuficiente para el producto {producto.Nombre}. Disponible: {producto.Stock}");
+
+                    var stockAnteriorAlmacen = inventarioAlmacen.Stock;
+
+                    inventarioAlmacen.Stock -= d.Cantidad;
+                    producto.Stock -= d.Cantidad;
+
+                    d.Subtotal = d.Cantidad * d.PrecioUnitario;
+
+                    movimientosPendientes.Add(new MovimientoInventario
                     {
-                        await transaction.RollbackAsync();
-                        _logger.LogError($"Producto {detalle.ProductoId} no encontrado");
-                        return BadRequest($"Producto con ID {detalle.ProductoId} no encontrado");
-                    }
-
-                    if (producto.Stock < detalle.Cantidad)
-                    {
-                        await transaction.RollbackAsync();
-                        _logger.LogError($"Stock insuficiente para {producto.Nombre}");
-                        return BadRequest($"Stock insuficiente para {producto.Nombre}. Disponible: {producto.Stock}");
-                    }
-
-                    _logger.LogInformation($"Descontando {detalle.Cantidad} de {producto.Nombre}. Stock actual: {producto.Stock}");
-
-                    producto.Stock -= detalle.Cantidad;
+                        Fecha = venta.Fecha,
+                        ProductoId = d.ProductoId,
+                        AlmacenId = venta.AlmacenId.Value,
+                        TipoMovimiento = "SalidaVenta",
+                        Cantidad = d.Cantidad,
+                        StockAnterior = stockAnteriorAlmacen,
+                        StockNuevo = inventarioAlmacen.Stock,
+                        Referencia = venta.NumeroVenta,
+                        Observaciones = "Salida generada desde venta"
+                    });
                 }
 
                 // Agregar la venta
                 _context.Ventas.Add(venta);
 
                 _logger.LogInformation("Guardando cambios en la base de datos...");
+
+                await _context.SaveChangesAsync();
+                foreach (var movimiento in movimientosPendientes)
+                {
+                    movimiento.VentaId = venta.Id;
+                    _context.MovimientosInventario.Add(movimiento);
+                }
 
                 await _context.SaveChangesAsync();
                 if (!venta.EsCredito)

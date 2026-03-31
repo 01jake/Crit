@@ -1,116 +1,253 @@
-﻿@* @page "/kardex/{productoId:int}"
+﻿@page "/kardex"
+@using Crit.Client.Services
+@using Crit.Shared.DTOs
 @using Crit.Shared.Models
+@using Microsoft.AspNetCore.Components
 @inject KardexHttpService KardexHttpService
+@inject ProductoHttpService ProductoHttpService
+@inject AlmacenHttpService AlmacenHttpService
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
 
-<PageTitle>Kardex</PageTitle>
+<PageTitle>Kardex de Inventario | Crit</PageTitle>
 
-<div class="container-fluid">
-
-    <h3 class="mb-4">Kardex del Producto</h3>
-
-    @if (loading)
-    {
-        <div class="text-center">
-            <div class="spinner-border text-primary"></div>
-        </div>
-    }
-    else if (!kardex.Any())
-    {
-        <div class="alert alert-warning">
-            No hay movimientos registrados
-        </div>
-    }
-    else
-    {
-        <div class="card shadow-sm">
-
-            <div class="card-header bg-dark text-white">
-                Movimientos
+<div class="pos-container px-4 py-4">
+    @* --- ENCABEZADO --- *@
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-dark text-white rounded-3 p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 52px; height: 52px;">
+                <i class="bi bi-journal-text fs-2"></i>
             </div>
+            <div>
+                <h2 class="page-title mb-0 fw-bold text-dark">Kardex de Inventario</h2>
+                <p class="text-muted small mb-0">Seguimiento detallado de entradas, salidas y traspasos</p>
+            </div>
+        </div>
 
-            <div class="table-responsive">
-                <table class="table table-hover table-sm mb-0">
+        <button class="btn btn-white border fw-bold shadow-sm px-3" @onclick="CargarDatos">
+            <i class="bi bi-arrow-clockwise me-2 text-primary"></i>Actualizar Vista
+        </button>
+    </div>
 
-                    <thead class="table-dark">
+    @* --- PANEL DE FILTROS --- *@
+    <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden border-light">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-filter-right fs-5 text-primary"></i>
+                <h6 class="mb-0 fw-bold text-dark">Filtros de Búsqueda</h6>
+            </div>
+        </div>
+        <div class="card-body p-4 bg-white">
+            <div class="row g-3">
+                <div class="col-md-4 col-lg-3">
+                    <label class="form-label-custom">Producto</label>
+                    <select class="form-select border-light-subtle shadow-none" @bind="productoId">
+                        <option value="">-- Todos los productos --</option>
+                        @foreach (var p in productos)
+                        {
+                            <option value="@p.Id">@p.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4 col-lg-3">
+                    <label class="form-label-custom">Almacén</label>
+                    <select class="form-select border-light-subtle shadow-none" @bind="almacenId">
+                        <option value="">-- Todos los almacenes --</option>
+                        @foreach (var a in almacenes)
+                        {
+                            <option value="@a.Id">@a.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-lg-2">
+                    <label class="form-label-custom">Desde</label>
+                    <input type="date" class="form-control border-light-subtle shadow-none" @bind="fechaInicio" />
+                </div>
+
+                <div class="col-md-2 col-lg-2">
+                    <label class="form-label-custom">Hasta</label>
+                    <input type="date" class="form-control border-light-subtle shadow-none" @bind="fechaFin" />
+                </div>
+
+                <div class="col-md-12 col-lg-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100 fw-bold shadow-sm py-2" @onclick="AplicarFiltros">
+                        <i class="bi bi-funnel-fill me-2"></i>Filtrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- TABLA DE MOVIMIENTOS --- *@
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold text-dark">Registros de Movimiento</h6>
+            <span class="badge bg-light text-dark border fw-semibold px-3 py-2">
+                @movimientos.Count registro(s) encontrados
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 custom-table">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3">Fecha y Hora</th>
+                        <th>Producto / SKU</th>
+                        <th>Almacén</th>
+                        <th>Tipo de Movimiento</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">Balance Stock</th>
+                        <th class="pe-4">Referencia / Notas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!movimientos.Any())
+                    {
                         <tr>
-                            <th>Fecha</th>
-                            <th>Tipo</th>
-                            <th>Referencia</th>
-                            <th>Entrada</th>
-                            <th>Salida</th>
-                            <th>Stock</th>
-                            <th>Costo</th>
-                            <th>Total</th>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <div class="py-4">
+                                    <i class="bi bi-search fs-1 opacity-25 d-block mb-3"></i>
+                                    <p class="mb-0 fw-semibold">No se encontraron movimientos con los filtros aplicados.</p>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach (var k in kardex)
+                    }
+                    else
+                    {
+                        @foreach (var item in movimientos)
                         {
                             <tr>
-                                <td>@k.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">@item.Fecha.ToString("dd/MM/yyyy")</div>
+                                    <div class="text-muted small">@item.Fecha.ToString("HH:mm") hrs</div>
+                                </td>
                                 <td>
-                                    @if (k.TipoMovimiento == "COMPRA")
+                                    <div class="fw-bold text-primary">@item.Producto</div>
+                                    <div class="font-monospace small text-muted">@item.CodigoProducto</div>
+                                </td>
+                                <td>
+                                    <span class="text-secondary"><i class="bi bi-geo-alt me-1"></i>@item.Almacen</span>
+                                </td>
+                                <td>
+                                    <span class="@ObtenerBadge(item.TipoMovimiento)">
+                                        @item.TipoMovimiento
+                                    </span>
+                                </td>
+                                <td class="text-end fw-bold fs-6">
+                                    <span class="@(item.Cantidad < 0 ? "text-danger" : "text-success")">
+                                        @(item.Cantidad > 0 ? "+" : "")@item.Cantidad.ToString("N2")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="small text-muted mb-0">Ant: @item.StockAnterior.ToString("N2")</div>
+                                    <div class="fw-bold text-dark">Nuevo: @item.StockNuevo.ToString("N2")</div>
+                                </td>
+                                <td class="pe-4">
+                                    <div class="small fw-semibold text-dark">@item.Referencia</div>
+                                    @if (!string.IsNullOrEmpty(item.Observaciones))
                                     {
-                                        <span class="badge bg-success">COMPRA</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">VENTA</span>
+                                        <div class="text-muted small text-truncate" style="max-width: 200px;" title="@item.Observaciones">
+                                            @item.Observaciones
+                                        </div>
                                     }
                                 </td>
-
-                                <td>@k.Referencia</td>
-
-                                <td class="text-success fw-bold">
-                                    @(k.TipoMovimiento == "COMPRA" ? k.Cantidad : 0)
-                                </td>
-
-                                <td class="text-danger fw-bold">
-                                    @(k.TipoMovimiento == "VENTA" ? k.Cantidad : 0)
-                                </td>
-
-                                <td><strong>@k.StockNuevo</strong></td>
-
-                                <td>$@k.CostoUnitario.ToString("N2")</td>
-
-                                <td>$@k.Total.ToString("N2")</td>
                             </tr>
                         }
-                    </tbody>
-
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
-    }
-
+    </div>
 </div>
 
-@code {
-    [Parameter] public int productoId { get; set; }
+<style>
+    .pos-container {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
 
-    private List<Kardex> kardex = new();
-    private bool loading = true;
+ 
+    .btn-white {
+        background-color: #fff;
+    }
+
+    .form-label-custom {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #7e8299;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .form-select, .form-control {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
+    }
+
+    /* Tabla Customizada */
+    .custom-table thead th {
+        border: none;
+        font-size: 11px;
+        color: #7e8299;
+        background-color: #fcfcfd;
+        letter-spacing: 0.5px;
+    }
+
+    .custom-table tbody td {
+        border-color: #f1f1f4;
+        padding-top: 14px;
+        padding-bottom: 14px;
+        font-size: 13.5px;
+    }
+
+    /* Badges de Tipo de Movimiento */
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.5em 0.8em;
+        font-weight: 600;
+        border-radius: 6px;
+    }
+</style>
+
+@code {
+    // Tu lógica se mantiene idéntica
+    private List<KardexMovimientoDto> movimientos = new();
+    private List<Producto> productos = new();
+    private List<Almacen> almacenes = new();
+    [SupplyParameterFromQuery] public int? productoId { get; set; }
+    [SupplyParameterFromQuery] public int? almacenId { get; set; }
+
+    private DateTime? fechaInicio;
+    private DateTime? fechaFin;
 
     protected override async Task OnInitializedAsync()
     {
-        await Cargar();
+        productos = await ProductoHttpService.GetProductosAsync();
+        almacenes = await AlmacenHttpService.GetActivosAsync();
+        await AplicarFiltros();
     }
 
-    private async Task Cargar()
+    private async Task CargarDatos()
     {
-        try
-        {
-            kardex = await KardexHttpService.GetKardexAsync(productoId);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-        finally
-        {
-            loading = false;
-        }
+        movimientos = await KardexHttpService.GetAsync();
     }
-} *@
+
+    private async Task AplicarFiltros()
+    {
+        movimientos = await KardexHttpService.GetAsync(productoId, almacenId, fechaInicio, fechaFin);
+    }
+
+    private static string ObtenerBadge(string? tipo) => tipo switch
+    {
+        "EntradaCompra" => "badge text-bg-success-subtle text-success border border-success-subtle",
+        "SalidaVenta" => "badge text-bg-danger-subtle text-danger border border-danger-subtle",
+        "TraspasoEntrada" => "badge text-bg-info-subtle text-info border border-info-subtle",
+        "TraspasoSalida" => "badge text-bg-warning-subtle text-warning-emphasis border border-warning-subtle",
+        _ => "badge text-bg-secondary-subtle text-secondary border border-secondary-subtle"
+    };
+}

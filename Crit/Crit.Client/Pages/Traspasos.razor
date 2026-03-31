@@ -1,0 +1,364 @@
+﻿@page "/traspasos"
+@using Crit.Client.Services
+@using Crit.Shared.Models
+@using Microsoft.AspNetCore.Components
+@inject TraspasoHttpService TraspasoHttpService
+@inject AlmacenHttpService AlmacenHttpService
+@inject ProductoHttpService ProductoHttpService
+@inject ReabastecimientoHttpService ReabastecimientoHttpService
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Traspasos entre Almacenes</PageTitle>
+
+<div class="pos-container px-3 py-4">
+    @* --- ENCABEZADO --- *@
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                <i class="bi bi-arrow-left-right fs-3"></i>
+            </div>
+            <div>
+                <h2 class="page-title mb-0 fw-bold">Traspasos de Inventario</h2>
+                <p class="text-muted small mb-0">Control de movimientos internos entre sucursales o bodegas</p>
+            </div>
+        </div>
+
+        <button class="btn btn-light border shadow-sm fw-bold" @onclick="CargarDatos">
+            <i class="bi bi-arrow-clockwise me-2 text-primary"></i>Actualizar Stock
+        </button>
+    </div>
+
+    @* --- FORMULARIO DE NUEVO TRASPASO --- *@
+    <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-plus-circle me-2 text-primary"></i>Configurar Nuevo Movimiento</h5>
+        </div>
+        <div class="card-body p-4 bg-light-subtle">
+            <div class="row g-4 align-items-center">
+
+                @* Lógica Visual: Origen -> Destino *@
+                <div class="col-lg-5">
+                    <div class="p-3 bg-white rounded-3 border border-primary-subtle shadow-sm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Almacén Origen</label>
+                                <select class="form-select border-primary-subtle" value="@nuevoTraspaso.AlmacenOrigenId" @onchange="OnOrigenChanged">
+                                    <option value="0">Seleccionar...</option>
+                                    @foreach (var almacen in almacenes)
+                                    {
+                                        <option value="@almacen.Id">📦 @almacen.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Almacén Destino</label>
+                                <select class="form-select border-primary-subtle" @bind="nuevoTraspaso.AlmacenDestinoId">
+                                    <option value="0">Seleccionar...</option>
+                                    @foreach (var almacen in almacenes.Where(a => a.Id != nuevoTraspaso.AlmacenOrigenId))
+                                    {
+                                        <option value="@almacen.Id">🚚 @almacen.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-1 text-center d-none d-lg-block">
+                    <i class="bi bi-arrow-right fs-1 text-primary-emphasis opacity-25"></i>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="p-3 bg-white rounded-3 border shadow-sm">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Producto a Mover</label>
+                                <select class="form-select" @bind="nuevoTraspaso.ProductoId">
+                                    <option value="0">Seleccionar producto...</option>
+                                    @foreach (var producto in productos)
+                                    {
+                                        <option value="@producto.Id">@producto.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Cantidad</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0.01" class="form-control fw-bold text-primary" @bind="nuevoTraspaso.Cantidad" />
+                                    <span class="input-group-text bg-light text-muted small">Cant.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-3">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Observaciones / Motivo del traspaso</label>
+                    <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-chat-dots"></i></span>
+                        <input class="form-control border-start-0 py-2" placeholder="Ej. Reabastecimiento de sucursal por venta especial..." @bind="nuevoTraspaso.Observaciones" />
+                    </div>
+                </div>
+
+                <div class="col-12 text-end">
+                    <button class="btn btn-primary btn-lg px-5 shadow fw-bold rounded-3" @onclick="GuardarTraspaso">
+                        <i class="bi bi-arrow-left-right me-2"></i>EJECUTAR TRASPASO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- HISTORIAL DE TRASPASOS --- *@
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-dark">Historial de Movimientos</h5>
+            <div class="input-group input-group-sm" style="width: 250px;">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control bg-light border-start-0" placeholder="Buscar en historial...">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3">Fecha y Hora</th>
+                        <th>Producto</th>
+                        <th>Ruta de Traspaso</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in traspasos)
+                    {
+                        <tr class="border-bottom">
+                            <td class="ps-4">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold text-dark">@item.Fecha.ToString("dd/MM/yyyy")</span>
+                                    <span class="text-muted small">@item.Fecha.ToString("HH:mm") hrs</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-primary">@item.Producto?.Nombre</div>
+                                <div class="text-muted x-small">ID: #@item.ProductoId</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-light text-dark border fw-normal px-2">@item.AlmacenOrigen?.Nombre</span>
+                                    <i class="bi bi-chevron-right text-primary opacity-50 small"></i>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold px-2">@item.AlmacenDestino?.Nombre</span>
+                                </div>
+                            </td>
+                            <td class="text-end fw-bold font-monospace fs-6">
+                                @item.Cantidad.ToString("N2")
+                            </td>
+                            <td class="text-center">
+                                <span class="@ObtenerBadgeEstado(item.Estado)">
+                                    <i class="bi @(item.Estado == "Completado" ? "bi-check-circle-fill" : "bi-info-circle") me-1"></i>
+                                    @item.Estado
+                                </span>
+                            </td>
+                            <td class="text-center pe-4">
+                                @if (item.Estado == "Completado")
+                                {
+                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" @onclick="() => CancelarTraspaso(item.Id)">
+                                        <i class="bi bi-x-circle me-1"></i>Anular
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pos-container {
+        min-height: 100vh;
+    }
+
+    .x-small {
+        font-size: 0.7rem;
+    }
+
+    .card {
+        transition: box-shadow 0.3s;
+    }
+
+        .card:hover {
+            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.08) !important;
+        }
+
+    .form-select, .form-control {
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+    }
+
+        .form-select:focus, .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+
+    /* Badges Customizados de Blazor logic */
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.5em 1em;
+    }
+
+    .table thead th {
+        font-weight: 700;
+        color: #555;
+        border-top: none;
+    }
+</style>
+
+@code {
+    private List<TraspasoAlmacen> traspasos = new();
+    private List<Almacen> almacenes = new();
+    private List<Producto> productos = new();
+    [SupplyParameterFromQuery] public int? productoId { get; set; }
+    [SupplyParameterFromQuery] public int? almacenDestinoId { get; set; }
+    [SupplyParameterFromQuery] public decimal? cantidad { get; set; }
+    [SupplyParameterFromQuery] public int? ordenReabastecimientoId { get; set; }
+
+    private TraspasoAlmacen nuevoTraspaso = new()
+    {
+        Fecha = DateTime.Now,
+        Estado = "Completado"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+        AplicarParametrosReabastecimiento();
+
+    }
+
+    private async Task CargarDatos()
+    {
+        traspasos = await TraspasoHttpService.GetAsync();
+        almacenes = await AlmacenHttpService.GetActivosAsync();
+        productos = await ProductoHttpService.GetProductosAsync();
+    }
+
+    private async Task GuardarTraspaso()
+    {
+        if (nuevoTraspaso.AlmacenOrigenId <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Debes seleccionar almacén origen.");
+            return;
+        }
+
+        if (nuevoTraspaso.AlmacenDestinoId <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Debes seleccionar almacén destino.");
+            return;
+        }
+
+        if (nuevoTraspaso.AlmacenOrigenId == nuevoTraspaso.AlmacenDestinoId)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "El almacén origen y destino no pueden ser el mismo.");
+            return;
+        }
+
+        if (nuevoTraspaso.ProductoId <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Debes seleccionar un producto.");
+            return;
+        }
+
+        if (nuevoTraspaso.Cantidad <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "La cantidad debe ser mayor a cero.");
+            return;
+        }
+
+        var traspasoCreado = await TraspasoHttpService.CreateAsync(nuevoTraspaso);
+
+        if (traspasoCreado is null)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "No se pudo registrar el traspaso.");
+            return;
+        }
+
+        if (ordenReabastecimientoId.HasValue && ordenReabastecimientoId.Value > 0)
+        {
+            var completada = await ReabastecimientoHttpService
+                .CompletarDesdeTraspasoAsync(ordenReabastecimientoId.Value, traspasoCreado.Id);
+
+            if (!completada)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "El traspaso se guardó, pero no se pudo completar la orden de reabastecimiento.");
+            }
+        }
+
+
+        nuevoTraspaso = new TraspasoAlmacen
+        {
+            Fecha = DateTime.Now,
+            Estado = "Completado"
+        };
+
+        await CargarDatos();
+    }
+
+    private void AplicarParametrosReabastecimiento()
+    {
+        if (productoId.HasValue && productoId > 0)
+        {
+            nuevoTraspaso.ProductoId = productoId.Value;
+        }
+
+        if (almacenDestinoId.HasValue && almacenDestinoId > 0)
+        {
+            nuevoTraspaso.AlmacenDestinoId = almacenDestinoId.Value;
+        }
+
+        if (cantidad.HasValue && cantidad > 0)
+        {
+            nuevoTraspaso.Cantidad = cantidad.Value;
+        }
+    }
+
+    private void OnOrigenChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var origenId))
+        {
+            nuevoTraspaso.AlmacenOrigenId = origenId;
+
+            if (nuevoTraspaso.AlmacenDestinoId == origenId)
+            {
+                nuevoTraspaso.AlmacenDestinoId = 0;
+            }
+        }
+    }
+
+
+    private async Task CancelarTraspaso(int id)
+    {
+        var ok = await TraspasoHttpService.CancelAsync(id);
+
+        if (!ok)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "No se pudo cancelar el traspaso.");
+            return;
+        }
+
+        await CargarDatos();
+    }
+
+    private static string ObtenerBadgeEstado(string? estado) => estado switch
+    {
+        "Completado" => "badge rounded-pill text-bg-success-subtle text-success border border-success",
+        "Pendiente" => "badge rounded-pill text-bg-warning-subtle text-warning-emphasis border border-warning",
+        "Cancelado" => "badge rounded-pill text-bg-danger-subtle text-danger border border-danger",
+        _ => "badge rounded-pill text-bg-primary-subtle text-primary border border-primary"
+    };
+}

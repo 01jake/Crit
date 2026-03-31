@@ -10,6 +10,8 @@ namespace Crit.Shared.Models
     public class PagoCliente
     {
         public int Id { get; set; }
+        public int EmpresaId { get; set; }
+        public Empresa? Empresa { get; set; }
 
         [Required]
         public int CuentaPorCobrarId { get; set; }

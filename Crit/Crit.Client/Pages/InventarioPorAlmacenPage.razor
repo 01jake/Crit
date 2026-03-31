@@ -1,0 +1,303 @@
+﻿@page "/inventario-por-almacen"
+@using System.Net.Http.Json
+@using Crit.Client.Services
+@using Crit.Shared.Models
+@inject InventarioAlmacenHttpService InventarioAlmacenHttpService
+@inject AlmacenHttpService AlmacenHttpService
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+
+<PageTitle>Inventario por Almacén | Crit</PageTitle>
+
+<div class="pos-container px-3 py-4">
+    @* --- HEADER --- *@
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                <i class="bi bi-building-check fs-3"></i>
+            </div>
+            <div>
+                <h2 class="page-title mb-0 fw-bold">Inventario por Almacén</h2>
+                <p class="text-muted small mb-0">Monitoreo de existencias y niveles críticos por sucursal</p>
+            </div>
+        </div>
+
+        <button class="btn btn-white border shadow-sm fw-bold px-3" @onclick="CargarDatos">
+            <i class="bi bi-arrow-clockwise me-2 text-primary"></i>Sincronizar Datos
+        </button>
+    </div>
+
+    @* --- DASHBOARD DE ESTADO --- *@
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 border-bottom border-4 border-secondary h-100 rounded-3">
+                <div class="card-body p-3">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Items en Vista</div>
+                    <h3 class="fw-bold mb-0">@inventarioFiltrado.Count</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 border-bottom border-4 border-primary h-100 rounded-3">
+                <div class="card-body p-3">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Stock Físico Total</div>
+                    <h3 class="fw-bold text-primary mb-0">@inventarioFiltrado.Sum(x => x.Stock).ToString("N0")</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 border-bottom border-4 border-warning h-100 rounded-3">
+                <div class="card-body p-3">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Bajo Mínimo</div>
+                    <h3 class="fw-bold text-warning mb-0">@inventarioFiltrado.Count(x => x.Stock <= x.StockMinimo && x.Stock > 0)</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 border-bottom border-4 border-danger h-100 rounded-3">
+                <div class="card-body p-3">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Agotados</div>
+                    <h3 class="fw-bold text-danger mb-0">@inventarioFiltrado.Count(x => x.Stock <= 0)</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- PANEL DE CONTROL (FILTROS) --- *@
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-3 bg-white">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label x-small fw-bold text-muted">FILTRAR POR ALMACÉN</label>
+                    <select class="form-select border-0 bg-light" @bind="almacenSeleccionadoId" @bind:after="AplicarFiltros">
+                        <option value="0">🌐 Todos los almacenes</option>
+                        @foreach (var almacen in almacenes)
+                        {
+                            <option value="@almacen.Id">📦 @almacen.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-5">
+                    <label class="form-label x-small fw-bold text-muted">BUSCAR PRODUCTO</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0 bg-light"><i class="bi bi-search text-muted"></i></span>
+                        <input class="form-control border-0 bg-light" placeholder="Nombre o código de barras..." @bind="busqueda" @bind:event="oninput" @bind:after="AplicarFiltros" />
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label x-small fw-bold text-muted">ESTADO DE EXISTENCIA</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio1" autocomplete="off" checked @onclick='() => SetAlertFilter("todos")'>
+                        <label class="btn btn-outline-secondary border-light-subtle small py-2" for="vbtn-radio1">Todos</label>
+
+                        <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio2" autocomplete="off" @onclick='() => SetAlertFilter("alertas")'>
+                        <label class="btn btn-outline-warning border-light-subtle small py-2" for="vbtn-radio2">Solo Alertas</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- TABLA DE RESULTADOS --- *@
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-dark text-white x-small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3" style="width: 35%">Información del Producto</th>
+                        <th style="width: 15%">Ubicación</th>
+                        <th class="text-end" style="width: 10%">Stock</th>
+                        <th class="text-end" style="width: 10%">Mínimo</th>
+                        <th class="text-end" style="width: 10%">Máximo</th>
+                        <th class="text-center pe-4" style="width: 20%">Estado de Salud</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!inventarioFiltrado.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="py-4">
+                                    <i class="bi bi-search fs-1 text-muted opacity-25"></i>
+                                    <p class="text-muted mt-2">No se encontraron productos con los filtros aplicados.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in inventarioFiltrado)
+                        {
+                            <tr class="border-bottom">
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded-2 p-2 me-3 d-none d-sm-block">
+                                            <i class="bi bi-box text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@item.Producto?.Nombre</div>
+                                            <div class="text-muted small">ID: @item.Producto?.Codigo</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-white text-dark border fw-semibold">
+                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i>@item.Almacen?.Nombre
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fs-6 fw-bold @(item.Stock <= 0 ? "text-danger" : (item.Stock <= item.StockMinimo ? "text-warning" : "text-primary"))">
+                                        @item.Stock.ToString("N0")
+                                    </span>
+                                </td>
+                                <td class="text-end text-muted small">@item.StockMinimo.ToString("N0")</td>
+                                <td class="text-end text-muted small">@item.StockMaximo.ToString("N0")</td>
+                                <td class="text-center pe-4">
+                                    <span class="@ObtenerBadgeStock(item) w-100 shadow-sm" style="max-width: 140px; display: inline-block;">
+                                        @if (item.Stock <= 0)
+                                        {
+                                            <i class="bi bi-x-octagon me-1"></i>
+                                        }
+                                        else if (item.Stock <= item.StockMinimo)
+                                        {
+
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                        }
+                                        else
+                                        {
+
+                                            <i class="bi bi-check2-circle me-1"></i>
+                                        }
+                                        @ObtenerTextoEstado(item)
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white border-0 py-3 text-center">
+            <small class="text-muted">Mostrando <b>@inventarioFiltrado.Count</b> de un total de <b>@inventario.Count</b> registros.</small>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pos-container {
+       
+        min-height: 100vh;
+    }
+
+    .x-small {
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-white {
+        background-color: #fff;
+        color: #333;
+        border: 1px solid #dee2e6;
+    }
+
+    .table thead th {
+        border: none;
+    }
+
+    .table tbody tr {
+        transition: background-color 0.2s;
+    }
+
+        .table tbody tr:hover {
+            background-color: #fcfcfc;
+        }
+
+    .form-select, .form-control {
+        border-radius: 10px;
+        font-size: 0.9rem;
+    }
+
+    .badge {
+        padding: 0.6em 1em;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+</style>
+
+@code {
+    private List<InventarioPorAlmacen> inventario = new();
+    private List<InventarioPorAlmacen> inventarioFiltrado = new();
+    private List<Almacen> almacenes = new();
+
+    private int almacenSeleccionadoId = 0;
+    private string busqueda = string.Empty;
+    private string soloAlertasTexto = "todos";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        inventario = await InventarioAlmacenHttpService.GetAsync() ?? new();
+        almacenes = await AlmacenHttpService.GetActivosAsync() ?? new();
+        AplicarFiltros();
+    }
+
+    private void SetAlertFilter(string value)
+    {
+        soloAlertasTexto = value;
+        AplicarFiltros();
+    }
+
+    private void AplicarFiltros()
+    {
+        IEnumerable<InventarioPorAlmacen> query = inventario;
+
+        if (almacenSeleccionadoId > 0)
+        {
+            query = query.Where(x => x.AlmacenId == almacenSeleccionadoId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(busqueda))
+        {
+            query = query.Where(x =>
+                (x.Producto?.Nombre?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (x.Producto?.Codigo?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        if (soloAlertasTexto == "alertas")
+        {
+            query = query.Where(x => x.Stock <= x.StockMinimo);
+        }
+
+        inventarioFiltrado = query
+            .OrderBy(x => x.Almacen?.Nombre)
+            .ThenBy(x => x.Producto?.Nombre)
+            .ToList();
+    }
+
+    private static string ObtenerTextoEstado(InventarioPorAlmacen item)
+    {
+        if (item.Stock <= 0) return "AGOTADO";
+        if (item.Stock <= item.StockMinimo) return "MÍNIMO";
+        return "SALUDABLE";
+    }
+
+    private static string ObtenerBadgeStock(InventarioPorAlmacen item)
+    {
+        if (item.Stock <= 0)
+            return "badge rounded-pill text-bg-danger-subtle text-danger border border-danger";
+
+        if (item.Stock <= item.StockMinimo)
+            return "badge rounded-pill text-bg-warning-subtle text-warning-emphasis border border-warning";
+
+        return "badge rounded-pill text-bg-success-subtle text-success border border-success";
+    }
+}

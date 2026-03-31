@@ -8,14 +8,14 @@
 @inject VentaHttpService VentaHttpService
 @inject ProductoHttpService ProductoHttpService
 @inject PdfHttpService PdfHttpService
+@inject AlmacenHttpService AlmacenHttpService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Punto de Venta</PageTitle>
 
 <div class="pos-container">
-    @* --- ENCABEZADO --- *@
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-        <h2 class="page-title mb-0">Punto de Venta</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="page-title">Punto de Venta</h2>
         <div class="search-box">
             <i class="bi bi-search"></i>
             <input type="text" class="form-control" placeholder="Buscar producto (F4)..."
@@ -24,25 +24,23 @@
     </div>
 
     <div class="row g-4">
-
-        @* 1. SECCIÓN PRODUCTOS (Arriba en Celular, Izquierda en PC) *@
-        <div class="col-12 col-lg-8 order-1">
+        <div class="col-lg-8">
             <div class="products-grid-container">
-                <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
-                    @foreach (var producto in productosFiltrados.Take(20))
+                <div class="row row-cols-1 row-cols-md-3 row-cols-xl-4 g-3">
+                    @foreach (var p in productosFiltrados.Take(20))
                     {
                         <div class="col">
-                            <div class="card h-100 producto-card" @onclick="() => AgregarAlCarrito(producto)">
-                                <div class="card-body p-2 p-md-3">
-                                    <div class="producto-icon d-none d-md-flex">
+                            <div class="card h-100 producto-card" @onclick="() => AgregarAlCarrito(p)">
+                                <div class="card-body">
+                                    <div class="producto-icon bg-soft-primary">
                                         <i class="bi bi-box-seam"></i>
                                     </div>
-                                    <h6 class="producto-nombre text-truncate">@producto.Nombre</h6>
-                                    <span class="producto-codigo small text-muted">@producto.Codigo</span>
-                                    <div class="d-flex justify-content-between align-items-end mt-2">
-                                        <span class="producto-precio fw-bold text-primary">$@producto.PrecioVenta.ToString("N2")</span>
-                                        <span class="badge-stock @(producto.Stock > producto.StockMinimo ? "stock-ok" : "stock-low")">
-                                            @producto.Stock
+                                    <h6 class="producto-nombre">@p.Nombre</h6>
+                                    <span class="producto-codigo">@p.Codigo</span>
+                                    <div class="d-flex justify-content-between align-items-end mt-3">
+                                        <span class="producto-precio text-dark">$@p.PrecioVenta.ToString("N2")</span>
+                                        <span class="badge-stock @(p.Stock > p.StockMinimo ? "stock-ok" : "stock-low")">
+                                            Stock: @p.Stock
                                         </span>
                                     </div>
                                 </div>
@@ -51,142 +49,8 @@
                     }
                 </div>
             </div>
-        </div>
 
-        @* 2. SECCIÓN CARRITO (Medio en Celular, Derecha en PC) *@
-        @* En PC (lg), ocupa 4 columnas. En celular, ocupa las 12 *@
-        <div class="col-12 col-lg-4 order-2 order-lg-2">
-            <div class="carrito-sticky">
-                <div class="card carrito-card shadow-lg border-0">
-                    <div class="card-header text-white d-flex justify-content-between align-items-center bg-dark">
-                        <h5 class="mb-0"><i class="bi bi-cart3 me-2"></i>Carrito</h5>
-                        <span class="badge bg-white text-dark">@ventaActual.Detalles.Count</span>
-                    </div>
-                    <div class="card-body d-flex flex-column" style="min-height: 400px;">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Cliente</label>
-                            <select class="form-select form-select-sm" @bind="ventaActual.ClienteId">
-                                <option value="0">Cliente General</option>
-                                @foreach (var cliente in clientes)
-                                {
-                                    <option value="@cliente.Id">@cliente.Nombre</option>
-                                }
-                            </select>
-                        </div>
-
-                        <div class="row g-2 mb-3">
-                            <div class="col-12">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Tipo de venta</label>
-                                <div class="row g-2 mb-3">
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted text-uppercase">Método de pago</label>
-                                        <select class="form-select form-select-sm" @bind="ventaActual.MetodoPago">
-                                            <option value="">Seleccione...</option>
-                                            <option value="PUE - Pago en una sola exhibición">PUE - Pago en una sola exhibición</option>
-                                            <option value="PPD - Pago en parcialidades o diferido">PPD - Pago en parcialidades o diferido</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted text-uppercase">Forma de pago</label>
-                                        <select class="form-select form-select-sm" @bind="ventaActual.FormaPago">
-                                            <option value="">Seleccione...</option>
-                                            <option value="01 - Efectivo">01 - Efectivo</option>
-                                            <option value="03 - Transferencia electrónica">03 - Transferencia electrónica</option>
-                                            <option value="04 - Tarjeta de crédito">04 - Tarjeta de crédito</option>
-                                            <option value="28 - Tarjeta de débito">28 - Tarjeta de débito</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted text-uppercase">Uso CFDI</label>
-                                        <select class="form-select form-select-sm" @bind="ventaActual.UsoCFDI">
-                                            <option value="">Seleccione...</option>
-                                            <option value="G03 - Gastos en general">G03 - Gastos en general</option>
-                                            <option value="G01 - Adquisición de mercancías">G01 - Adquisición de mercancías</option>
-                                            <option value="S01 - Sin efectos fiscales">S01 - Sin efectos fiscales</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted text-uppercase">Notas</label>
-                                        <textarea class="form-control form-control-sm" rows="2" @bind="ventaActual.Notas"></textarea>
-                                    </div>
-                                </div>
-                                <select class="form-select form-select-sm" value="@tipoVenta" @onchange="OnTipoVentaChanged">
-                                    <option value="Contado">Contado</option>
-                                    <option value="Credito">Crédito</option>
-                                </select>
-                            </div>
-
-                            @if (ventaActual.EsCredito)
-                            {
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">Días de crédito</label>
-                                    <input type="number" min="1" class="form-control form-control-sm" @bind="ventaActual.DiasCredito" />
-                                </div>
-                            }
-                        </div>
-
-                        <div class="carrito-items-list flex-grow-1 overflow-auto" style="max-height: 350px;">
-                            @if (!ventaActual.Detalles.Any())
-                            {
-                                <div class="empty-cart text-center py-4 text-muted">
-                                    <i class="bi bi-cart-x fs-1"></i>
-                                    <p>Carrito vacío</p>
-                                </div>
-                            }
-                            else
-                            {
-                                @foreach (var detalle in ventaActual.Detalles)
-                                {
-                                    <div class="item-fila border-bottom py-2">
-                                        <div class="d-flex justify-content-between">
-                                            <span class="item-name small fw-bold text-truncate" style="max-width: 150px;">@GetProductoNombre(detalle.ProductoId)</span>
-                                            <span class="small text-primary fw-bold">$@detalle.Subtotal.ToString("N2")</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center mt-1">
-                                            <div class="item-controls">
-                                                <button class="btn btn-sm btn-light border" @onclick="() => DisminuirCantidad(detalle)">-</button>
-                                                <span class="mx-2 small">@detalle.Cantidad</span>
-                                                <button class="btn btn-sm btn-light border" @onclick="() => AumentarCantidad(detalle)">+</button>
-                                            </div>
-                                            <button class="btn btn-sm text-danger border-0" @onclick="() => EliminarDelCarrito(detalle)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                        </div>
-
-                        <div class="ticket-summary mt-3 p-3 bg-light rounded">
-                            <div class="d-flex justify-content-between small">
-                                <span>Subtotal:</span> <span>$@subtotal.ToString("N2")</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center my-1 small">
-                                <span>Desc:</span>
-                                <input type="number" class="form-control form-control-sm w-25 text-end" @bind="ventaActual.Descuento" @bind:event="oninput" @onchange="RecalcularTotales" />
-                            </div>
-                            <div class="d-flex justify-content-between fw-bold border-top pt-2 mt-2">
-                                <span>TOTAL:</span> <span class="text-primary">$@total.ToString("N2")</span>
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2 mt-3">
-                            <button class="btn btn-primary btn-lg" @onclick="ProcesarVenta"
-                                    disabled="@(procesando || !ventaActual.Detalles.Any())">
-                                @(procesando ? "PROCESANDO..." : "CONSOLIDAR VENTA")
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @* 3. TABLA DE VENTAS RECIENTES (Abajo en Celular, Izquierda en PC) *@
-        <div class="col-12 col-lg-8 order-3 order-lg-3">
-            <div class="card shadow-sm border-0">
+            <div class="card mt-4 shadow-sm border-0">
                 <div class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
                     <h5 class="mb-0 fw-bold text-dark">Ventas Recientes</h5>
                     <div class="input-group input-group-sm w-100" style="max-width: 300px;">
@@ -216,23 +80,17 @@
                                                 #@venta.NumeroVenta
                                             </a>
                                         </td>
-
                                         <td>
                                             <div class="text-truncate" style="max-width: 120px;">
                                                 @(venta.Cliente?.Nombre ?? "Público General")
                                             </div>
                                         </td>
-
-                                        <td class="fw-bold text-primary">
-                                            $@venta.Total.ToString("N2")
-                                        </td>
-
+                                        <td class="fw-bold text-primary">$@venta.Total.ToString("N2")</td>
                                         <td class="text-center">
                                             <a class="btn btn-sm btn-outline-primary" href="/ventas/@venta.Id" title="Ver detalle">
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                         </td>
-
                                         <td class="text-center">
                                             <button class="btn btn-link text-danger p-0" @onclick="() => DescargarPdfVenta(venta.Id)">
                                                 <i class="bi bi-file-earmark-pdf fs-5"></i>
@@ -247,8 +105,114 @@
             </div>
         </div>
 
+        <div class="col-lg-4">
+            <div class="card carrito-card shadow-lg border-0">
+                <div class="card-header text-white d-flex justify-content-between align-items-center bg-dark">
+                    <h5 class="mb-0"><i class="bi bi-cart-check me-2"></i>Venta Actual</h5>
+                    <span class="badge bg-primary">@ventaActual.Detalles.Count SKU</span>
+                </div>
+                <div class="card-body d-flex flex-column" style="min-height: 550px;">
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">TIPO DE VENTA</label>
+                            <select class="form-select form-select-sm" value="@tipoVenta" @onchange="OnTipoVentaChanged">
+                                <option value="Contado">Contado</option>
+                                <option value="Credito">Crédito</option>
+                            </select>
+                        </div>
+
+                        @if (ventaActual.EsCredito)
+                        {
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-muted">DÍAS DE CRÉDITO</label>
+                                <input type="number" min="1" class="form-control form-control-sm" @bind="ventaActual.DiasCredito" />
+                            </div>
+                        }
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">ALMACÉN</label>
+                            <select class="form-select border-primary-subtle" @bind="ventaActual.AlmacenId">
+                                <option value="">Seleccionar Almacén...</option>
+                                @foreach (var a in almacenes)
+                                {
+                                    <option value="@a.Id">@a.Nombre</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">CLIENTE</label>
+                            <select class="form-select border-primary-subtle" @bind="ventaActual.ClienteId">
+                                <option value="0">Público General</option>
+                                @foreach (var c in clientes)
+                                {
+                                    <option value="@c.Id">@c.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="carrito-items-list flex-grow-1">
+                        @if (!ventaActual.Detalles.Any())
+                        {
+                            <div class="empty-cart text-center p-4">
+                                <i class="bi bi-basket3 fs-1 text-muted"></i>
+                                <p class="text-muted mt-2">El ticket está vacío</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var d in ventaActual.Detalles)
+                            {
+                                <div class="item-compra-fila">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="item-name fw-bold">@GetProductoNombre(d.ProductoId)</span>
+                                        <button class="btn-delete-item text-danger border-0 bg-transparent" @onclick="() => EliminarDelCarrito(d)"><i class="bi bi-x fs-5"></i></button>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button class="btn btn-sm btn-outline-secondary py-0" @onclick="() => DisminuirCantidad(d)">-</button>
+                                            <span class="fw-bold">@d.Cantidad</span>
+                                            <button class="btn btn-sm btn-outline-secondary py-0" @onclick="() => AumentarCantidad(d)">+</button>
+                                        </div>
+                                        <span class="fw-bold text-primary">$@d.Subtotal.ToString("N2")</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <div class="ticket-summary mt-3 border-top pt-3">
+                        <div class="summary-row d-flex justify-content-between mb-1">
+                            <span class="text-muted">Subtotal</span>
+                            <span class="fw-bold">$@subtotal.ToString("N2")</span>
+                        </div>
+                        <div class="summary-row d-flex justify-content-between mb-1">
+                            <span class="text-muted">IVA (16%)</span>
+                            <span class="fw-bold">$@iva.ToString("N2")</span>
+                        </div>
+                        <div class="summary-total mt-2 d-flex justify-content-between fw-bolder fs-5 text-dark">
+                            <span>TOTAL</span>
+                            <span>$@total.ToString("N2")</span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button class="btn btn-primary btn-lg shadow-sm" @onclick="ProcesarVenta"
+                                disabled="@(!ventaActual.Detalles.Any() || procesando)">
+                            <i class="bi bi-check2-circle me-2"></i>CONSOLIDAR VENTA
+                        </button>
+                        <button class="btn btn-link btn-sm text-muted text-decoration-none" @onclick="LimpiarCarrito">
+                            Descartar venta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
 @code {
     private List<Cliente> clientes = new();
     private List<Producto> productos = new();
@@ -258,10 +222,10 @@
     private ElementReference searchBar;
     private string tipoVenta = "Contado";
     private string busquedaProducto = "";
-    private string busquedaVenta = ""; // Variable para el buscador de folios
+    private string busquedaVenta = ""; 
     private bool procesando = false;
     private decimal tasaIva = 0.16m;
-
+    private List<Almacen> almacenes = new();
     // Propiedades calculadas
     private decimal subtotal => ventaActual.Detalles.Sum(d => d.Subtotal);
     private decimal iva => (subtotal - ventaActual.Descuento) * tasaIva;
@@ -275,38 +239,39 @@
                 v.NumeroVenta.ToString().Contains(busquedaVenta) ||
                 (v.Cliente?.Nombre?.Contains(busquedaVenta, StringComparison.OrdinalIgnoreCase) ?? false)
             );
-
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarDatos();
-        InicializarVenta();
-    }
-
     private async Task CargarDatos()
     {
         clientes = (await ClienteHttpService.GetClientesActivosAsync()).ToList();
         productos = (await ProductoHttpService.GetProductosActivosAsync()).ToList();
         productosFiltrados = productos;
         ventasRecientes = (await VentaHttpService.GetVentasRecientesAsync(20)).ToList();
+        almacenes = (await AlmacenHttpService.GetActivosAsync()).ToList();
     }
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+        InicializarVenta();
+    }
+
 
     private void InicializarVenta()
     {
-        tipoVenta = "Contado";
+       tipoVenta = "Contado";
 
-        ventaActual = new Venta
-        {
-            Fecha = DateTime.Now,
-            Estado = "Completada",
-            Detalles = new List<DetalleVenta>(),
-            Descuento = 0,
-            EsCredito = false,
-            DiasCredito = null,
-            MetodoPago = "PUE - Pago en una sola exhibición",
-            FormaPago = "03 - Transferencia electrónica",
-            UsoCFDI = "G03 - Gastos en general",
-            Notas = string.Empty
-        };
+    ventaActual = new Venta
+    {
+        Fecha = DateTime.Now,
+        Estado = "Completada",
+        AlmacenId = almacenes.Any() ? almacenes.First().Id : null,
+        Detalles = new List<DetalleVenta>(),
+        Descuento = 0,
+        EsCredito = false,
+        DiasCredito = null,
+        MetodoPago = "PUE - Pago en una sola exhibición",
+        FormaPago = "03 - Transferencia electrónica",
+        UsoCFDI = "G03 - Gastos en general",
+        Notas = string.Empty
+    };
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -424,6 +389,11 @@
 
             if (ventaActual.EsCredito)
             {
+                if (!ventaActual.AlmacenId.HasValue || ventaActual.AlmacenId <= 0)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Debes seleccionar un almacén para la venta.");
+                    return;
+                }
                 if (ventaActual.ClienteId == 0)
                 {
                     await JSRuntime.InvokeVoidAsync("alert", "Debes seleccionar un cliente para una venta a crédito.");

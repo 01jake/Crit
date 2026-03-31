@@ -58,6 +58,11 @@ namespace Crit.Controllers
             try
             {
                 compra.Fecha = DateTime.Now;
+                var almacenExiste = await _context.Almacenes.AnyAsync(a => a.Id == compra.AlmacenId && a.Activo);
+                if (!almacenExiste)
+                    return BadRequest("Debes seleccionar un almacén válido para la compra.");
+
+                var movimientosPendientes = new List<MovimientoInventario>();
 
                 decimal total = 0;
 
@@ -68,31 +73,50 @@ namespace Crit.Controllers
                     if (producto == null)
                         return BadRequest("Producto no existe");
 
-                    int stockAnterior = producto.Stock;
+                    int stockAnteriorGlobal = producto.Stock;
 
-                    // 🔥 REGLA #1: recalcular SIEMPRE
+                    var inventarioAlmacen = await _context.InventarioPorAlmacen
+                        .FirstOrDefaultAsync(x => x.ProductoId == d.ProductoId && x.AlmacenId == compra.AlmacenId);
+
+                    if (inventarioAlmacen == null)
+                    {
+                        inventarioAlmacen = new InventarioPorAlmacen
+                        {
+                            ProductoId = d.ProductoId,
+                            AlmacenId = compra.AlmacenId.Value,
+                            Stock = 0,
+                            StockMinimo = producto.StockMinimo,
+                            StockMaximo = 0
+                        };
+
+                        _context.InventarioPorAlmacen.Add(inventarioAlmacen);
+                    }
+
+                    var stockAnteriorAlmacen = inventarioAlmacen.Stock;
+
                     d.Subtotal = d.Cantidad * d.PrecioUnitario;
 
-                    // 🔥 INVENTARIO
                     producto.Stock += d.Cantidad;
 
-                    // 🔥 COSTO PROMEDIO
                     producto.PrecioCompra =
-                        ((producto.PrecioCompra * stockAnterior) +
+                        ((producto.PrecioCompra * stockAnteriorGlobal) +
                         (d.PrecioUnitario * d.Cantidad))
-                        / (stockAnterior + d.Cantidad);
+                        / (stockAnteriorGlobal + d.Cantidad);
 
-                    // 🔥 KARDEX
-                    //_context.Kardex.Add(new Kardex
-                    //{
-                    //    ProductoId = producto.Id,
-                    //    Fecha = DateTime.Now,
-                    //    TipoMovimiento = "COMPRA",
-                    //    Cantidad = d.Cantidad,
-                    //    CostoUnitario = d.PrecioUnitario,
-                    //    StockAnterior = stockAnterior,
-                    //    StockNuevo = producto.Stock
-                    //});
+                    inventarioAlmacen.Stock += d.Cantidad;
+
+                    movimientosPendientes.Add(new MovimientoInventario
+                    {
+                        Fecha = compra.Fecha,
+                        ProductoId = d.ProductoId,
+                        AlmacenId = compra.AlmacenId.Value,
+                        TipoMovimiento = "EntradaCompra",
+                        Cantidad = d.Cantidad,
+                        StockAnterior = stockAnteriorAlmacen,
+                        StockNuevo = inventarioAlmacen.Stock,
+                        Referencia = $"{compra.SerieFactura}-{compra.FolioFactura}",
+                        Observaciones = "Entrada generada desde compra"
+                    });
 
                     total += d.Subtotal;
                 }
@@ -101,6 +125,13 @@ namespace Crit.Controllers
                 compra.Total = compra.Subtotal + compra.IVA;
 
                 _context.Compra.Add(compra);
+                await _context.SaveChangesAsync();
+                foreach (var movimiento in movimientosPendientes)
+                {
+                    movimiento.CompraId = compra.Id;
+                    _context.MovimientosInventario.Add(movimiento);
+                }
+
                 await _context.SaveChangesAsync();
                 if (compra.EsCredito)
                 {
