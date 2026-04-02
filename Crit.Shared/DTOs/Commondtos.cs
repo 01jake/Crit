@@ -296,5 +296,10 @@ namespace Crit.Shared.DTOs
         public string? Referencia { get; set; }
         public string? Observaciones { get; set; }
     }
-
+    public class EmpresaSesionDto
+    {
+        public int EmpresaId { get; set; }
+        public string EmpresaNombre { get; set; } = string.Empty;
+        public string? Email { get; set; }
+    }
 }

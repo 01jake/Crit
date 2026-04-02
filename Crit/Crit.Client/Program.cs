@@ -1,7 +1,8 @@
 using Crit.Client.Services;
+using Crit.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-
+using Microsoft.Extensions.DependencyInjection;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddAuthorizationCore();
@@ -20,6 +21,8 @@ builder.Services.AddScoped<VentaHttpService>();
 builder.Services.AddScoped<ProductoHttpService>();
 builder.Services.AddScoped<PdfHttpService>();
 builder.Services.AddScoped<CompraHttpService>();
+builder.Services.AddScoped<SesionHttpService>();
+
 builder.Services.AddScoped<CuentaPorCobrarHttpService>();
 builder.Services.AddScoped<CuentaPorPagarHttpService>();
 builder.Services.AddScoped<TraspasoHttpService>();

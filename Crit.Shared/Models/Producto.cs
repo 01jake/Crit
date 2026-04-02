@@ -10,8 +10,9 @@ namespace Crit.Shared.Models
     public class Producto
     {
         public int Id { get; set; }
-        public int EmpresaId { get; set; }
+        public int? EmpresaId { get; set; }
         public Empresa? Empresa { get; set; }
+
 
         [Required(ErrorMessage = "El código es requerido")]
         [StringLength(50)]

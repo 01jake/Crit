@@ -91,11 +91,17 @@ namespace Crit.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NombreCompleto")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -125,6 +131,8 @@ namespace Crit.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EmpresaId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -317,6 +325,9 @@ namespace Crit.Migrations
                     b.Property<int?>("CuentaPorPagarId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
@@ -360,6 +371,8 @@ namespace Crit.Migrations
 
                     b.HasIndex("CajaSesionId");
 
+                    b.HasIndex("EmpresaId");
+
                     b.ToTable("CajaMovimientos");
                 });
 
@@ -370,6 +383,9 @@ namespace Crit.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Estado")
                         .IsRequired()
@@ -403,6 +419,8 @@ namespace Crit.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EmpresaId");
+
                     b.ToTable("CajaSesiones");
                 });
 
@@ -429,6 +447,9 @@ namespace Crit.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("FechaRegistro")
                         .HasColumnType("datetime2");
@@ -458,6 +479,8 @@ namespace Crit.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("EmpresaId");
+
                     b.ToTable("Clientes");
                 });
 
@@ -473,6 +496,9 @@ namespace Crit.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("DiasCredito")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EmpresaId")
                         .HasColumnType("int");
 
                     b.Property<bool>("EsCredito")
@@ -512,6 +538,8 @@ namespace Crit.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AlmacenId");
+
+                    b.HasIndex("EmpresaId");
 
                     b.HasIndex("ProveedorId");
 
@@ -598,6 +626,9 @@ namespace Crit.Migrations
                     b.Property<decimal>("Descuento")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -639,6 +670,8 @@ namespace Crit.Migrations
 
                     b.HasIndex("ClienteId");
 
+                    b.HasIndex("EmpresaId");
+
                     b.HasIndex("VentaId")
                         .IsUnique()
                         .HasFilter("[VentaId] IS NOT NULL");
@@ -662,6 +695,9 @@ namespace Crit.Migrations
 
                     b.Property<decimal>("Descuento")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Estado")
                         .IsRequired()
@@ -705,6 +741,8 @@ namespace Crit.Migrations
                     b.HasIndex("CompraId")
                         .IsUnique()
                         .HasFilter("[CompraId] IS NOT NULL");
+
+                    b.HasIndex("EmpresaId");
 
                     b.HasIndex("ProveedorId");
 
@@ -820,6 +858,38 @@ namespace Crit.Migrations
                     b.ToTable("DetallesVenta");
                 });
 
+            modelBuilder.Entity("Crit.Shared.Models.Empresa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Dominio")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("RFC")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Empresas");
+                });
+
             modelBuilder.Entity("Crit.Shared.Models.Gasto", b =>
                 {
                     b.Property<int>("Id")
@@ -848,6 +918,9 @@ namespace Crit.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
@@ -879,6 +952,8 @@ namespace Crit.Migrations
 
                     b.HasIndex("CajaSesionId");
 
+                    b.HasIndex("EmpresaId");
+
                     b.HasIndex("ProveedorId");
 
                     b.ToTable("Gastos");
@@ -893,6 +968,9 @@ namespace Crit.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AlmacenId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EmpresaId")
                         .HasColumnType("int");
 
                     b.Property<int>("ProductoId")
@@ -913,6 +991,8 @@ namespace Crit.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AlmacenId");
+
+                    b.HasIndex("EmpresaId");
 
                     b.HasIndex("UbicacionAlmacenId");
 
@@ -937,6 +1017,9 @@ namespace Crit.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("CompraId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EmpresaId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
@@ -974,6 +1057,8 @@ namespace Crit.Migrations
 
                     b.HasIndex("AlmacenId");
 
+                    b.HasIndex("EmpresaId");
+
                     b.HasIndex("ProductoId");
 
                     b.HasIndex("UbicacionAlmacenId");
@@ -996,6 +1081,9 @@ namespace Crit.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("CompraId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EmpresaId")
                         .HasColumnType("int");
 
                     b.Property<string>("Estado")
@@ -1032,6 +1120,8 @@ namespace Crit.Migrations
 
                     b.HasIndex("CompraId");
 
+                    b.HasIndex("EmpresaId");
+
                     b.HasIndex("ProductoId");
 
                     b.HasIndex("TraspasoAlmacenId");
@@ -1051,6 +1141,9 @@ namespace Crit.Migrations
                         .HasColumnType("bit");
 
                     b.Property<int>("CuentaPorCobrarId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EmpresaId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("FechaPago")
@@ -1084,6 +1177,8 @@ namespace Crit.Migrations
 
                     b.HasIndex("CuentaPorCobrarId");
 
+                    b.HasIndex("EmpresaId");
+
                     b.ToTable("PagosCliente");
                 });
 
@@ -1099,6 +1194,9 @@ namespace Crit.Migrations
                         .HasColumnType("bit");
 
                     b.Property<int>("CuentaPorPagarId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EmpresaId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("FechaPago")
@@ -1132,6 +1230,8 @@ namespace Crit.Migrations
 
                     b.HasIndex("CuentaPorPagarId");
 
+                    b.HasIndex("EmpresaId");
+
                     b.ToTable("PagosProveedor");
                 });
 
@@ -1158,6 +1258,9 @@ namespace Crit.Migrations
                     b.Property<string>("Descripcion")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("datetime2");
@@ -1188,6 +1291,8 @@ namespace Crit.Migrations
                     b.HasIndex("Codigo")
                         .IsUnique();
 
+                    b.HasIndex("EmpresaId");
+
                     b.ToTable("Productos");
                 });
 
@@ -1212,6 +1317,9 @@ namespace Crit.Migrations
 
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("FechaRegistro")
                         .HasColumnType("datetime2");
@@ -1238,6 +1346,8 @@ namespace Crit.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EmpresaId");
 
                     b.ToTable("Proveedores");
                 });
@@ -1350,6 +1460,9 @@ namespace Crit.Migrations
                     b.Property<decimal>("Cantidad")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1370,6 +1483,8 @@ namespace Crit.Migrations
                     b.HasIndex("AlmacenDestinoId");
 
                     b.HasIndex("AlmacenOrigenId");
+
+                    b.HasIndex("EmpresaId");
 
                     b.HasIndex("ProductoId");
 
@@ -1424,6 +1539,9 @@ namespace Crit.Migrations
                     b.Property<int?>("DiasCredito")
                         .HasColumnType("int");
 
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("EsCredito")
                         .HasColumnType("bit");
 
@@ -1466,6 +1584,8 @@ namespace Crit.Migrations
                     b.HasIndex("AlmacenId");
 
                     b.HasIndex("ClienteId");
+
+                    b.HasIndex("EmpresaId");
 
                     b.HasIndex("NumeroVenta")
                         .IsUnique()
@@ -1676,6 +1796,16 @@ namespace Crit.Migrations
                     b.ToTable("Queja");
                 });
 
+            modelBuilder.Entity("Crit.Data.ApplicationUser", b =>
+                {
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Empresa");
+                });
+
             modelBuilder.Entity("Crit.Server.Data.ArticuloEntity", b =>
                 {
                     b.HasOne("Crit.Data.ApplicationUser", "UsuarioQueRegistro")
@@ -1712,7 +1842,31 @@ namespace Crit.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.Navigation("CajaSesion");
+
+                    b.Navigation("Empresa");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.CajaSesion", b =>
+                {
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
+                    b.Navigation("Empresa");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.Cliente", b =>
+                {
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
+                    b.Navigation("Empresa");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.Compra", b =>
@@ -1722,6 +1876,10 @@ namespace Crit.Migrations
                         .HasForeignKey("AlmacenId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.HasOne("Crit.Shared.Models.Proveedor", "Proveedor")
                         .WithMany()
                         .HasForeignKey("ProveedorId")
@@ -1729,6 +1887,8 @@ namespace Crit.Migrations
                         .IsRequired();
 
                     b.Navigation("Almacen");
+
+                    b.Navigation("Empresa");
 
                     b.Navigation("Proveedor");
                 });
@@ -1752,12 +1912,18 @@ namespace Crit.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.HasOne("Crit.Shared.Models.Venta", "Venta")
                         .WithOne("CuentaPorCobrar")
                         .HasForeignKey("Crit.Shared.Models.CuentaPorCobrar", "VentaId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Cliente");
+
+                    b.Navigation("Empresa");
 
                     b.Navigation("Venta");
                 });
@@ -1769,6 +1935,10 @@ namespace Crit.Migrations
                         .HasForeignKey("Crit.Shared.Models.CuentaPorPagar", "CompraId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.HasOne("Crit.Shared.Models.Proveedor", "Proveedor")
                         .WithMany("CuentasPorPagar")
                         .HasForeignKey("ProveedorId")
@@ -1776,6 +1946,8 @@ namespace Crit.Migrations
                         .IsRequired();
 
                     b.Navigation("Compra");
+
+                    b.Navigation("Empresa");
 
                     b.Navigation("Proveedor");
                 });
@@ -1848,6 +2020,10 @@ namespace Crit.Migrations
                         .HasForeignKey("CajaSesionId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.HasOne("Crit.Shared.Models.Proveedor", "Proveedor")
                         .WithMany()
                         .HasForeignKey("ProveedorId")
@@ -1856,6 +2032,8 @@ namespace Crit.Migrations
                     b.Navigation("CajaMovimiento");
 
                     b.Navigation("CajaSesion");
+
+                    b.Navigation("Empresa");
 
                     b.Navigation("Proveedor");
                 });
@@ -1868,6 +2046,10 @@ namespace Crit.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.HasOne("Crit.Shared.Models.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -1879,6 +2061,8 @@ namespace Crit.Migrations
                         .HasForeignKey("UbicacionAlmacenId");
 
                     b.Navigation("Almacen");
+
+                    b.Navigation("Empresa");
 
                     b.Navigation("Producto");
 
@@ -1893,6 +2077,10 @@ namespace Crit.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.HasOne("Crit.Shared.Models.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -1904,6 +2092,8 @@ namespace Crit.Migrations
                         .HasForeignKey("UbicacionAlmacenId");
 
                     b.Navigation("Almacen");
+
+                    b.Navigation("Empresa");
 
                     b.Navigation("Producto");
 
@@ -1923,6 +2113,10 @@ namespace Crit.Migrations
                         .HasForeignKey("CompraId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.HasOne("Crit.Shared.Models.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -1938,6 +2132,8 @@ namespace Crit.Migrations
 
                     b.Navigation("Compra");
 
+                    b.Navigation("Empresa");
+
                     b.Navigation("Producto");
 
                     b.Navigation("TraspasoAlmacen");
@@ -1951,7 +2147,13 @@ namespace Crit.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.Navigation("CuentaPorCobrar");
+
+                    b.Navigation("Empresa");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.PagoProveedor", b =>
@@ -1962,7 +2164,31 @@ namespace Crit.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.Navigation("CuentaPorPagar");
+
+                    b.Navigation("Empresa");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.Producto", b =>
+                {
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
+                    b.Navigation("Empresa");
+                });
+
+            modelBuilder.Entity("Crit.Shared.Models.Proveedor", b =>
+                {
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
+                    b.Navigation("Empresa");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.ServicioCliente", b =>
@@ -1998,6 +2224,10 @@ namespace Crit.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.HasOne("Crit.Shared.Models.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId")
@@ -2007,6 +2237,8 @@ namespace Crit.Migrations
                     b.Navigation("AlmacenDestino");
 
                     b.Navigation("AlmacenOrigen");
+
+                    b.Navigation("Empresa");
 
                     b.Navigation("Producto");
                 });
@@ -2035,9 +2267,15 @@ namespace Crit.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Crit.Shared.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
                     b.Navigation("Almacen");
 
                     b.Navigation("Cliente");
+
+                    b.Navigation("Empresa");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

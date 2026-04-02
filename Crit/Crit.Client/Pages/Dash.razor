@@ -10,30 +10,31 @@
 
 @attribute [Authorize]
 
-<PageTitle>Dashboard Financiero</PageTitle>
+<PageTitle>Panel de Control | Crit</PageTitle>
 
-<div class="admin-container">
+<div class="dashboard-container px-4 py-4">
+
+    @* --- CABECERA Y FILTROS --- *@
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-            <h2 class="page-title mb-0">Dashboard Financiero</h2>
+            <h2 class="page-title mb-0 fw-bold">Dashboard Financiero</h2>
             <p class="text-muted small">Resumen general del rendimiento de tu negocio</p>
         </div>
 
         <div class="d-flex align-items-center gap-2">
             <div class="dropdown">
-                <button class="btn btn-white shadow-sm dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false" disabled="@loading">
+                <button class="btn btn-white bg-white shadow-sm dropdown-toggle fw-bold border-0 rounded-3 px-3 py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" disabled="@loading">
                     <i class="bi bi-calendar3 text-primary me-2"></i> @RangoSeleccionadoTexto
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-4">
                     <li><h6 class="dropdown-header">Rango de datos</h6></li>
-                    <li><button class="dropdown-item @(rangoSeleccionado == "hoy" ? "active bg-primary-soft text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("hoy"))">Hoy</button></li>
-                    <li><button class="dropdown-item @(rangoSeleccionado == "7dias" ? "active bg-primary-soft text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("7dias"))">Últimos 7 días</button></li>
-                    <li><button class="dropdown-item @(rangoSeleccionado == "mes" ? "active bg-primary-soft text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("mes"))">Este Mes</button></li>
-                    <li><button class="dropdown-item @(rangoSeleccionado == "anio" ? "active bg-primary-soft text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("anio"))">Este Año</button></li>
+                    <li><button class="dropdown-item @(rangoSeleccionado == "hoy" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("hoy"))">Hoy</button></li>
+                    <li><button class="dropdown-item @(rangoSeleccionado == "7dias" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("7dias"))">Últimos 7 días</button></li>
+                    <li><button class="dropdown-item @(rangoSeleccionado == "mes" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("mes"))">Este Mes</button></li>
+                    <li><button class="dropdown-item @(rangoSeleccionado == "anio" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("anio"))">Este Año</button></li>
                 </ul>
             </div>
-
-            <button class="btn btn-primary shadow-sm d-none d-sm-block">
+            <button class="btn btn-primary shadow-sm rounded-3 px-3 py-2 d-none d-sm-block fw-bold">
                 <i class="bi bi-download me-2"></i> Reporte
             </button>
         </div>
@@ -42,254 +43,110 @@
     @if (loading)
     {
         <div class="d-flex flex-column align-items-center justify-content-center py-5" style="min-height: 50vh;">
-            <div class="spinner-custom mb-3"></div>
+            <div class="spinner-border text-primary mb-3" role="status"></div>
             <p class="text-muted fw-bold">Actualizando métricas...</p>
         </div>
     }
     else
     {
-        <div class="row g-4 mb-4">
-            <div class="col-md-6 col-xl-3">
-                <div class="card kpi-card border-0 shadow-sm h-100">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted fw-bold mb-1 small text-uppercase">Ingresos (@RangoSeleccionadoTexto)</p>
-                                <h3 class="fw-black text-dark mb-2">$@stats.IngresosMes.ToString("N0")</h3>
-                            </div>
-                            <div class="icon-shape bg-primary-soft text-primary">
-                                <i class="bi bi-wallet2"></i>
-                            </div>
+        @* --- 1. CABECERA PRINCIPAL: 4 KPIs CRÍTICOS --- *@
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-primary text-white h-100 kpi-main">
+                    <div class="card-body p-4 d-flex flex-column justify-content-center">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="small fw-bold text-uppercase opacity-75">Utilidad Bruta</span>
+                            <i class="bi bi-piggy-bank fs-5"></i>
                         </div>
-                        <div class="mt-2">
-                            <span class="badge bg-success-soft text-success fw-bold"><i class="bi bi-arrow-up-right"></i> Flujo Positivo</span>
-                        </div>
+                        <h2 class="fw-black mb-1">$@stats.UtilidadBrutaMes.ToString("N0")</h2>
+                        <span class="small opacity-75 fw-semibold"><i class="bi bi-graph-up-arrow me-1"></i> Margen: @stats.MargenBrutoMes.ToString("N1")%</span>
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-6 col-xl-3">
-                <div class="card kpi-card border-0 shadow-sm h-100">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted fw-bold mb-1 small text-uppercase">Costo de Ventas</p>
-                                <h3 class="fw-black text-danger mb-2">$@stats.CostoVentasMes.ToString("N0")</h3>
-                            </div>
-                            <div class="icon-shape bg-danger-soft text-danger">
-                                <i class="bi bi-graph-down-arrow"></i>
-                            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white text-dark h-100 kpi-main">
+                    <div class="card-body p-4 d-flex flex-column justify-content-center">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="text-muted small fw-bold text-uppercase">Ingresos (@RangoSeleccionadoTexto)</span>
+                            <div class="icon-box bg-success-subtle text-success p-2 rounded-3"><i class="bi bi-wallet2"></i></div>
                         </div>
-                        <div class="mt-2">
-                            <span class="text-muted small">Inversión en mercancía</span>
-                        </div>
+                        <h2 class="fw-black mb-1 text-dark">$@stats.IngresosMes.ToString("N0")</h2>
+                        <span class="text-success small fw-bold"><i class="bi bi-arrow-up-right"></i> Flujo Positivo</span>
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-6 col-xl-3">
-                <div class="card kpi-card border-0 shadow-sm h-100">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted fw-bold mb-1 small text-uppercase">Utilidad Bruta</p>
-                                <h3 class="fw-black text-success mb-2">$@stats.UtilidadBrutaMes.ToString("N0")</h3>
-                            </div>
-                            <div class="icon-shape bg-success-soft text-success">
-                                <i class="bi bi-piggy-bank"></i>
-                            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white text-dark h-100 kpi-main">
+                    <div class="card-body p-4 d-flex flex-column justify-content-center">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="text-muted small fw-bold text-uppercase">Cuentas por Cobrar</span>
+                            <div class="icon-box bg-warning-subtle text-warning p-2 rounded-3"><i class="bi bi-cash-coin"></i></div>
                         </div>
-                        <div class="mt-2">
-                            <span class="badge bg-light text-dark border fw-bold">Margen: @stats.MargenBrutoMes.ToString("N1")%</span>
-                        </div>
+                        <h2 class="fw-black mb-1 text-primary">$@finanzas.TotalPorCobrar.ToString("N0")</h2>
+                        <span class="text-muted small">@finanzas.CuentasPorCobrarPendientes cuenta(s) activa(s)</span>
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-6 col-xl-3">
-                <div class="card kpi-card border-0 shadow-sm h-100">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted fw-bold mb-1 small text-uppercase">Valor Inventario Actual</p>
-                                <h3 class="fw-black text-dark mb-2">$@stats.ValorInventario.ToString("N0")</h3>
-                            </div>
-                            <div class="icon-shape bg-info-soft text-info">
-                                <i class="bi bi-boxes"></i>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white text-dark h-100 kpi-main">
+                    <div class="card-body p-4 d-flex flex-column justify-content-center">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="text-muted small fw-bold text-uppercase">Saldo en Caja</span>
+                            <div class="icon-box @(cajaResumen.CajaAbierta ? "bg-info-subtle text-info" : "bg-danger-subtle text-danger") p-2 rounded-3">
+                                <i class="bi bi-safe2"></i>
                             </div>
                         </div>
-                        <div class="mt-2">
-                            <span class="text-muted small"><strong>@stats.TotalProductos</strong> productos registrados</span>
-                        </div>
+                        <h2 class="fw-black mb-1 text-dark">$@cajaResumen.SaldoActual.ToString("N0")</h2>
+                        <span class="small fw-bold @(cajaResumen.CajaAbierta ? "text-success" : "text-danger")">
+                            Estado: @(cajaResumen.CajaAbierta ? "Abierta" : "Cerrada")
+                        </span>
                     </div>
                 </div>
             </div>
-            <div class="row g-4 mb-4">
-                <div class="col-md-6 col-xl-3">
-                    <div class="card kpi-card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Por Cobrar</p>
-                                    <h3 class="fw-black text-primary mb-2">$@finanzas.TotalPorCobrar.ToString("N0")</h3>
-                                </div>
-                                <div class="icon-shape bg-primary-soft text-primary">
-                                    <i class="bi bi-cash-coin"></i>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="text-muted small">@finanzas.CuentasPorCobrarPendientes cuenta(s) activas</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card kpi-card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Por Pagar</p>
-                                    <h3 class="fw-black text-danger mb-2">$@finanzas.TotalPorPagar.ToString("N0")</h3>
-                                </div>
-                                <div class="icon-shape bg-danger-soft text-danger">
-                                    <i class="bi bi-bank"></i>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="text-muted small">@finanzas.CuentasPorPagarPendientes cuenta(s) activas</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card kpi-card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Cobrado este Mes</p>
-                                    <h3 class="fw-black text-success mb-2">$@finanzas.TotalCobradoMes.ToString("N0")</h3>
-                                </div>
-                                <div class="icon-shape bg-success-soft text-success">
-                                    <i class="bi bi-check-circle"></i>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="text-muted small">Cobranza confirmada</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card kpi-card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Pagado este Mes</p>
-                                    <h3 class="fw-black text-warning mb-2">$@finanzas.TotalPagadoMes.ToString("N0")</h3>
-                                </div>
-                                <div class="icon-shape bg-warning-soft text-warning">
-                                    <i class="bi bi-credit-card-2-front"></i>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="text-muted small">Egresos financieros del mes</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row g-4 mb-4">
-                <div class="col-md-6 col-xl-3">
-                    <div class="card kpi-card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Caja</p>
-                                    <h3 class="fw-black @(cajaResumen.CajaAbierta ? "text-success" : "text-danger") mb-2">
-                                        @(cajaResumen.CajaAbierta ? "Abierta" : "Cerrada")
-                                    </h3>
-                                </div>
-                                <div class="icon-shape @(cajaResumen.CajaAbierta ? "bg-success-soft text-success" : "bg-danger-soft text-danger")">
-                                    <i class="bi bi-safe2"></i>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="text-muted small">Estado operativo de caja</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card kpi-card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Saldo Actual Caja</p>
-                                    <h3 class="fw-black text-primary mb-2">$@cajaResumen.SaldoActual.ToString("N0")</h3>
-                                </div>
-                                <div class="icon-shape bg-primary-soft text-primary">
-                                    <i class="bi bi-cash-stack"></i>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="text-muted small">Incluye apertura, ingresos y egresos</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card kpi-card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Ingresos Hoy</p>
-                                    <h3 class="fw-black text-success mb-2">$@cajaResumen.IngresosHoy.ToString("N0")</h3>
-                                </div>
-                                <div class="icon-shape bg-success-soft text-success">
-                                    <i class="bi bi-arrow-down-circle"></i>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="text-muted small">Cobros y ventas de contado</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card kpi-card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <p class="text-muted fw-bold mb-1 small text-uppercase">Egresos Hoy</p>
-                                    <h3 class="fw-black text-danger mb-2">$@cajaResumen.EgresosHoy.ToString("N0")</h3>
-                                </div>
-                                <div class="icon-shape bg-danger-soft text-danger">
-                                    <i class="bi bi-arrow-up-circle"></i>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="text-muted small">Gastos y pagos a proveedores</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
-        <div class="row g-4 mb-4">
-            <div class="col-lg-8">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-bar-chart-line text-primary me-2"></i> Cash Flow Histórico</h6>
+        @* --- SUB-MÉTRICAS OPERATIVAS (Compactas) --- *@
+        <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+            <div class="card-body p-3">
+                <div class="row text-center g-2 divide-md">
+                    <div class="col-md-2 col-4">
+                        <span class="d-block text-muted smaller text-uppercase fw-bold">Costo Ventas</span>
+                        <span class="fw-bold text-danger">$@stats.CostoVentasMes.ToString("N0")</span>
                     </div>
-                    <div class="card-body px-4">
+                    <div class="col-md-2 col-4">
+                        <span class="d-block text-muted smaller text-uppercase fw-bold">Val. Inventario</span>
+                        <span class="fw-bold text-dark">$@stats.ValorInventario.ToString("N0")</span>
+                    </div>
+                    <div class="col-md-2 col-4">
+                        <span class="d-block text-muted smaller text-uppercase fw-bold">Por Pagar</span>
+                        <span class="fw-bold text-danger">$@finanzas.TotalPorPagar.ToString("N0")</span>
+                    </div>
+                    <div class="col-md-2 col-4">
+                        <span class="d-block text-muted smaller text-uppercase fw-bold">Cobrado Mes</span>
+                        <span class="fw-bold text-success">$@finanzas.TotalCobradoMes.ToString("N0")</span>
+                    </div>
+                    <div class="col-md-2 col-4">
+                        <span class="d-block text-muted smaller text-uppercase fw-bold">Ingresos Hoy</span>
+                        <span class="fw-bold text-success">$@cajaResumen.IngresosHoy.ToString("N0")</span>
+                    </div>
+                    <div class="col-md-2 col-4">
+                        <span class="d-block text-muted smaller text-uppercase fw-bold">Egresos Hoy</span>
+                        <span class="fw-bold text-danger">$@cajaResumen.EgresosHoy.ToString("N0")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* --- 2. SECCIÓN CENTRAL: GRÁFICOS Y ALERTAS --- *@
+        <div class="row g-4 mb-4">
+            @* Izquierda: Tendencias (Cash Flow) *@
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-bar-chart-line text-primary me-2"></i>Cash Flow Histórico</h6>
+                        <span class="badge bg-light text-muted fw-normal px-3 py-2 border">Últimos meses</span>
+                    </div>
+                    <div>
                         @if (cashFlow.Any())
                         {
                             <ApexChart TItem="CashFlowDto" Options="cashFlowOptions" @key="cashFlow.Count">
@@ -300,18 +157,111 @@
                         }
                         else
                         {
-                            <div class="empty-state">No hay datos suficientes para graficar en este periodo</div>
+                            <div class="d-flex align-items-center justify-content-center bg-light rounded-4" style="height: 300px; border: 2px dashed #e9ecef;">
+                                <span class="text-muted">No hay datos suficientes</span>
+                            </div>
                         }
                     </div>
                 </div>
             </div>
 
+            @* Derecha: Alertas de Stock (Crítico) *@
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-pie-chart text-primary me-2"></i> Top Vendidos (@RangoSeleccionadoTexto)</h6>
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white border-top border-4 border-danger">
+                    <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold mb-0 text-danger"><i class="bi bi-exclamation-octagon-fill me-2"></i>Alertas de Stock</h6>
+                            <p class="text-muted smaller mb-0 mt-1">Reponer productos</p>
+                        </div>
+                        <a href="/productos" class="btn btn-sm btn-light text-primary fw-bold">Ver todo</a>
                     </div>
-                    <div class="card-body px-4 d-flex align-items-center justify-content-center">
+                    <div class="card-body px-3 pt-2">
+                        <div class="alert-list" style="max-height: 300px; overflow-y: auto;">
+                            @if (productosBajoStock.Any())
+                            {
+                                @foreach (var p in productosBajoStock)
+                                {
+                                    <div class="d-flex justify-content-between align-items-center p-3 mb-2 rounded-3 bg-danger-subtle border-start border-4 border-danger mx-1">
+                                        <div>
+                                            <span class="fw-bold d-block small text-dark">@p.Nombre</span>
+                                            <span class="text-muted smaller">Cód: @p.Codigo</span>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge @(p.Stock == 0 ? "bg-danger" : "bg-warning text-dark") fs-6">@p.Stock</span>
+                                            <span class="d-block smaller text-muted mt-1">Mín: @p.StockMinimo</span>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-check-circle fs-3 text-success mb-2 d-block"></i>
+                                    Stock en niveles óptimos
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* --- 3. PIE DE DASHBOARD: CASH FLOW REAL, TOP VENDIDOS Y ÚLTIMAS VENTAS --- *@
+        <div class="row g-4">
+            @* Izquierda: Cash Flow Real y Últimas Ventas *@
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-cash-coin text-success me-2"></i>Cash Flow Real</h6>
+                    @if (cashFlowReal.Any())
+                    {
+                        <ApexChart TItem="FlujoCajaRealDto" Options="cashFlowRealOptions" @key="cashFlowReal.Count">
+                            <ApexPointSeries TItem="FlujoCajaRealDto" Items="cashFlowReal" Name="Ingresos" SeriesType="SeriesType.Bar" XValue="@(e => e.Periodo)" YValue="@(e => e.Ingresos)" />
+                            <ApexPointSeries TItem="FlujoCajaRealDto" Items="cashFlowReal" Name="Egresos" SeriesType="SeriesType.Bar" XValue="@(e => e.Periodo)" YValue="@(e => e.Egresos)" />
+                            <ApexPointSeries TItem="FlujoCajaRealDto" Items="cashFlowReal" Name="Neto" SeriesType="SeriesType.Line" XValue="@(e => e.Periodo)" YValue="@(e => e.Neto)" />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <div class="empty-state text-muted text-center py-5 bg-light rounded-4">No hay movimientos suficientes.</div>
+                    }
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 bg-white">
+                    <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark">Últimas Ventas</h6>
+                        <a href="/ventas" class="text-primary text-decoration-none small fw-bold">Ver todas</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted smaller text-uppercase">
+                                <tr>
+                                    <th class="ps-4 rounded-start">Folio</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th class="text-end pe-4 rounded-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                @foreach (var v in ventasRecientes)
+                                {
+                                    <tr>
+                                        <td class="ps-4 py-3"><span class="badge bg-light text-dark border">@v.NumeroVenta</span></td>
+                                        <td class="fw-semibold">@v.Cliente</td>
+                                        <td class="text-muted">@v.Fecha.ToString("dd MMM, yyyy")</td>
+                                        <td class="text-end pe-4 fw-bold text-success">$@v.Total.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            @* Derecha: Top Productos *@
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-pie-chart text-primary me-2"></i> Top Vendidos</h6>
+                    <div class="d-flex align-items-center justify-content-center h-100 pb-4">
                         @if (topProductos.Any())
                         {
                             <div class="w-100">
@@ -322,110 +272,88 @@
                         }
                         else
                         {
-                            <div class="empty-state">Aún no hay ventas registradas en este periodo</div>
+                            <div class="empty-state text-muted text-center">Aún no hay ventas registradas en este periodo</div>
                         }
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-lg-7">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="row g-4 mb-4">
-                        <div class="col-12">
-                            <div class="card shadow-sm border-0 h-100">
-                                <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
-                                    <h6 class="fw-bold mb-0 text-dark">
-                                        <i class="bi bi-cash-coin text-success me-2"></i> Cash Flow Real
-                                    </h6>
-                                </div>
-                                <div class="card-body px-4">
-                                    @if (cashFlowReal.Any())
-                                    {
-                                        <ApexChart TItem="FlujoCajaRealDto" Options="cashFlowRealOptions" @key="cashFlowReal.Count">
-                                            <ApexPointSeries TItem="FlujoCajaRealDto" Items="cashFlowReal" Name="Ingresos" SeriesType="SeriesType.Bar" XValue="@(e => e.Periodo)" YValue="@(e => e.Ingresos)" />
-                                            <ApexPointSeries TItem="FlujoCajaRealDto" Items="cashFlowReal" Name="Egresos" SeriesType="SeriesType.Bar" XValue="@(e => e.Periodo)" YValue="@(e => e.Egresos)" />
-                                            <ApexPointSeries TItem="FlujoCajaRealDto" Items="cashFlowReal" Name="Neto" SeriesType="SeriesType.Line" XValue="@(e => e.Periodo)" YValue="@(e => e.Neto)" />
-                                        </ApexChart>
-                                    }
-                                    else
-                                    {
-                                        <div class="empty-state">No hay movimientos suficientes para calcular flujo de efectivo real.</div>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0 text-dark">Últimas Ventas</h6>
-                        <a href="/ventas" class="text-primary text-decoration-none small fw-bold">Ver todas</a>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Folio</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th class="text-end pe-4">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var v in ventasRecientes)
-                                {
-                                    <tr>
-                                        <td class="ps-4"><code class="text-dark fw-bold">@v.NumeroVenta</code></td>
-                                        <td>@v.Cliente</td>
-                                        <td class="text-muted small">@v.Fecha.ToString("dd MMM, yyyy")</td>
-                                        <td class="text-end pe-4 fw-bold text-primary">$@v.Total.ToString("N2")</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-5">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Alertas de Stock</h6>
-                        <a href="/productos" class="text-primary text-decoration-none small fw-bold">Ver inventario</a>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Producto</th>
-                                    <th class="text-center">Stock</th>
-                                    <th class="text-center pe-4">Mínimo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var p in productosBajoStock)
-                                {
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="fw-bold text-dark">@p.Nombre</div>
-                                            <div class="text-muted extra-small">@p.Codigo</div>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge @(p.Stock == 0 ? "bg-danger" : "bg-warning text-dark")">@p.Stock</span>
-                                        </td>
-                                        <td class="text-center pe-4 text-muted">@p.StockMinimo</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>
         </div>
     }
 </div>
-@code {
 
+<style>
+    .dashboard-container {
+        background-color: #f4f7f6;
+        min-height: 100vh;
+    }
+
+    /* Variables y Utilidades Visuales */
+    .fw-black {
+        font-weight: 900;
+    }
+
+    .smaller {
+        font-size: 0.75rem;
+    }
+
+    /* Main KPIs */
+    .kpi-main {
+        transition: transform 0.2s ease;
+    }
+
+        .kpi-main:hover {
+            transform: translateY(-3px);
+        }
+
+    .icon-box {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Colores sutiles para fondos de iconos/alertas */
+    .bg-primary-subtle {
+        background-color: #e0e7ff !important;
+    }
+
+    .bg-success-subtle {
+        background-color: #d1fae5 !important;
+    }
+
+    .bg-warning-subtle {
+        background-color: #fef3c7 !important;
+    }
+
+    .bg-info-subtle {
+        background-color: #e0f2fe !important;
+    }
+
+    .bg-danger-subtle {
+        background-color: #ffe4e6 !important;
+    }
+
+    /* Divisores para submétricas */
+    @@media (min-width: 768px) {
+        .divide-md > div:not(:last-child) {
+            border-right: 1px solid #e9ecef;
+        }
+    }
+
+    /* Scrollbar minimalista para alertas */
+    .alert-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .alert-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+</style>
+
+@code {
+    // --- TU CÓDIGO C# INTACTO A CONTINUACIÓN ---
     private bool loading = true;
     private string rangoSeleccionado = "mes";
     private DashboardStatsDto stats = new();
@@ -439,14 +367,10 @@
 
     private ApexChartOptions<CashFlowDto> cashFlowOptions = new()
     {
-        Chart = new Chart { Height = 340, Type = ChartType.Bar, Toolbar = new Toolbar { Show = false } }, // Ocultar toolbar para diseño más limpio
-        // Colores: Ingresos (Azul), Costos (Rojo suave), Utilidad (Verde)
+        Chart = new Chart { Height = 340, Type = ChartType.Bar, Toolbar = new Toolbar { Show = false } },
         Colors = new List<string> { "#4f46e5", "#f87171", "#10b981" },
         Stroke = new Stroke { Width = new List<double> { 0, 0, 4 }, Curve = Curve.Smooth },
-        PlotOptions = new PlotOptions
-        {
-            Bar = new PlotOptionsBar { BorderRadius = 4, ColumnWidth = "45%" }
-        },
+        PlotOptions = new PlotOptions { Bar = new PlotOptionsBar { BorderRadius = 4, ColumnWidth = "45%" } },
         DataLabels = new DataLabels { Enabled = false },
         Legend = new Legend { Position = LegendPosition.Top, HorizontalAlign = Align.Right }
     };
@@ -454,10 +378,9 @@
     private ApexChartOptions<ProductoMasVendidoDto> topProductosOptions = new()
     {
         Chart = new Chart { Height = 320, Type = ChartType.Donut },
-        // Paleta de azules/morados premium
         Colors = new List<string> { "#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe" },
         Legend = new Legend { Position = LegendPosition.Bottom },
-        Stroke = new Stroke { Show = false } // Quita el borde blanco entre rebanadas
+        Stroke = new Stroke { Show = false }
     };
 
     private ApexChartOptions<FlujoCajaRealDto> cashFlowRealOptions = new()
@@ -465,10 +388,7 @@
         Chart = new Chart { Height = 340, Type = ChartType.Bar, Toolbar = new Toolbar { Show = false } },
         Colors = new List<string> { "#10b981", "#ef4444", "#0ea5e9" },
         Stroke = new Stroke { Width = new List<double> { 0, 0, 4 }, Curve = Curve.Smooth },
-        PlotOptions = new PlotOptions
-        {
-            Bar = new PlotOptionsBar { BorderRadius = 4, ColumnWidth = "45%" }
-        },
+        PlotOptions = new PlotOptions { Bar = new PlotOptionsBar { BorderRadius = 4, ColumnWidth = "45%" } },
         DataLabels = new DataLabels { Enabled = false },
         Legend = new Legend { Position = LegendPosition.Top, HorizontalAlign = Align.Right }
     };
@@ -491,6 +411,7 @@
         var alertas = await DashboardService.GetAlertasAsync();
         productosBajoStock = alertas.ProductosBajoStock;
     }
+
     private string RangoSeleccionadoTexto => rangoSeleccionado switch
     {
         "hoy" => "Hoy",
@@ -499,39 +420,32 @@
         "anio" => "Este Año",
         _ => "Este Mes"
     };
+
     private async Task CambiarRango(string nuevoRango)
     {
         if (rangoSeleccionado == nuevoRango) return;
 
         rangoSeleccionado = nuevoRango;
         loading = true;
-
         StateHasChanged();
-
         await Task.Delay(50);
-
         await CargarDatos(rangoSeleccionado);
     }
+
     private async Task CargarDatos(string rango)
     {
         DateTime? fechaFiltro = null;
         DateTime hoy = DateTime.Today;
         cajaResumen = await CajaHttpService.GetResumenAsync();
         cashFlowReal = await CajaHttpService.GetCashFlowRealAsync(6);
+
         switch (rango)
         {
-            case "hoy":
-                fechaFiltro = hoy;
-                break;
-            case "7dias":
-                fechaFiltro = hoy.AddDays(-7);
-                break;
-            case "mes":
-                fechaFiltro = new DateTime(hoy.Year, hoy.Month, 1);
-                break;
+            case "hoy": fechaFiltro = hoy; break;
+            case "7dias": fechaFiltro = hoy.AddDays(-7); break;
+            case "mes": fechaFiltro = new DateTime(hoy.Year, hoy.Month, 1); break;
         }
 
-        // DEPUREMOS: Mira esto en la consola del navegador (F12)
         Console.WriteLine($"Cargando rango: {rango} - Fecha Inicio: {fechaFiltro?.ToString("yyyy-MM-dd")}");
 
         stats = await DashboardService.GetStatsAsync(fechaFiltro);

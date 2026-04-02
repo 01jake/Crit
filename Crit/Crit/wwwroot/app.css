@@ -58,3 +58,33 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+/* Forzamos la limpieza en todo el sidebar de forma global */
+.saas-sidebar a,
+.saas-sidebar .nav-link,
+.saas-sidebar .saas-nav-link {
+    text-decoration: none !important;
+}
+
+    /* Evitamos que cambie a azul al pasar el mouse o hacer click */
+    .saas-sidebar a:hover,
+    .saas-sidebar a:active,
+    .saas-sidebar a:focus {
+        text-decoration: none !important;
+    }
+
+/* Estilo para el link que esté activo (el que tiene la clase .active) */
+.saas-sidebar .active {
+    color: #1d4ed8 !important; /* El azul de --sidebar-active-text */
+    background-color: #e8f1ff !important;
+}
+/* Esto afectará a TODOS los enlaces de la aplicación */
+a, a:hover, a:focus, a:active {
+    text-decoration: none !important;
+    -webkit-text-decoration: none !important;
+    box-shadow: none !important;
+}
+
+/* Específicamente para la barra lateral */
+.saas-sidebar a {
+    text-decoration: none !important;
+}

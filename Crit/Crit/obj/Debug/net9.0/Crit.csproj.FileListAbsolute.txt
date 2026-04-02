@@ -417,7 +417,6 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\p8kpjarly
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\dko6y7plta-j4a4u2uj29.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\1j8oabzfj7-qz6clc5837.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\0g0tdqq8mx-ody88ncx6z.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\jpci2lxogt-khy4lop6wu.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\264mygnbip-9pankj4op2.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\1zy76dlk12-bqjiyaj88i.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\b3xmi9by4v-c2jlpeoesf.gz
@@ -464,7 +463,6 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\cyizyyvg8
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\5onosyanv8-63fj8s7r0e.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\0fmjhhq0ks-0j3bgjxly4.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\2d3bpynw52-7vhap2rrw2.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-6aq1h9pdh2.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\k5ck305ath-vvhvr6h6b6.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\staticwebassets.build.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\staticwebassets.build.json.cache
@@ -477,3 +475,5 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\refint\Crit.dll
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.pdb
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.genruntimeconfig.cache
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\ref\Crit.dll
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-lc1tq1xbjo.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\jpci2lxogt-x6g4zrvuv8.gz

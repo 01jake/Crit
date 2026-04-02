@@ -8,8 +8,9 @@ namespace Crit.Shared.Models
     public class Compra
     {
         public int Id { get; set; }
-        public int EmpresaId { get; set; }
+        public int? EmpresaId { get; set; }
         public Empresa? Empresa { get; set; }
+
         public int ProveedorId { get; set; }
         public Proveedor? Proveedor { get; set; }
 

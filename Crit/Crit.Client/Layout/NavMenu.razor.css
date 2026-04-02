@@ -475,6 +475,55 @@ a.app-mobile-brand:visited {
         border-color: #cbd5e1;
         color: #0f172a;
     }
+.saas-integrated-card {
+    transition: all 0.2s ease;
+}
+
+.saas-user-avatar {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+    color: white;
+    font-weight: bold;
+    border-radius: 8px; /* Cuadrado redondeado se ve más moderno que círculo total */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-link:hover {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Reducir el tamaño de los títulos de grupo */
+.saas-nav-group-title {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.5rem !important;
+    letter-spacing: 1px;
+}
+
+/* Ajustar la altura de los links del menú para que sean más densos */
+.saas-nav-link {
+    padding: 0.4rem 0.6rem !important;
+    min-height: auto !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Asegurar que la caja de bienvenida no sea gigante */
+.saas-welcome-box {
+    border-color: #e2e8f0 !important;
+}
+
+/* Estilo para el borde punteado del footer */
+.border-dashed {
+    border-style: dashed !important;
+}
+
+/* Evita que el texto de la empresa se vea muy grande */
+.small {
+    font-size: 0.85rem;
+}
 @media (max-width: 991.98px) {
     .saas-sidebar-shell {
         min-height: 100%;

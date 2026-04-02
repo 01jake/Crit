@@ -38,6 +38,7 @@ namespace Crit.Server.Data
         public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
         public DbSet<TraspasoAlmacen> TraspasosAlmacen { get; set; }
         public DbSet<OrdenReabastecimiento> OrdenesReabastecimiento { get; set; }
+        public DbSet<Empresa> Empresas { get; set; }
 
 
 
@@ -131,7 +132,11 @@ namespace Crit.Server.Data
             }); // ⭐ CERRAR AQUÍ QuejaEntity
 
             // ✅ CONFIGURACIONES DE VENTAS (FUERA de QuejaEntity)
-
+            builder.Entity<ApplicationUser>()
+              .HasOne(u => u.Empresa)
+              .WithMany()
+              .HasForeignKey(u => u.EmpresaId)
+              .OnDelete(DeleteBehavior.NoAction);
             // Cliente
             builder.Entity<Cliente>()
                 .HasIndex(c => c.Email)
@@ -327,6 +332,11 @@ namespace Crit.Server.Data
                 .HasOne(x => x.TraspasoAlmacen)
                 .WithMany()
                 .HasForeignKey(x => x.TraspasoAlmacenId)
+                .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<ApplicationUser>()
+                .HasOne(u => u.Empresa)
+                .WithMany()
+                .HasForeignKey(u => u.EmpresaId)
                 .OnDelete(DeleteBehavior.NoAction);
             builder.Entity<CuentaPorCobrar>()
                 .Property(x => x.Subtotal)

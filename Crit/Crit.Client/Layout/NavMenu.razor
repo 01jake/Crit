@@ -1,6 +1,7 @@
 ﻿@using Crit.Client.Components
 @using Microsoft.AspNetCore.Components.Routing
 @inject NavigationManager NavigationManager
+@inject Crit.Client.Services.SesionHttpService SesionHttpService
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
@@ -53,6 +54,8 @@
 </div>
 
 @code {
+    private string empresaNombre = "Cargando...";
+    private bool cargandoEmpresa = true;
     private string? currentUrl;
 
     private RenderFragment SidebarContent => @<div class="saas-sidebar-shell">
@@ -137,6 +140,10 @@
                             <i class="bi bi-box-arrow-in-down"></i>
                             <span>Reabastecimiento</span>
                         </NavLink>
+                        <NavLink class="saas-nav-link" href="Kardex" @onclick="CerrarMenu">
+                            <i class="bi bi-clipboard-data"></i>
+                            <span>Kardex</span>
+                        </NavLink>
 
                     </nav>
 
@@ -151,16 +158,41 @@
                 </Authorized>
 
                 <NotAuthorized>
-                    <div class="saas-auth-panel">
-                        <div class="saas-nav-group-title">Acceso</div>
+                    <div class="d-flex flex-column h-100 px-2">
+                        <div class="saas-nav-group-title mt-2">Portal de Acceso</div>
 
-                        <NavLink class="saas-auth-link" href="Account/Login" @onclick="CerrarMenu">
-                            Iniciar sesión
+                        <div class="saas-welcome-box p-2 mb-2 border rounded-2 bg-white shadow-sm">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-shield-lock-fill text-primary" style="font-size: 1.1rem;"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0" style="font-size: 0.75rem;">¿Listo?</h6>
+                                    <p class="text-muted mb-0" style="font-size: 0.65rem;">Inicia sesión para gestionar.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <NavLink class="saas-nav-link py-1 mb-1" href="Account/Login" @onclick="CerrarMenu">
+                            <i class="bi bi-box-arrow-in-right" style="font-size: 0.9rem;"></i>
+                            <span style="font-size: 0.8rem;">Ingresar</span>
                         </NavLink>
 
-                        <NavLink class="saas-auth-link saas-auth-link-secondary" href="Account/Register" @onclick="CerrarMenu">
-                            Registro
+                        <NavLink class="saas-nav-link py-1" href="Account/Register" @onclick="CerrarMenu">
+                            <i class="bi bi-person-plus" style="font-size: 0.9rem;"></i>
+                            <span style="font-size: 0.8rem;">Registro</span>
                         </NavLink>
+
+                        <div class="mt-auto pb-2">
+                            <div class="p-2 rounded-2 bg-light border border-dashed" style="font-size: 0.65rem;">
+                                <div class="d-flex align-items-center gap-1 mb-1">
+                                    <i class="bi bi-question-circle text-secondary"></i>
+                                    <span class="fw-bold">Ayuda</span>
+                                </div>
+                                <p class="text-muted mb-0">Contacta a soporte si tienes problemas.</p>
+                            </div>
+                            <div class="text-center mt-2" style="opacity: 0.5;">
+                                <span style="font-size: 0.55rem; letter-spacing: 0.5px;">V 1.0.4 • Polynex</span>
+                            </div>
+                        </div>
                     </div>
                 </NotAuthorized>
             </AuthorizeView>
@@ -168,30 +200,46 @@
 
         <AuthorizeView>
             <Authorized Context="context">
-                <div class="saas-sidebar-footer">
-                    <div class="saas-user-card">
-                        <div class="saas-user-avatar">
-                            @GetInitials(context.User.Identity?.Name)
+                <div class="nav-footer-container p-3 border-top bg-light bg-opacity-10">
+
+                    <small class="text-uppercase fw-bold text-muted mb-2 d-block" style="font-size: 0.65rem; letter-spacing: 0.05rem;">Cuenta Activa</small>
+
+                    <div class="saas-integrated-card shadow-sm border rounded-3 bg-white p-2">
+
+                        <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
+                            <div class="bg-primary bg-opacity-10 rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px;">
+                                <i class="bi bi-building text-primary" style="font-size: 0.9rem;"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <div class="fw-bold text-dark text-truncate small" style="line-height: 1.2;">@empresaNombre</div>
+                            </div>
                         </div>
 
-                        <div class="saas-user-meta">
-                            <span class="saas-user-name">@GetDisplayName(context.User.Identity?.Name)</span>
-                            <span class="saas-user-email">@context.User.Identity?.Name</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="saas-user-avatar flex-shrink-0 shadow-sm" style="width: 35px; height: 35px; font-size: 0.8rem;">
+                                @GetInitials(context.User.Identity?.Name)
+                            </div>
+
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="fw-semibold text-dark text-truncate small" style="line-height: 1.2;">@GetDisplayName(context.User.Identity?.Name)</div>
+                                <div class="text-muted text-truncate" style="font-size: 0.7rem;">@context.User.Identity?.Name</div>
+                            </div>
+
+                            <div class="d-flex flex-column gap-1 border-start ps-2 flex-shrink-0">
+                                <NavLink href="Account/Manage" class="btn btn-link p-0 text-secondary" title="Ajustes" @onclick="CerrarMenu">
+                                    <i class="bi bi-gear" style="font-size: 0.9rem;"></i>
+                                </NavLink>
+
+                                <form action="Account/Logout" method="post" class="m-0 p-0">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                                    <button type="submit" class="btn btn-link p-0 text-danger" title="Salir">
+                                        <i class="bi bi-box-arrow-right" style="font-size: 0.9rem;"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
 
-                        <div class="saas-user-actions">
-                            <NavLink href="Account/Manage" class="saas-icon-button" title="Ajustes" @onclick="CerrarMenu">
-                                <i class="bi bi-gear-fill"></i>
-                            </NavLink>
-
-                            <form action="Account/Logout" method="post" class="saas-logout-form">
-                                <AntiforgeryToken />
-                                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                                <button type="submit" class="saas-icon-button saas-icon-button-danger" title="Salir">
-                                    <i class="bi bi-box-arrow-right"></i>
-                                </button>
-                            </form>
-                        </div>
                     </div>
                 </div>
             </Authorized>
@@ -202,8 +250,36 @@
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChangedHandler;
-    }
 
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var sesion = await SesionHttpService.GetEmpresaActualAsync();
+
+            if (sesion is not null)
+            {
+                empresaNombre = string.IsNullOrWhiteSpace(sesion.EmpresaNombre)
+                    ? "Sin empresa"
+                    : sesion.EmpresaNombre;
+
+            }
+            else
+            {
+                empresaNombre = "Sin empresa";
+            }
+        }
+        catch
+        {
+            empresaNombre = "Sin empresa";
+        }
+        finally
+        {
+            cargandoEmpresa = false;
+            StateHasChanged();
+        }
+    }
     private void OnLocationChangedHandler(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);

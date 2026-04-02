@@ -10,7 +10,8 @@ namespace Crit.Shared.Models
     public class Cliente
     {
         public int Id { get; set; }
-
+        public int? EmpresaId { get; set; }
+        public Empresa? Empresa { get; set; }
         [Required(ErrorMessage = "El nombre o razón social es requerido")]
         [StringLength(100)]
         public string Nombre { get; set; } = string.Empty;

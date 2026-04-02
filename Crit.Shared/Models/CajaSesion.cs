@@ -10,8 +10,9 @@ namespace Crit.Shared.Models
     public class CajaSesion
     {
         public int Id { get; set; }
-        public int EmpresaId { get; set; }
+        public int? EmpresaId { get; set; }
         public Empresa? Empresa { get; set; }
+
         public DateTime FechaApertura { get; set; } = DateTime.Now;
         public DateTime? FechaCierre { get; set; }
 

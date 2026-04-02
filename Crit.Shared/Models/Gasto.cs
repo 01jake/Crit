@@ -10,8 +10,9 @@ namespace Crit.Shared.Models
     public class Gasto
     {
         public int Id { get; set; }
-        public int EmpresaId { get; set; }
+        public int? EmpresaId { get; set; }
         public Empresa? Empresa { get; set; }
+
         public DateTime Fecha { get; set; } = DateTime.Now;
 
         [Required]

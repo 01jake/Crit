@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Crit.Client.Services;
 using Crit.Server.Data;
 using Crit.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -18,11 +19,13 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<ClientesController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public ClientesController(ApplicationDbContext context, ILogger<ClientesController> logger)
+        public ClientesController(ApplicationDbContext context, ILogger<ClientesController> logger, IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
         // GET: api/clientes
@@ -31,9 +34,16 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var clientes = await _context.Clientes
+                    .Where(c => c.EmpresaId == empresaId)
                     .OrderBy(c => c.Nombre)
                     .ToListAsync();
+
                 return Ok(clientes);
             }
             catch (Exception ex)
@@ -43,18 +53,23 @@ namespace Crit.Controllers
             }
         }
 
+
         // GET: api/clientes/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Cliente>> GetCliente(int id)
         {
             try
             {
-                var cliente = await _context.Clientes.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var cliente = await _context.Clientes
+                    .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
 
                 if (cliente == null)
-                {
                     return NotFound($"Cliente con ID {id} no encontrado");
-                }
 
                 return Ok(cliente);
             }
@@ -64,6 +79,7 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
 
         // GET: api/clientes/activos
         [HttpGet("activos")]
@@ -84,27 +100,28 @@ namespace Crit.Controllers
             }
         }
 
-        // POST: api/clientes
         [HttpPost]
         public async Task<ActionResult<Cliente>> CreateCliente([FromBody] Cliente cliente)
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
 
-                // Validar email único
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
                 var emailExiste = await _context.Clientes
-                    .AnyAsync(c => c.Email == cliente.Email);
+                    .AnyAsync(c => c.Email == cliente.Email && c.EmpresaId == empresaId);
 
                 if (emailExiste)
-                {
-                    return BadRequest("Ya existe un cliente con ese email");
-                }
+                    return BadRequest("Ya existe un cliente con ese email en esta empresa");
 
+                cliente.EmpresaId = empresaId;
                 cliente.FechaRegistro = DateTime.Now;
+
                 _context.Clientes.Add(cliente);
                 await _context.SaveChangesAsync();
 
@@ -117,46 +134,46 @@ namespace Crit.Controllers
             }
         }
 
-        // PUT: api/clientes/5
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 if (id != cliente.Id)
-                {
                     return BadRequest("El ID no coincide");
-                }
 
                 if (!ModelState.IsValid)
-                {
                     return BadRequest(ModelState);
-                }
 
-                var clienteExiste = await _context.Clientes.FindAsync(id);
+                var clienteExiste = await _context.Clientes
+                    .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
+
                 if (clienteExiste == null)
-                {
                     return NotFound($"Cliente con ID {id} no encontrado");
-                }
 
-                // Validar email único
                 var emailExiste = await _context.Clientes
-                    .AnyAsync(c => c.Email == cliente.Email && c.Id != id);
+                    .AnyAsync(c => c.Email == cliente.Email && c.Id != id && c.EmpresaId == empresaId);
 
                 if (emailExiste)
-                {
-                    return BadRequest("Ya existe otro cliente con ese email");
-                }
+                    return BadRequest("Ya existe otro cliente con ese email en esta empresa");
 
-                // Actualizar propiedades
                 clienteExiste.Nombre = cliente.Nombre;
                 clienteExiste.Email = cliente.Email;
                 clienteExiste.Telefono = cliente.Telefono;
-                clienteExiste.RFC = cliente.RFC;
                 clienteExiste.Direccion = cliente.Direccion;
+                clienteExiste.RFC = cliente.RFC;
+                clienteExiste.CodigoPostal = cliente.CodigoPostal;
+                clienteExiste.UsoCFDI = cliente.UsoCFDI;
                 clienteExiste.Activo = cliente.Activo;
 
                 await _context.SaveChangesAsync();
+
                 return NoContent();
             }
             catch (Exception ex)
@@ -166,17 +183,23 @@ namespace Crit.Controllers
             }
         }
 
+
         // DELETE: api/clientes/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCliente(int id)
         {
             try
             {
-                var cliente = await _context.Clientes.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var cliente = await _context.Clientes
+                    .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
+
                 if (cliente == null)
-                {
                     return NotFound($"Cliente con ID {id} no encontrado");
-                }
 
                 _context.Clientes.Remove(cliente);
                 await _context.SaveChangesAsync();
@@ -191,11 +214,24 @@ namespace Crit.Controllers
         }
 
 
+
         [HttpGet("count")]
         public async Task<ActionResult<int>> GetClientesCount()
         {
             var count = await _context.Clientes.CountAsync(c => c.Activo);
             return Ok(count);
+        }
+        [HttpGet("debug-empresa")]
+        public async Task<IActionResult> DebugEmpresa()
+        {
+            var userId = _empresaProvider.GetUserId();
+            var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+            return Ok(new
+            {
+                UserId = userId,
+                EmpresaId = empresaId
+            });
         }
     }
 }

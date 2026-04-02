@@ -608,6 +608,16 @@
     ]
   },
   {
+    "ContainingType": "Crit.Controllers.ClientesController",
+    "Method": "DebugEmpresa",
+    "RelativePath": "api/Clientes/debug-empresa",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Crit.Controllers.ComprasController",
     "Method": "GetCompras",
     "RelativePath": "api/Compras",
@@ -2207,6 +2217,26 @@
     "ReturnTypes": [
       {
         "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.Models.OrdenReabastecimiento, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Crit.Controllers.SesionController",
+    "Method": "GetEmpresaActual",
+    "RelativePath": "api/Sesion/empresa-actual",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "Crit.Shared.DTOs.EmpresaSesionDto",
         "MediaTypes": [
           "text/plain",
           "application/json",
