@@ -1,147 +1,67 @@
-:root[b-bhcxiibrfu] {
-    --primary-brand: #4f46e5;
-    --bg-body: #f1f5f9;
-}
-
-.admin-container[b-bhcxiibrfu] {
-    padding: 2rem;
-    background-color: var(--bg-body);
+.dashboard-container[b-bhcxiibrfu] {
     min-height: 100vh;
 }
 
-.page-title[b-bhcxiibrfu] {
-    font-weight: 800;
-    color: #0f172a;
-    letter-spacing: -0.5px;
-}
-
-/* KPI Cards */
-.kpi-card[b-bhcxiibrfu] {
-    border-radius: 16px;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-    .kpi-card:hover[b-bhcxiibrfu] {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
-    }
-
+/* Variables y Utilidades Visuales */
 .fw-black[b-bhcxiibrfu] {
     font-weight: 900;
-    letter-spacing: -0.5px;
-}
-.dropdown-menu[b-bhcxiibrfu] {
-    border-radius: 12px;
-    padding: 0.5rem;
 }
 
-.dropdown-item[b-bhcxiibrfu] {
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    margin-bottom: 2px;
+.smaller[b-bhcxiibrfu] {
+    font-size: 0.75rem;
 }
 
-    .dropdown-item:hover[b-bhcxiibrfu] {
-        background-color: #f1f5f9;
+/* Main KPIs */
+.kpi-main[b-bhcxiibrfu] {
+    transition: transform 0.2s ease;
+}
+
+    .kpi-main:hover[b-bhcxiibrfu] {
+        transform: translateY(-3px);
     }
 
-.dropdown-header[b-bhcxiibrfu] {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    font-weight: 800;
-    color: #94a3b8;
-}
-
-.btn-white.dropdown-toggle[b-bhcxiibrfu]::after {
-    vertical-align: middle;
-    margin-left: 0.5rem;
-}
-
-/* Icon Shapes (Fondos circulares para los iconos) */
-.icon-shape[b-bhcxiibrfu] {
-    width: 48px;
-    height: 48px;
+.icon-box[b-bhcxiibrfu] {
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
-    font-size: 1.5rem;
 }
 
-.bg-primary-soft[b-bhcxiibrfu] {
-    background-color: #e0e7ff;
+/* Colores sutiles para fondos de iconos/alertas */
+.bg-primary-subtle[b-bhcxiibrfu] {
+    background-color: #e0e7ff !important;
 }
 
-.bg-danger-soft[b-bhcxiibrfu] {
-    background-color: #fee2e2;
+.bg-success-subtle[b-bhcxiibrfu] {
+    background-color: #d1fae5 !important;
 }
 
-.bg-success-soft[b-bhcxiibrfu] {
-    background-color: #dcfce7;
+.bg-warning-subtle[b-bhcxiibrfu] {
+    background-color: #fef3c7 !important;
 }
 
-.bg-info-soft[b-bhcxiibrfu] {
-    background-color: #e0f2fe;
-    color: #0284c7;
+.bg-info-subtle[b-bhcxiibrfu] {
+    background-color: #e0f2fe !important;
 }
 
-.bg-success-soft.badge[b-bhcxiibrfu] {
-    background-color: #dcfce7;
-    padding: 5px 10px;
-    border-radius: 6px;
+.bg-danger-subtle[b-bhcxiibrfu] {
+    background-color: #ffe4e6 !important;
 }
 
-/* Tablas en Dashboard */
-.table thead th[b-bhcxiibrfu] {
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    letter-spacing: 0.05em;
-    color: #64748b;
-    padding-top: 12px;
-    padding-bottom: 12px;
-}
-
-.table tbody tr:hover[b-bhcxiibrfu] {
-    background-color: #f8fafc;
-}
-
-.extra-small[b-bhcxiibrfu] {
-    font-size: 0.7rem;
-}
-
-code[b-bhcxiibrfu] {
-    background: #f1f5f9;
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-
-/* Empty States */
-.empty-state[b-bhcxiibrfu] {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 200px;
-    color: #94a3b8;
-    font-size: 0.9rem;
-    border: 2px dashed #e2e8f0;
-    border-radius: 12px;
-    margin: 1rem 0;
-}
-
-/* Spinner */
-.spinner-custom[b-bhcxiibrfu] {
-    width: 3rem;
-    height: 3rem;
-    border: 4px solid #e2e8f0;
-    border-top-color: var(--primary-brand);
-    border-radius: 50%;
-    animation: spin-b-bhcxiibrfu 1s linear infinite;
-}
-
-@keyframes spin-b-bhcxiibrfu {
-    to {
-        transform: rotate(360deg);
+/* Divisores para submétricas */
+@media (min-width: 768px) {
+    .divide-md > div:not(:last-child)[b-bhcxiibrfu] {
+        border-right: 1px solid #e9ecef;
     }
+}
+
+/* Scrollbar minimalista para alertas */
+.alert-list[b-bhcxiibrfu]::-webkit-scrollbar {
+    width: 4px;
+}
+
+.alert-list[b-bhcxiibrfu]::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
 }

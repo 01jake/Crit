@@ -11,7 +11,8 @@ namespace Crit.Shared.Models
     public class Cotizacion
     {
         public int Id { get; set; }
-
+        public int EmpresaId { get; set; }
+        public Empresa? Empresa { get; set; }
         [Required]
         public string NumeroCotizacion { get; set; } = string.Empty;
 

@@ -9,6 +9,8 @@ namespace Crit.Shared.Models
 {
     public class QuejaPublica
     {
+        public int EmpresaId { get; set; }
+        public Empresa? Empresa { get; set; }
         [Required(ErrorMessage = "El nombre es obligatorio.")]
         public string NombreCliente { get; set; } = string.Empty;
 

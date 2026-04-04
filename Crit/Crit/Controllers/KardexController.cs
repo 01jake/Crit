@@ -1,6 +1,6 @@
 ﻿using Crit.Server.Data;
 using Crit.Shared.DTOs;
-using Microsoft.AspNetCore.Http;
+using Crit.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,11 +12,16 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<KardexController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public KardexController(ApplicationDbContext context, ILogger<KardexController> logger)
+        public KardexController(
+            ApplicationDbContext context,
+            ILogger<KardexController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
         [HttpGet]
@@ -28,9 +33,15 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var query = _context.MovimientosInventario
                     .Include(x => x.Producto)
                     .Include(x => x.Almacen)
+                    .Where(x => x.EmpresaId == empresaId)
                     .AsQueryable();
 
                 if (productoId.HasValue)

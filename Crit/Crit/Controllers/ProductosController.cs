@@ -1,39 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Crit.Server.Data;
+﻿using Crit.Server.Data;
 using Crit.Shared.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crit.Controllers
 {
-    //[Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ProductosController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<ProductosController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public ProductosController(ApplicationDbContext context, ILogger<ProductosController> logger)
+        public ProductosController(
+            ApplicationDbContext context,
+            ILogger<ProductosController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
-        // GET: api/productos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var productos = await _context.Productos
+                    .Where(p => p.EmpresaId == empresaId)
                     .OrderBy(p => p.Nombre)
                     .ToListAsync();
+
                 return Ok(productos);
             }
             catch (Exception ex)
@@ -43,18 +47,21 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/productos/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Producto>> GetProducto(int id)
         {
             try
             {
-                var producto = await _context.Productos.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var producto = await _context.Productos
+                    .FirstOrDefaultAsync(p => p.Id == id && p.EmpresaId == empresaId);
 
                 if (producto == null)
-                {
                     return NotFound($"Producto con ID {id} no encontrado");
-                }
 
                 return Ok(producto);
             }
@@ -65,14 +72,18 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/productos/activos
         [HttpGet("activos")]
         public async Task<ActionResult<IEnumerable<Producto>>> GetProductosActivos()
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var productos = await _context.Productos
-                    .Where(p => p.Activo)
+                    .Where(p => p.EmpresaId == empresaId && p.Activo)
                     .OrderBy(p => p.Nombre)
                     .ToListAsync();
 
@@ -85,46 +96,27 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/productos/bajo-stock
-        [HttpGet("bajo-stock")]
-        public async Task<ActionResult<IEnumerable<Producto>>> GetProductosBajoStock()
-        {
-            try
-            {
-                var productos = await _context.Productos
-                    .Where(p => p.Stock <= p.StockMinimo && p.Activo)
-                    .OrderBy(p => p.Stock)
-                    .ToListAsync();
-                return Ok(productos);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener productos con bajo stock");
-                return StatusCode(500, "Error interno del servidor");
-            }
-        }
-
-        // POST: api/productos
         [HttpPost]
         public async Task<ActionResult<Producto>> CreateProducto([FromBody] Producto producto)
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
 
-                // Validar código único
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
                 var codigoExiste = await _context.Productos
-                    .AnyAsync(p => p.Codigo == producto.Codigo);
+                    .AnyAsync(p => p.Codigo == producto.Codigo && p.EmpresaId == empresaId);
 
                 if (codigoExiste)
-                {
-                    return BadRequest("Ya existe un producto con ese código");
-                }
+                    return BadRequest("Ya existe un producto con ese código en esta empresa");
 
-                producto.FechaCreacion = DateTime.Now;
+                producto.EmpresaId = empresaId;
+
                 _context.Productos.Add(producto);
                 await _context.SaveChangesAsync();
 
@@ -137,50 +129,44 @@ namespace Crit.Controllers
             }
         }
 
-        // PUT: api/productos/5
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProducto(int id, [FromBody] Producto producto)
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 if (id != producto.Id)
-                {
                     return BadRequest("El ID no coincide");
-                }
 
                 if (!ModelState.IsValid)
-                {
                     return BadRequest(ModelState);
-                }
 
-                var productoExiste = await _context.Productos.FindAsync(id);
+                var productoExiste = await _context.Productos
+                    .FirstOrDefaultAsync(p => p.Id == id && p.EmpresaId == empresaId);
+
                 if (productoExiste == null)
-                {
                     return NotFound($"Producto con ID {id} no encontrado");
-                }
 
-                // Validar código único
                 var codigoExiste = await _context.Productos
-                    .AnyAsync(p => p.Codigo == producto.Codigo && p.Id != id);
+                    .AnyAsync(p => p.Codigo == producto.Codigo && p.Id != id && p.EmpresaId == empresaId);
 
                 if (codigoExiste)
-                {
-                    return BadRequest("Ya existe otro producto con ese código");
-                }
+                    return BadRequest("Ya existe otro producto con ese código en esta empresa");
 
-                // Actualizar propiedades
-                productoExiste.Codigo = producto.Codigo;
                 productoExiste.Nombre = producto.Nombre;
-                productoExiste.Descripcion = producto.Descripcion;
+                productoExiste.Codigo = producto.Codigo;
                 productoExiste.PrecioCompra = producto.PrecioCompra;
                 productoExiste.PrecioVenta = producto.PrecioVenta;
                 productoExiste.Stock = producto.Stock;
                 productoExiste.StockMinimo = producto.StockMinimo;
-                productoExiste.Categoria = producto.Categoria;
-                productoExiste.Unidad = producto.Unidad;
                 productoExiste.Activo = producto.Activo;
 
                 await _context.SaveChangesAsync();
+
                 return NoContent();
             }
             catch (Exception ex)
@@ -190,17 +176,21 @@ namespace Crit.Controllers
             }
         }
 
-        // DELETE: api/productos/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducto(int id)
         {
             try
             {
-                var producto = await _context.Productos.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var producto = await _context.Productos
+                    .FirstOrDefaultAsync(p => p.Id == id && p.EmpresaId == empresaId);
+
                 if (producto == null)
-                {
                     return NotFound($"Producto con ID {id} no encontrado");
-                }
 
                 _context.Productos.Remove(producto);
                 await _context.SaveChangesAsync();
@@ -213,20 +203,69 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+        [HttpGet("bajo-stock")]
+        public async Task<ActionResult<IEnumerable<Producto>>> GetProductosBajoStock()
+        {
+            try
+            {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
 
-        // PUT: api/productos/5/stock
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var productos = await _context.Productos
+                    .Where(p => p.EmpresaId == empresaId && p.Activo && p.Stock <= p.StockMinimo)
+                    .OrderBy(p => p.Stock)
+                    .ThenBy(p => p.Nombre)
+                    .ToListAsync();
+
+                return Ok(productos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener productos con bajo stock");
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
+        [HttpGet("count")]
+        public async Task<ActionResult<int>> GetProductosCount()
+        {
+            try
+            {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var count = await _context.Productos
+                    .CountAsync(p => p.EmpresaId == empresaId && p.Activo);
+
+                return Ok(count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener conteo de productos");
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
         [HttpPut("{id}/stock")]
         public async Task<IActionResult> ActualizarStock(int id, [FromBody] int cantidad)
         {
             try
             {
-                var producto = await _context.Productos.FindAsync(id);
-                if (producto == null)
-                {
-                    return NotFound($"Producto con ID {id} no encontrado");
-                }
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
 
-                producto.Stock += cantidad;
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var producto = await _context.Productos
+                    .FirstOrDefaultAsync(p => p.Id == id && p.EmpresaId == empresaId);
+
+                if (producto == null)
+                    return NotFound($"Producto con ID {id} no encontrado");
+
+                producto.Stock = cantidad;
+
                 await _context.SaveChangesAsync();
 
                 return NoContent();
@@ -238,12 +277,7 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/productos/count
-        [HttpGet("count")]
-        public async Task<ActionResult<int>> GetProductosCount()
-        {
-            var count = await _context.Productos.CountAsync(p => p.Activo);
-            return Ok(count);
-        }
+
+
     }
 }

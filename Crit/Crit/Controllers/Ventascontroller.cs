@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Crit.Server.Data;
+﻿using Crit.Server.Data;
 using Crit.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,23 +14,36 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<VentasController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public VentasController(ApplicationDbContext context, ILogger<VentasController> logger)
+        public VentasController(
+            ApplicationDbContext context,
+            ILogger<VentasController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
-        // GET: api/ventas
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Venta>>> GetVentas()
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var ventas = await _context.Ventas
                     .Include(v => v.Cliente)
+                    .Include(v => v.Detalles)
+                        .ThenInclude(d => d.Producto)
+                    .Where(v => v.EmpresaId == empresaId)
                     .OrderByDescending(v => v.Fecha)
                     .ToListAsync();
+
                 return Ok(ventas);
             }
             catch (Exception ex)
@@ -44,22 +53,24 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/ventas/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Venta>> GetVenta(int id)
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var venta = await _context.Ventas
                     .Include(v => v.Cliente)
                     .Include(v => v.Detalles)
                         .ThenInclude(d => d.Producto)
-                    .FirstOrDefaultAsync(v => v.Id == id);
+                    .FirstOrDefaultAsync(v => v.Id == id && v.EmpresaId == empresaId);
 
                 if (venta == null)
-                {
-                    return NotFound($"Venta con ID {id} no encontrada");
-                }
+                    return NotFound();
 
                 return Ok(venta);
             }
@@ -70,18 +81,23 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/ventas/cliente/5
         [HttpGet("cliente/{clienteId}")]
         public async Task<ActionResult<IEnumerable<Venta>>> GetVentasPorCliente(int clienteId)
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var ventas = await _context.Ventas
                     .Include(v => v.Cliente)
                     .Include(v => v.Detalles)
-                    .Where(v => v.ClienteId == clienteId)
+                    .Where(v => v.ClienteId == clienteId && v.EmpresaId == empresaId)
                     .OrderByDescending(v => v.Fecha)
                     .ToListAsync();
+
                 return Ok(ventas);
             }
             catch (Exception ex)
@@ -91,17 +107,23 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/ventas/recientes?cantidad=10
         [HttpGet("recientes")]
         public async Task<ActionResult<IEnumerable<Venta>>> GetVentasRecientes([FromQuery] int cantidad = 10)
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var ventas = await _context.Ventas
                     .Include(v => v.Cliente)
+                    .Where(v => v.EmpresaId == empresaId)
                     .OrderByDescending(v => v.Fecha)
                     .Take(cantidad)
                     .ToListAsync();
+
                 return Ok(ventas);
             }
             catch (Exception ex)
@@ -111,133 +133,73 @@ namespace Crit.Controllers
             }
         }
 
-        // POST: api/ventas
         [HttpPost]
-        public async Task<ActionResult<Venta>> CreateVenta([FromBody] Venta venta)
+        public async Task<IActionResult> CreateVenta(Venta venta)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
+
             try
             {
-                _logger.LogInformation("=== INICIO: Creando venta ===");
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
 
-                // Validaciones
-                if (venta.ClienteId == 0)
-                {
-                    _logger.LogWarning("ClienteId es 0");
-                    return BadRequest("Debe seleccionar un cliente");
-                }
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
 
-                if (venta.Detalles == null || !venta.Detalles.Any())
-                {
-                    _logger.LogWarning("No hay detalles en la venta");
-                    return BadRequest("La venta debe tener al menos un producto");
-                }
-
-                _logger.LogInformation($"Venta con {venta.Detalles.Count} productos");
-
-                // ✅ Limpiar TODAS las navegaciones que vienen del cliente
-                venta.Cliente = null;
-                venta.Id = 0;
-
-                foreach (var detalle in venta.Detalles)
-                {
-                    detalle.Venta = null;
-                    detalle.Producto = null;
-                    detalle.VentaId = 0;
-                    detalle.Id = 0;
-
-                    _logger.LogInformation($"Detalle: ProductoId={detalle.ProductoId}, Cantidad={detalle.Cantidad}");
-                }
-
-                // Generar número de venta
-                var ultimaVenta = await _context.Ventas
-                    .AsNoTracking()
-                    .OrderByDescending(v => v.Id)
-                    .FirstOrDefaultAsync();
-
-                var numero = ultimaVenta != null ? ultimaVenta.Id + 1 : 1;
-                venta.NumeroVenta = $"V-{DateTime.Now:yyyyMMdd}-{numero:D6}";
+                venta.EmpresaId = empresaId;
                 venta.Fecha = DateTime.Now;
-                var almacenExiste = await _context.Almacenes.AnyAsync(a => a.Id == venta.AlmacenId && a.Activo);
-                if (!almacenExiste)
-                    return BadRequest("Debes seleccionar un almacén válido para la venta.");
 
-                var movimientosPendientes = new List<MovimientoInventario>();
-
-
-                _logger.LogInformation($"Número de venta generado: {venta.NumeroVenta}");
-
-                // Validar y descontar stock
                 foreach (var d in venta.Detalles)
                 {
-                    var producto = await _context.Productos.FindAsync(d.ProductoId);
+                    var producto = await _context.Productos
+                        .FirstOrDefaultAsync(p => p.Id == d.ProductoId && p.EmpresaId == empresaId);
 
                     if (producto == null)
                         return BadRequest($"Producto con ID {d.ProductoId} no encontrado");
 
-                    var inventarioAlmacen = await _context.InventarioPorAlmacen
-                        .FirstOrDefaultAsync(x => x.ProductoId == d.ProductoId && x.AlmacenId == venta.AlmacenId);
-
-                    if (inventarioAlmacen == null)
-                        return BadRequest($"El producto {producto.Nombre} no tiene inventario en el almacén seleccionado.");
-
-                    if (inventarioAlmacen.Stock < d.Cantidad)
-                        return BadRequest($"Stock insuficiente en almacén para el producto {producto.Nombre}. Disponible: {inventarioAlmacen.Stock}");
-
-                    if (producto.Stock < d.Cantidad)
-                        return BadRequest($"Stock global insuficiente para el producto {producto.Nombre}. Disponible: {producto.Stock}");
-
-                    var stockAnteriorAlmacen = inventarioAlmacen.Stock;
-
-                    inventarioAlmacen.Stock -= d.Cantidad;
-                    producto.Stock -= d.Cantidad;
-
                     d.Subtotal = d.Cantidad * d.PrecioUnitario;
-
-                    movimientosPendientes.Add(new MovimientoInventario
-                    {
-                        Fecha = venta.Fecha,
-                        ProductoId = d.ProductoId,
-                        AlmacenId = venta.AlmacenId.Value,
-                        TipoMovimiento = "SalidaVenta",
-                        Cantidad = d.Cantidad,
-                        StockAnterior = stockAnteriorAlmacen,
-                        StockNuevo = inventarioAlmacen.Stock,
-                        Referencia = venta.NumeroVenta,
-                        Observaciones = "Salida generada desde venta"
-                    });
                 }
 
-                // Agregar la venta
                 _context.Ventas.Add(venta);
-
-                _logger.LogInformation("Guardando cambios en la base de datos...");
-
                 await _context.SaveChangesAsync();
-                foreach (var movimiento in movimientosPendientes)
+
+                if (venta.EsCredito)
                 {
-                    movimiento.VentaId = venta.Id;
-                    _context.MovimientosInventario.Add(movimiento);
+                    var cuentaPorCobrar = new CuentaPorCobrar
+                    {
+                        EmpresaId = empresaId,
+                        ClienteId = venta.ClienteId,
+                        VentaId = venta.Id,
+                        Folio = venta.NumeroVenta,
+                        FechaEmision = venta.Fecha,
+                        FechaVencimiento = venta.Fecha.AddDays(venta.DiasCredito ?? 30),
+                        Subtotal = venta.Subtotal,
+                        Descuento = venta.Descuento,
+                        IVA = venta.IVA,
+                        Total = venta.Total,
+                        TotalPagado = 0m,
+                        Estado = "Pendiente",
+                        Observaciones = "Generada automáticamente desde venta a crédito",
+                        Activa = true
+                    };
+
+                    _context.CuentasPorCobrar.Add(cuentaPorCobrar);
+                    await _context.SaveChangesAsync();
                 }
 
-                await _context.SaveChangesAsync();
                 if (!venta.EsCredito)
                 {
                     var caja = await _context.CajaSesiones
-                        .OrderByDescending(x => x.FechaApertura)
-                        .FirstOrDefaultAsync(x => x.Estado == "Abierta");
+                        .FirstOrDefaultAsync(x => x.Estado == "Abierta" && x.EmpresaId == empresaId);
 
                     if (caja == null)
-                    {
-                        await transaction.RollbackAsync();
                         return BadRequest("No hay una caja abierta para registrar la venta de contado.");
-                    }
 
                     var saldoAnterior = caja.SaldoCalculado;
                     var saldoPosterior = saldoAnterior + venta.Total;
 
                     var movimientoCaja = new CajaMovimiento
                     {
+                        EmpresaId = empresaId,
                         CajaSesionId = caja.Id,
                         Fecha = venta.Fecha,
                         Tipo = "Ingreso",
@@ -249,7 +211,6 @@ namespace Crit.Controllers
                         Referencia = venta.NumeroVenta,
                         Concepto = $"Venta de contado {venta.NumeroVenta}",
                         MetodoPago = venta.FormaPago,
-                        UsuarioId = venta.UsuarioId,
                         Activo = true
                     };
 
@@ -258,53 +219,18 @@ namespace Crit.Controllers
 
                     await _context.SaveChangesAsync();
                 }
+
                 await transaction.CommitAsync();
-
-                _logger.LogInformation($"✅ Venta creada exitosamente con ID: {venta.Id}");
-               
-
-                // ✅ Retornar solo datos básicos sin navegaciones complejas
-                return Ok(new
-                {
-                    Id = venta.Id,
-                    NumeroVenta = venta.NumeroVenta,
-                    ClienteId = venta.ClienteId,
-                    Fecha = venta.Fecha,
-                    Subtotal = venta.Subtotal,
-                    Descuento = venta.Descuento,
-                    IVA = venta.IVA,
-                    Total = venta.Total,
-                    Estado = venta.Estado,
-                    Notas = venta.Notas,
-                    EsCredito = venta.EsCredito
-                });
-            }
-            catch (DbUpdateException dbEx)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(dbEx, "Error de base de datos al crear venta");
-                _logger.LogError($"Inner: {dbEx.InnerException?.Message}");
-                return StatusCode(500, new
-                {
-                    error = "Error de base de datos",
-                    message = dbEx.InnerException?.Message ?? dbEx.Message
-                });
+                return Ok(venta);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
                 _logger.LogError(ex, "Error al crear venta");
-                _logger.LogError($"StackTrace: {ex.StackTrace}");
-                return StatusCode(500, new
-                {
-                    error = "Error interno",
-                    message = ex.Message,
-                    inner = ex.InnerException?.Message
-                });
+                return StatusCode(500, "Error interno del servidor");
             }
         }
 
-        // GET: api/ventas/fecha
         [HttpGet("fecha")]
         public async Task<ActionResult<IEnumerable<Venta>>> GetVentasPorFecha(
             [FromQuery] DateTime desde,
@@ -312,9 +238,14 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var ventas = await _context.Ventas
                     .Include(v => v.Cliente)
-                    .Where(v => v.Fecha >= desde && v.Fecha <= hasta)
+                    .Where(v => v.EmpresaId == empresaId && v.Fecha >= desde && v.Fecha <= hasta)
                     .OrderByDescending(v => v.Fecha)
                     .ToListAsync();
 
@@ -327,15 +258,23 @@ namespace Crit.Controllers
             }
         }
 
-        // GET: api/ventas/total-mes?mes=1&año=2024
         [HttpGet("total-mes")]
         public async Task<ActionResult<decimal>> GetTotalVentasMes([FromQuery] int mes, [FromQuery] int año)
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var total = await _context.Ventas
-                    .Where(v => v.Fecha.Month == mes && v.Fecha.Year == año && v.Estado == "Completada")
+                    .Where(v => v.EmpresaId == empresaId &&
+                                v.Fecha.Month == mes &&
+                                v.Fecha.Year == año &&
+                                v.Estado == "Completada")
                     .SumAsync(v => v.Total);
+
                 return Ok(total);
             }
             catch (Exception ex)
@@ -344,21 +283,25 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
         [HttpGet("{id}/pdf")]
         public async Task<IActionResult> DescargarVentaPdf(int id)
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var venta = await _context.Ventas
                     .Include(v => v.Cliente)
                     .Include(v => v.Detalles)
                         .ThenInclude(d => d.Producto)
-                    .FirstOrDefaultAsync(v => v.Id == id);
+                    .FirstOrDefaultAsync(v => v.Id == id && v.EmpresaId == empresaId);
 
                 if (venta == null)
-                {
                     return NotFound($"Venta {id} no encontrada");
-                }
 
                 var pdfBytes = GenerarPdfVenta(venta);
 
@@ -375,7 +318,6 @@ namespace Crit.Controllers
         {
             QuestPDF.Settings.License = LicenseType.Community;
 
-            // Definición de Colores e Identidad
             var colorPrimario = Color.FromHex("#1F2A44");
             var colorGrisClaro = Color.FromHex("#F8F9FA");
             var colorTextoSuave = Color.FromHex("#4B5563");
@@ -388,7 +330,7 @@ namespace Crit.Controllers
                     page.Size(PageSizes.Letter);
                     page.Margin(1, Unit.Centimetre);
                     page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Helvetica"));
-                    // --- CABECERA (EMISOR) ---
+
                     page.Header().Row(row =>
                     {
                         row.RelativeItem().Column(col =>
@@ -412,69 +354,50 @@ namespace Crit.Controllers
                         });
                     });
 
-                    // --- DATOS DEL CLIENTE (RECEPTOR) ---
                     page.Content().PaddingVertical(20).Column(column =>
                     {
                         column.Item().Row(row =>
                         {
-                            // --- BLOQUE IZQUIERDO: DATOS DEL CLIENTE ---
                             row.RelativeItem().Border(1).BorderColor(colorBorde).Padding(10).Column(col =>
                             {
                                 col.Item().Text("RECEPTOR (CLIENTE)").FontSize(8).Bold().FontColor(colorPrimario);
-
-                                // Nombre del cliente
                                 col.Item().Text(venta.Cliente?.Nombre ?? "PÚBLICO EN GENERAL").FontSize(11).Bold();
-
-                                // RFC
                                 col.Item().Text($"RFC: {(string.IsNullOrEmpty(venta.Cliente?.RFC) ? "XAXX010101000" : venta.Cliente.RFC.ToUpper())}").FontSize(9);
 
-                                // Régimen Fiscal (Nuevo campo)
                                 if (!string.IsNullOrEmpty(venta.Cliente?.RegimenFiscal))
-                                {
                                     col.Item().Text($"Régimen: {venta.Cliente.RegimenFiscal}").FontSize(8);
-                                }
 
-                                // Código Postal
                                 col.Item().Text($"CP: {venta.Cliente?.CodigoPostal ?? "S/N"}").FontSize(9);
-
-                                // Email
                                 col.Item().Text($"Email: {venta.Cliente?.Email ?? "N/A"}").FontSize(9).FontColor(colorTextoSuave);
                             });
 
                             row.ConstantItem(15);
 
-                            // --- BLOQUE DERECHO: DETALLES FISCALES DE LA OPERACIÓN ---
                             row.RelativeItem().Border(1).BorderColor(colorBorde).Padding(10).Column(col =>
                             {
                                 col.Item().Text("DETALLES DE PAGO / FISCALES").FontSize(8).Bold().FontColor(colorPrimario);
-
-                                // Método de Pago (Asegúrate de que venta.MetodoPago exista en el modelo)
                                 col.Item().Text($"Método: {(string.IsNullOrEmpty(venta.MetodoPago) ? "PUE - Pago en una sola exhibición" : venta.MetodoPago)}").FontSize(9);
-
-                                // Forma de Pago
                                 col.Item().Text($"Forma: {(string.IsNullOrEmpty(venta.FormaPago) ? "03 - Transferencia electrónica" : venta.FormaPago)}").FontSize(9);
 
-                                // Uso de CFDI corregido
-                                string usoCfdiFinal = !string.IsNullOrEmpty(venta.UsoCFDI) ? venta.UsoCFDI :
-                                                     (!string.IsNullOrEmpty(venta.Cliente?.UsoCFDI) ? venta.Cliente.UsoCFDI : "G03 - Gastos en general");
+                                string usoCfdiFinal = !string.IsNullOrEmpty(venta.UsoCFDI)
+                                    ? venta.UsoCFDI
+                                    : (!string.IsNullOrEmpty(venta.Cliente?.UsoCFDI) ? venta.Cliente.UsoCFDI : "G03 - Gastos en general");
 
                                 col.Item().Text($"Uso CFDI: {usoCfdiFinal}").FontSize(9);
-
                                 col.Item().Text("Moneda: MXN - Peso Mexicano").FontSize(9);
                             });
                         });
 
                         column.Item().PaddingVertical(15);
 
-                        // --- TABLA DE CONCEPTOS ---
                         column.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(1); // Cantidad
-                                columns.RelativeColumn(4); // Descripción
-                                columns.RelativeColumn(1.5f); // Precio Unitario
-                                columns.RelativeColumn(1.5f); // Importe
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(4);
+                                columns.RelativeColumn(1.5f);
+                                columns.RelativeColumn(1.5f);
                             });
 
                             table.Header(header =>
@@ -486,7 +409,7 @@ namespace Crit.Controllers
 
                                 static IContainer CellStyle(IContainer container) =>
                                     container.DefaultTextStyle(x => x.SemiBold().FontColor(Colors.White))
-                                             .Background("#3c3c3c").PaddingVertical(5).PaddingHorizontal(5);
+                                        .Background("#3c3c3c").PaddingVertical(5).PaddingHorizontal(5);
                             });
 
                             foreach (var detalle in venta.Detalles)
@@ -501,10 +424,9 @@ namespace Crit.Controllers
                             }
                         });
 
-                        // --- TOTALES ---
                         column.Item().Row(row =>
                         {
-                            row.RelativeItem(); // Espacio vacío a la izquierda
+                            row.RelativeItem();
 
                             row.ConstantItem(200).PaddingTop(10).Column(col =>
                             {
@@ -526,7 +448,6 @@ namespace Crit.Controllers
                             });
                         });
 
-                        // --- TEXTO LEGAL Y FIRMA ---
                         column.Item().PaddingTop(40).Row(row =>
                         {
                             row.RelativeItem().Column(col =>

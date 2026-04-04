@@ -20,9 +20,7 @@
     z-index: 1030;
     width: var(--sidebar-width);
     height: 100vh;
-    padding: 0.7rem;
-    background: #f8fafc;
-    border-right: 1px solid #eef2f7;
+   
 }
 
 .saas-sidebar-shell[b-vmfwnc5aaa] {

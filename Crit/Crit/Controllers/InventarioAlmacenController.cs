@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Crit.Server.Data;
+﻿using Crit.Server.Data;
 using Crit.Shared.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Crit.Controllers
 {
@@ -16,11 +11,16 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<InventarioAlmacenController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public InventarioAlmacenController(ApplicationDbContext context, ILogger<InventarioAlmacenController> logger)
+        public InventarioAlmacenController(
+            ApplicationDbContext context,
+            ILogger<InventarioAlmacenController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
         [HttpGet]
@@ -28,9 +28,15 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var inventario = await _context.InventarioPorAlmacen
                     .Include(x => x.Producto)
                     .Include(x => x.Almacen)
+                    .Where(x => x.EmpresaId == empresaId)
                     .OrderBy(x => x.Almacen!.Nombre)
                     .ThenBy(x => x.Producto!.Nombre)
                     .ToListAsync();
@@ -49,10 +55,15 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var inventario = await _context.InventarioPorAlmacen
                     .Include(x => x.Producto)
                     .Include(x => x.Almacen)
-                    .Where(x => x.AlmacenId == almacenId)
+                    .Where(x => x.AlmacenId == almacenId && x.EmpresaId == empresaId)
                     .OrderBy(x => x.Producto!.Nombre)
                     .ToListAsync();
 
@@ -70,10 +81,15 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var inventario = await _context.InventarioPorAlmacen
                     .Include(x => x.Producto)
                     .Include(x => x.Almacen)
-                    .Where(x => x.ProductoId == productoId)
+                    .Where(x => x.ProductoId == productoId && x.EmpresaId == empresaId)
                     .OrderBy(x => x.Almacen!.Nombre)
                     .ToListAsync();
 
@@ -91,10 +107,15 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var alertas = await _context.InventarioPorAlmacen
                     .Include(x => x.Producto)
                     .Include(x => x.Almacen)
-                    .Where(x => x.Stock <= x.StockMinimo)
+                    .Where(x => x.EmpresaId == empresaId && x.Stock <= x.StockMinimo)
                     .OrderBy(x => x.Stock)
                     .ToListAsync();
 
@@ -112,22 +133,35 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var productoExiste = await _context.Productos.AnyAsync(p => p.Id == item.ProductoId);
+                var productoExiste = await _context.Productos
+                    .AnyAsync(p => p.Id == item.ProductoId && p.EmpresaId == empresaId);
+
                 if (!productoExiste)
                     return BadRequest("El producto no existe");
 
-                var almacenExiste = await _context.Almacenes.AnyAsync(a => a.Id == item.AlmacenId);
+                var almacenExiste = await _context.Almacenes
+                    .AnyAsync(a => a.Id == item.AlmacenId && a.EmpresaId == empresaId);
+
                 if (!almacenExiste)
                     return BadRequest("El almacen no existe");
 
                 var existeRegistro = await _context.InventarioPorAlmacen
-                    .AnyAsync(x => x.ProductoId == item.ProductoId && x.AlmacenId == item.AlmacenId);
+                    .AnyAsync(x => x.ProductoId == item.ProductoId &&
+                                   x.AlmacenId == item.AlmacenId &&
+                                   x.EmpresaId == empresaId);
 
                 if (existeRegistro)
                     return BadRequest("Ya existe inventario para ese producto en ese almacen");
+
+                item.EmpresaId = empresaId;
 
                 _context.InventarioPorAlmacen.Add(item);
                 await _context.SaveChangesAsync();
@@ -146,13 +180,20 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 if (id != item.Id)
                     return BadRequest("El ID no coincide");
 
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var inventario = await _context.InventarioPorAlmacen.FindAsync(id);
+                var inventario = await _context.InventarioPorAlmacen
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
                 if (inventario == null)
                     return NotFound("Registro de inventario no encontrado");
 
@@ -176,7 +217,14 @@ namespace Crit.Controllers
         {
             try
             {
-                var inventario = await _context.InventarioPorAlmacen.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var inventario = await _context.InventarioPorAlmacen
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
                 if (inventario == null)
                     return NotFound("Registro de inventario no encontrado");
 

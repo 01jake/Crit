@@ -156,6 +156,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVHJhc3Bhc29zLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/Usuarios.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXN1YXJpb3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/ang31/source/repos/Crit/Crit/Crit.Client/Pages/VentaDetalle.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVudGFEZXRhbGxlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 

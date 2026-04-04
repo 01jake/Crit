@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -301,5 +302,42 @@ namespace Crit.Shared.DTOs
         public int EmpresaId { get; set; }
         public string EmpresaNombre { get; set; } = string.Empty;
         public string? Email { get; set; }
+    }
+    public class RegisterEmpresaDto
+    {
+        [Required]
+        [StringLength(150)]
+        public string EmpresaNombre { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string? RFC { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string NombreCompleto { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [MinLength(6)]
+        public string Password { get; set; } = string.Empty;
+    }
+    public class CrearUsuarioDto
+    {
+        [Required]
+        public string NombreCompleto { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [MinLength(6)]
+        public string Password { get; set; } = string.Empty;
+
+        [Required]
+        public string Rol { get; set; } = "Usuario";
     }
 }

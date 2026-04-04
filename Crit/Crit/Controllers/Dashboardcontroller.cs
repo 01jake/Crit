@@ -1,7 +1,6 @@
 ﻿using Crit.Server.Data;
 using Crit.Shared.DTOs;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using Crit.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,86 +12,62 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DashboardController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public DashboardController(ApplicationDbContext context, ILogger<DashboardController> logger)
+        public DashboardController(
+            ApplicationDbContext context,
+            ILogger<DashboardController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
         [HttpGet("stats")]
-        public async Task<ActionResult<DashboardStatsDto>> GetStats([FromQuery] string? fechaInicio = null)
+        public async Task<ActionResult<DashboardStatsDto>> GetStats([FromQuery] DateTime? fechaInicio = null)
         {
             try
             {
-                var hoy = DateTime.Today;
-                DateTime inicioFiltro;
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
 
-                // Si el cliente envía una fecha (7 días, hoy, etc.), la usamos.
-                // Si no envía nada o el formato es incorrecto, usamos el primero de mes por defecto.
-                if (string.IsNullOrEmpty(fechaInicio) || !DateTime.TryParse(fechaInicio, out inicioFiltro))
-                {
-                    inicioFiltro = new DateTime(hoy.Year, hoy.Month, 1);
-                }
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
 
-                // 1. VENTAS DEL PERIODO FILTRADO (Dinámico)
-                var ventasPeriodo = await _context.Ventas
-                    .AsNoTracking()
+                var ventas = _context.Ventas
                     .Include(v => v.Detalles)
                         .ThenInclude(d => d.Producto)
-                    .Where(v => v.Fecha >= inicioFiltro)
+                    .Where(v => v.EmpresaId == empresaId);
+
+                if (fechaInicio.HasValue)
+                    ventas = ventas.Where(v => v.Fecha >= fechaInicio.Value);
+
+                var ventasList = await ventas.ToListAsync();
+
+                var ingresos = ventasList.Sum(v => v.Total);
+                var costoVentas = ventasList.Sum(v => v.Detalles.Sum(d => d.Cantidad * d.Producto!.PrecioCompra));
+                var utilidadBruta = ingresos - costoVentas;
+                var margen = ingresos > 0 ? (utilidadBruta / ingresos) * 100 : 0;
+
+                var productos = await _context.Productos
+                    .Where(p => p.EmpresaId == empresaId)
                     .ToListAsync();
 
-                // 2. VENTAS DE HOY (Estático, para el cuadro de "Hoy")
-                var ventasHoy = await _context.Ventas
-                    .AsNoTracking()
-                    .Include(v => v.Detalles)
-                        .ThenInclude(d => d.Producto)
-                    .Where(v => v.Fecha.Date == hoy)
-                    .ToListAsync();
+                var valorInventario = productos.Sum(p => p.Stock * p.PrecioCompra);
 
-                var productos = await _context.Productos.AsNoTracking().ToListAsync();
-
-                // CÁLCULOS DEL PERIODO (Los que cambian con el botón)
-                decimal ingresosPeriodo = ventasPeriodo.Sum(v => v.Total);
-                decimal costoVentasPeriodo = ventasPeriodo.Sum(v =>
-                    v.Detalles.Sum(d => d.Cantidad * (d.Producto?.PrecioCompra ?? 0m)));
-                decimal utilidadBrutaPeriodo = ingresosPeriodo - costoVentasPeriodo;
-
-                // CÁLCULOS DE HOY (Los que siempre muestran el día actual)
-                decimal ingresosHoy = ventasHoy.Sum(v => v.Total);
-                decimal costoVentasHoy = ventasHoy.Sum(v =>
-                    v.Detalles.Sum(d => d.Cantidad * (d.Producto?.PrecioCompra ?? 0m)));
-
-                var stats = new DashboardStatsDto
+                return Ok(new DashboardStatsDto
                 {
-                    // Mapeamos los datos filtrados a las propiedades que usa el Dash
-                    IngresosMes = ingresosPeriodo,
-                    CostoVentasMes = costoVentasPeriodo,
-                    UtilidadBrutaMes = utilidadBrutaPeriodo,
-                    MargenBrutoMes = ingresosPeriodo > 0 ? (utilidadBrutaPeriodo / ingresosPeriodo) * 100m : 0m,
-                    VentasMes = ventasPeriodo.Count,
-                    TicketPromedioMes = ventasPeriodo.Count > 0 ? ingresosPeriodo / ventasPeriodo.Count : 0m,
-
-                    // Datos de hoy
-                    IngresosHoy = ingresosHoy,
-                    CostoVentasHoy = costoVentasHoy,
-                    UtilidadBrutaHoy = ingresosHoy - costoVentasHoy,
-                    VentasHoy = ventasHoy.Count,
-                    TicketPromedioHoy = ventasHoy.Count > 0 ? ingresosHoy / ventasHoy.Count : 0m,
-
-                    // Datos Globales
-                    TotalClientes = await _context.Clientes.CountAsync(),
-                    TotalProductos = productos.Count,
-                    ProductosBajoStock = productos.Count(p => p.Stock <= p.StockMinimo),
-                    ValorInventario = productos.Sum(p => p.Stock * p.PrecioCompra)
-                };
-
-                return Ok(stats);
+                    IngresosMes = ingresos,
+                    CostoVentasMes = costoVentas,
+                    UtilidadBrutaMes = utilidadBruta,
+                    MargenBrutoMes = margen,
+                    ValorInventario = valorInventario,
+                    TotalProductos = productos.Count
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener stats unificados");
+                _logger.LogError(ex, "Error al obtener stats del dashboard");
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -102,13 +77,18 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var fechaInicio = DateTime.Today.AddMonths(-meses);
 
                 var ventas = await _context.Ventas
                     .AsNoTracking()
                     .Include(v => v.Detalles)
                         .ThenInclude(d => d.Producto)
-                    .Where(v => v.Fecha >= fechaInicio)
+                    .Where(v => v.EmpresaId == empresaId && v.Fecha >= fechaInicio)
                     .ToListAsync();
 
                 var data = ventas
@@ -116,30 +96,19 @@ namespace Crit.Controllers
                     .Select(g =>
                     {
                         var ingresos = g.Sum(v => v.Total);
-                        var costoMercancia = g.Sum(v =>
-                            v.Detalles.Sum(d => d.Cantidad * (d.Producto?.PrecioCompra ?? 0m)));
-
+                        var costoMercancia = g.Sum(v => v.Detalles.Sum(d => d.Cantidad * (d.Producto?.PrecioCompra ?? 0m)));
                         var utilidadBruta = ingresos - costoMercancia;
 
-                        return new
+                        return new CashFlowDto
                         {
-                            g.Key.Year,
-                            g.Key.Month,
+                            Mes = $"{g.Key.Month:00}/{g.Key.Year}",
                             Ingresos = ingresos,
                             CostoMercancia = costoMercancia,
-                            UtilidadBruta = utilidadBruta
+                            UtilidadBruta = utilidadBruta,
+                            FlujoEstimado = utilidadBruta
                         };
                     })
-                    .OrderBy(x => x.Year)
-                    .ThenBy(x => x.Month)
-                    .Select(x => new CashFlowDto
-                    {
-                        Mes = $"{x.Month:00}/{x.Year}",
-                        Ingresos = x.Ingresos,
-                        CostoMercancia = x.CostoMercancia,
-                        UtilidadBruta = x.UtilidadBruta,
-                        FlujoEstimado = x.UtilidadBruta
-                    })
+                    .OrderBy(x => x.Mes)
                     .ToList();
 
                 return Ok(data);
@@ -156,11 +125,16 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var fechaInicio = DateTime.Today.AddDays(-dias);
 
                 var ventas = await _context.Ventas
                     .AsNoTracking()
-                    .Where(v => v.Fecha >= fechaInicio)
+                    .Where(v => v.EmpresaId == empresaId && v.Fecha >= fechaInicio)
                     .GroupBy(v => v.Fecha.Date)
                     .Select(g => new VentasPorDiaDto
                     {
@@ -185,9 +159,16 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var data = await _context.DetallesVenta
                     .AsNoTracking()
                     .Include(d => d.Producto)
+                    .Include(d => d.Venta)
+                    .Where(d => d.Venta != null && d.Venta.EmpresaId == empresaId)
                     .GroupBy(d => new
                     {
                         d.ProductoId,
@@ -218,9 +199,14 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var productosBajoStock = await _context.Productos
                     .AsNoTracking()
-                    .Where(p => p.Stock <= p.StockMinimo)
+                    .Where(p => p.EmpresaId == empresaId && p.Stock <= p.StockMinimo)
                     .OrderBy(p => p.Stock)
                     .Select(p => new ProductoBajoStockDto
                     {
@@ -252,23 +238,26 @@ namespace Crit.Controllers
         }
 
         [HttpGet("ventas-recientes")]
-        public async Task<ActionResult<List<VentaRecienteDto>>> GetVentasRecientes([FromQuery] int cantidad = 5)
+        public async Task<ActionResult<IEnumerable<VentaRecienteDto>>> GetVentasRecientes([FromQuery] int take = 5)
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var ventas = await _context.Ventas
-                    .AsNoTracking()
                     .Include(v => v.Cliente)
+                    .Where(v => v.EmpresaId == empresaId)
                     .OrderByDescending(v => v.Fecha)
-                    .Take(cantidad)
+                    .Take(take)
                     .Select(v => new VentaRecienteDto
                     {
-                        Id = v.Id,
                         NumeroVenta = v.NumeroVenta,
-                        Cliente = v.Cliente != null ? v.Cliente.Nombre : null,
+                        Cliente = v.Cliente != null ? v.Cliente.Nombre : "Público General",
                         Fecha = v.Fecha,
-                        Total = v.Total,
-                        Estado = v.Estado
+                        Total = v.Total
                     })
                     .ToListAsync();
 
@@ -286,41 +275,38 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var inicioMes = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
-                var cuentasCobrar = await _context.CuentasPorCobrar
-                    .AsNoTracking()
-                    .Where(x => x.Activa)
+                var cuentasPorCobrar = await _context.CuentasPorCobrar
+                    .Where(x => x.EmpresaId == empresaId && x.Activa)
                     .ToListAsync();
 
-                var cuentasPagar = await _context.CuentasPorPagar
-                    .AsNoTracking()
-                    .Where(x => x.Activa)
+                var cuentasPorPagar = await _context.CuentasPorPagar
+                    .Where(x => x.EmpresaId == empresaId && x.Activa)
                     .ToListAsync();
 
-                var pagosClienteMes = await _context.PagosCliente
-                    .AsNoTracking()
-                    .Where(x => x.Activo && x.FechaPago >= inicioMes)
-                    .SumAsync(x => (decimal?)x.Monto) ?? 0m;
+                var pagosCliente = await _context.Set<PagoCliente>()
+                    .Where(x => x.EmpresaId == empresaId && x.Activo && x.FechaPago >= inicioMes)
+                    .ToListAsync();
 
-                var pagosProveedorMes = await _context.PagosProveedor
-                    .AsNoTracking()
-                    .Where(x => x.Activo && x.FechaPago >= inicioMes)
-                    .SumAsync(x => (decimal?)x.Monto) ?? 0m;
+                var pagosProveedor = await _context.Set<PagoProveedor>()
+                    .Where(x => x.EmpresaId == empresaId && x.Activo && x.FechaPago >= inicioMes)
+                    .ToListAsync();
 
-                var resumen = new FinanzasResumenDto
+                return Ok(new FinanzasResumenDto
                 {
-                    TotalPorCobrar = cuentasCobrar.Where(x => x.Saldo > 0).Sum(x => x.Saldo),
-                    TotalPorPagar = cuentasPagar.Where(x => x.Saldo > 0).Sum(x => x.Saldo),
-                    TotalCobradoMes = pagosClienteMes,
-                    TotalPagadoMes = pagosProveedorMes,
-                    CarteraVencidaClientes = cuentasCobrar.Where(x => x.EstaVencida).Sum(x => x.Saldo),
-                    CarteraVencidaProveedores = cuentasPagar.Where(x => x.EstaVencida).Sum(x => x.Saldo),
-                    CuentasPorCobrarPendientes = cuentasCobrar.Count(x => x.Saldo > 0),
-                    CuentasPorPagarPendientes = cuentasPagar.Count(x => x.Saldo > 0)
-                };
-
-                return Ok(resumen);
+                    TotalPorCobrar = cuentasPorCobrar.Where(x => x.Saldo > 0).Sum(x => x.Saldo),
+                    TotalPorPagar = cuentasPorPagar.Where(x => x.Saldo > 0).Sum(x => x.Saldo),
+                    CuentasPorCobrarPendientes = cuentasPorCobrar.Count(x => x.Saldo > 0),
+                    CuentasPorPagarPendientes = cuentasPorPagar.Count(x => x.Saldo > 0),
+                    TotalCobradoMes = pagosCliente.Sum(x => x.Monto),
+                    TotalPagadoMes = pagosProveedor.Sum(x => x.Monto)
+                });
             }
             catch (Exception ex)
             {
@@ -328,6 +314,5 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
-
     }
 }

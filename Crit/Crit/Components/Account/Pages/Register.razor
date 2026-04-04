@@ -3,9 +3,14 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
+@using Crit.Data
+@using Crit.Server.Data
+@using Crit.Shared.Models
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
-@using Crit.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Antiforgery
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -14,86 +19,126 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext DbContext
 
-<PageTitle>Crear Cuenta - Polynex</PageTitle>
+<PageTitle>Crear Empresa - Polynex</PageTitle>
 
-<div class="login-split-container">
-    <div class="brand-panel d-none d-lg-flex">
+<div class="saas-register-container">
+    <div class="saas-brand-panel d-none d-lg-flex">
         <div class="brand-content text-center">
-            <div class="logo-circle mb-4">
-                <i class="bi bi-person-check text-white fs-1"></i>
+            <div class="logo-circle mb-4 mx-auto">
+                <i class="bi bi-buildings text-white" style="font-size: 2.5rem;"></i>
             </div>
-            <h1 class="display-5 fw-bold text-white">Únete a Polynex</h1>
-            <p class="lead text-white-50 px-5">Estás a un paso de gestionar tus proyectos con la mejor herramienta administrativa.</p>
-            <div class="mt-5 pt-4 border-top border-secondary w-75 mx-auto">
-                <small class="text-white-300">Infraestructura Segura & Datos Encriptados</small>
+            <h1 class="display-6 fw-bold text-white mb-3">Polynex System</h1>
+            <p class="text-white-50 px-5 mb-5" style="font-size: 1.1rem; line-height: 1.6;">
+                Centraliza tus operaciones. Registra tu empresa y crea la cuenta de administrador principal en segundos.
+            </p>
+            <div class="mt-auto pt-5 border-top border-secondary border-opacity-25 w-75 mx-auto">
+                <div class="d-flex align-items-center justify-content-center gap-2 text-white-50 small">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Infraestructura Segura & Datos Encriptados</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="form-panel">
+    <div class="saas-form-panel">
         <div class="form-wrapper">
+
             <div class="mb-4">
-                <a href="/" class="text-decoration-none text-muted small hover-dark">
-                    <i class="bi bi-arrow-left me-2"></i>Volver al Inicio
+                <a href="/" class="saas-back-link">
+                    <i class="bi bi-arrow-left"></i> Volver al Inicio
                 </a>
             </div>
 
-            <div class="mb-4">
-                <h2 class="fw-bold" style="color: #3c3c3c;">Nueva Cuenta</h2>
-                <p class="text-muted">Crea tus credenciales de acceso al sistema.</p>
+            <div class="mb-5">
+                <h2 class="fw-bold text-dark mb-2" style="font-size: 1.75rem;">Nueva Empresa</h2>
+                <p class="text-muted" style="font-size: 0.95rem;">Crea tu entorno de trabajo y usuario administrador.</p>
             </div>
 
-            <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
+            <EditForm Model="Input" OnValidSubmit="RegisterUser" FormName="register">
                 <DataAnnotationsValidator />
 
                 @if (!string.IsNullOrEmpty(Message))
                 {
-                    <div class="alert alert-custom border-0 shadow-sm mb-4" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i> @Message
+                    <div class="alert saas-alert-error mb-4" role="alert">
+                        <i class="bi bi-exclamation-octagon-fill me-2"></i> @Message
                     </div>
                 }
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-secondary">CORREO ELECTRÓNICO</label>
-                    <div class="input-group custom-input-group">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-envelope text-muted"></i></span>
-                        <InputText @bind-Value="Input.Email" class="form-control custom-control border-start-0 ps-0" autocomplete="username" placeholder="usuario@empresa.com" />
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="saas-label">EMPRESA</label>
+                        <div class="input-group saas-input-group">
+                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                            <InputText @bind-Value="Input.EmpresaNombre" class="form-control" placeholder="Nombre de tu empresa" />
+                        </div>
+                        <ValidationMessage For="() => Input.EmpresaNombre" class="saas-validation-message" />
                     </div>
-                    <ValidationMessage For="() => Input.Email" class="text-danger small mt-1" />
+
+                    <div class="col-12">
+                        <label class="saas-label">RFC</label>
+                        <div class="input-group saas-input-group">
+                            <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                            <InputText @bind-Value="Input.RFC" class="form-control" placeholder="RFC de la empresa" />
+                        </div>
+                        <ValidationMessage For="() => Input.RFC" class="saas-validation-message" />
+                    </div>
+
+                    <div class="col-12 my-2">
+                        <hr class="text-muted opacity-25">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="saas-label">NOMBRE DEL ADMINISTRADOR</label>
+                        <div class="input-group saas-input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <InputText @bind-Value="Input.NombreCompleto" class="form-control" placeholder="Tu nombre completo" />
+                        </div>
+                        <ValidationMessage For="() => Input.NombreCompleto" class="saas-validation-message" />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="saas-label">CORREO ELECTRÓNICO</label>
+                        <div class="input-group saas-input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" placeholder="usuario@empresa.com" />
+                        </div>
+                        <ValidationMessage For="() => Input.Email" class="saas-validation-message" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="saas-label">CONTRASEÑA</label>
+                        <div class="input-group saas-input-group position-relative">
+                            <InputText type="@(showPassword ? "text" : "password")" @bind-Value="Input.Password" class="form-control pe-5" autocomplete="new-password" placeholder="••••••••" />
+                            <button type="button" @onclick="TogglePasswordVisibility" class="saas-eye-btn">
+                                <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                            </button>
+                        </div>
+                        <ValidationMessage For="() => Input.Password" class="saas-validation-message" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="saas-label">CONFIRMAR CONTRASEÑA</label>
+                        <div class="input-group saas-input-group position-relative">
+                            <InputText type="@(showConfirmPassword ? "text" : "password")" @bind-Value="Input.ConfirmPassword" class="form-control pe-5" autocomplete="new-password" placeholder="••••••••" />
+                            <button type="button" @onclick="ToggleConfirmPasswordVisibility" class="saas-eye-btn">
+                                <i class="bi @(showConfirmPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                            </button>
+                        </div>
+                        <ValidationMessage For="() => Input.ConfirmPassword" class="saas-validation-message" />
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-secondary">CONTRASEÑA</label>
-                    <div class="position-relative">
-                        <InputText type="@(showPassword ? "text" : "password")" @bind-Value="Input.Password" class="form-control custom-control" autocomplete="new-password" placeholder="••••••••" />
-                        <button type="button" @onclick="TogglePasswordVisibility" class="pw-eye-btn">
-                            <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
-                        </button>
-                    </div>
-                    <ValidationMessage For="() => Input.Password" class="text-danger small mt-1" />
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label fw-bold small text-secondary">CONFIRMAR CONTRASEÑA</label>
-                    <div class="position-relative">
-                        <InputText type="@(showConfirmPassword ? "text" : "password")" @bind-Value="Input.ConfirmPassword" class="form-control custom-control" autocomplete="new-password" placeholder="••••••••" />
-                        <button type="button" @onclick="ToggleConfirmPasswordVisibility" class="pw-eye-btn">
-                            <i class="bi @(showConfirmPassword ? "bi-eye-slash" : "bi-eye")"></i>
-                        </button>
-                    </div>
-                    <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger small mt-1" />
-                </div>
-
-                <button type="submit" class="btn btn-main-login w-100 py-3 shadow mb-3">
-                    Registrar Cuenta
+                <button type="submit" class="btn saas-btn-primary w-100 mt-5 shadow-sm">
+                    Crear Empresa
                 </button>
             </EditForm>
 
-            <div class="mt-4 pt-3 text-center border-top">
-                <p class="text-muted small">
+            <div class="mt-4 pt-4 text-center">
+                <p class="text-muted" style="font-size: 0.85rem;">
                     ¿Ya tienes una cuenta activa? <br>
-                    <a href="Account/Login" class="fw-bold text-primary text-decoration-none">Inicia sesión aquí</a>
+                    <a href="Account/Login" class="saas-link-bold mt-1 d-inline-block">Inicia sesión aquí</a>
                 </p>
             </div>
         </div>
@@ -102,8 +147,8 @@
 
 @code {
     private IEnumerable<IdentityError>? identityErrors;
-    private bool showPassword = false;
-    private bool showConfirmPassword = false;
+    private bool showPassword;
+    private bool showConfirmPassword;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
@@ -111,7 +156,9 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+    private string? Message => identityErrors is null
+        ? null
+        : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
     private void TogglePasswordVisibility()
     {
@@ -125,40 +172,107 @@
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var user = CreateUser();
-
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-        var emailStore = GetEmailStore();
-        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-        var result = await UserManager.CreateAsync(user, Input.Password);
-
-        if (!result.Succeeded)
+        try
         {
-            identityErrors = result.Errors;
+            var emailExiste = await UserManager.Users.AnyAsync(x => x.Email == Input.Email);
+            if (emailExiste)
+            {
+                identityErrors =
+                [
+                    new IdentityError { Description = "Ya existe un usuario con ese correo." }
+                ];
+                return;
+            }
+
+            var empresaExiste = await DbContext.Empresas.AnyAsync(x => x.Nombre == Input.EmpresaNombre);
+            if (empresaExiste)
+            {
+                identityErrors =
+                [
+                    new IdentityError { Description = "Ya existe una empresa con ese nombre." }
+                ];
+                return;
+            }
+
+            var empresa = new Empresa
+            {
+                Nombre = Input.EmpresaNombre.Trim(),
+                RFC = string.IsNullOrWhiteSpace(Input.RFC) ? null : Input.RFC.Trim().ToUpper(),
+                Activa = true,
+                FechaRegistro = DateTime.Now
+            };
+
+            DbContext.Empresas.Add(empresa);
+            await DbContext.SaveChangesAsync();
+
+            var user = CreateUser();
+
+            await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+            var emailStore = GetEmailStore();
+            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+            user.NombreCompleto = Input.NombreCompleto.Trim();
+            user.EmpresaId = empresa.Id;
+            user.EmailConfirmed = true;
+
+            var result = await UserManager.CreateAsync(user, Input.Password);
+
+            if (!result.Succeeded)
+            {
+                DbContext.Empresas.Remove(empresa);
+                await DbContext.SaveChangesAsync();
+
+                identityErrors = result.Errors;
+                return;
+            }
+
+            await UserManager.AddToRoleAsync(user, "Admin");
+
+            Logger.LogInformation("Empresa y usuario administrador creados correctamente.");
+
+            var userId = await UserManager.GetUserIdAsync(user);
+            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+                new Dictionary<string, object?>
+                {
+                    ["userId"] = userId,
+                    ["code"] = code,
+                    ["returnUrl"] = ReturnUrl
+                });
+
+            await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+            if (UserManager.Options.SignIn.RequireConfirmedAccount)
+            {
+                RedirectManager.RedirectTo(
+                    "Account/RegisterConfirmation",
+                    new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+                return;
+            }
+
+            await SignInManager.SignInAsync(user, isPersistent: false);
+        }
+        catch (Microsoft.AspNetCore.Components.NavigationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al registrar empresa y usuario administrador.");
+
+            identityErrors =
+            [
+                new IdentityError { Description = "Ocurrió un error al crear la empresa." }
+            ];
             return;
         }
 
-        Logger.LogInformation("User created a new account with password.");
-
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
-
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-        if (UserManager.Options.SignIn.RequireConfirmedAccount)
-        {
-            RedirectManager.RedirectTo(
-                "Account/RegisterConfirmation",
-                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
-        }
-
-        await SignInManager.SignInAsync(user, isPersistent: false);
         RedirectManager.RedirectTo(ReturnUrl);
     }
+
 
     private ApplicationUser CreateUser()
     {
@@ -179,25 +293,39 @@
         {
             throw new NotSupportedException("The default UI requires a user store with email support.");
         }
+
         return (IUserEmailStore<ApplicationUser>)UserStore;
     }
 
     private sealed class InputModel
     {
+        [Required(ErrorMessage = "El nombre de la empresa es obligatorio.")]
+        [StringLength(150, ErrorMessage = "El nombre de la empresa no puede exceder 150 caracteres.")]
+        public string EmpresaNombre { get; set; } = "";
+
+        [Required(ErrorMessage = "El RFC es obligatorio.")]
+        [StringLength(13, MinimumLength = 12, ErrorMessage = "El RFC debe tener entre 12 y 13 caracteres.")]
+        [RegularExpression(
+            @"^([A-Za-zñÑ&]{3,4})([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01]))([A-Za-z0-9]{3})$",
+            ErrorMessage = "Formato de RFC inválido. Ejemplo: VIML030903QY6")]
+        public string? RFC { get; set; }
+
+        [Required(ErrorMessage = "El nombre completo es obligatorio.")]
+        [StringLength(100, ErrorMessage = "El nombre completo no puede exceder 100 caracteres.")]
+        public string NombreCompleto { get; set; } = "";
+
         [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
         [EmailAddress(ErrorMessage = "Por favor ingresa un correo electrónico válido.")]
-        [Display(Name = "Email")]
         public string Email { get; set; } = "";
 
         [Required(ErrorMessage = "La contraseña es obligatoria.")]
         [StringLength(100, ErrorMessage = "La contraseña debe tener entre {2} y {1} caracteres.", MinimumLength = 6)]
         [DataType(DataType.Password)]
-        [Display(Name = "Password")]
         public string Password { get; set; } = "";
 
         [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "Las contraseñas no coinciden.")]
         public string ConfirmPassword { get; set; } = "";
     }
+
 }

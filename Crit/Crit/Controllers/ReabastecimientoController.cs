@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Crit.Server.Data;
-using Crit.Shared.Models;
+﻿using Crit.Server.Data;
 using Crit.Shared.DTOs;
+using Crit.Shared.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Crit.Controllers
 {
@@ -17,11 +12,16 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<ReabastecimientoController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public ReabastecimientoController(ApplicationDbContext context, ILogger<ReabastecimientoController> logger)
+        public ReabastecimientoController(
+            ApplicationDbContext context,
+            ILogger<ReabastecimientoController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
         [HttpGet]
@@ -29,9 +29,14 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var ordenes = await _context.OrdenesReabastecimiento
                     .Include(x => x.Producto)
                     .Include(x => x.Almacen)
+                    .Where(x => x.EmpresaId == empresaId)
                     .OrderByDescending(x => x.Fecha)
                     .ToListAsync();
 
@@ -49,10 +54,15 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var ordenes = await _context.OrdenesReabastecimiento
                     .Include(x => x.Producto)
                     .Include(x => x.Almacen)
-                    .Where(x => x.Estado == "Pendiente" || x.Estado == "Solicitada" || x.Estado == "EnProceso")
+                    .Where(x => x.EmpresaId == empresaId &&
+                                (x.Estado == "Pendiente" || x.Estado == "Solicitada" || x.Estado == "EnProceso"))
                     .OrderByDescending(x => x.Fecha)
                     .ToListAsync();
 
@@ -60,7 +70,7 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener ordenes pendientes de reabastecimiento");
+                _logger.LogError(ex, "Error al obtener ordenes pendientes");
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -70,10 +80,14 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var inventarioEnAlerta = await _context.InventarioPorAlmacen
                     .Include(x => x.Producto)
                     .Include(x => x.Almacen)
-                    .Where(x => x.Stock <= x.StockMinimo)
+                    .Where(x => x.EmpresaId == empresaId && x.Stock <= x.StockMinimo)
                     .ToListAsync();
 
                 var creadas = 0;
@@ -81,6 +95,7 @@ namespace Crit.Controllers
                 foreach (var item in inventarioEnAlerta)
                 {
                     var yaExiste = await _context.OrdenesReabastecimiento.AnyAsync(x =>
+                        x.EmpresaId == empresaId &&
                         x.ProductoId == item.ProductoId &&
                         x.AlmacenId == item.AlmacenId &&
                         (x.Estado == "Pendiente" || x.Estado == "Solicitada" || x.Estado == "EnProceso"));
@@ -90,13 +105,11 @@ namespace Crit.Controllers
 
                     var sugerida = item.StockMinimo > item.Stock
                         ? item.StockMinimo - item.Stock
-                        : 0;
-
-                    if (sugerida <= 0)
-                        sugerida = 1;
+                        : 1;
 
                     var orden = new OrdenReabastecimiento
                     {
+                        EmpresaId = empresaId,
                         Fecha = DateTime.Now,
                         ProductoId = item.ProductoId,
                         AlmacenId = item.AlmacenId,
@@ -114,11 +127,7 @@ namespace Crit.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new
-                {
-                    message = "Alertas generadas correctamente",
-                    total = creadas
-                });
+                return Ok(new { message = "Alertas generadas correctamente", total = creadas });
             }
             catch (Exception ex)
             {
@@ -132,20 +141,25 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
                 if (orden.CantidadSugerida <= 0)
                     return BadRequest("La cantidad sugerida debe ser mayor a cero");
 
-                var productoExiste = await _context.Productos.AnyAsync(x => x.Id == orden.ProductoId);
+                var productoExiste = await _context.Productos.AnyAsync(x => x.Id == orden.ProductoId && x.EmpresaId == empresaId);
                 if (!productoExiste)
                     return BadRequest("El producto no existe");
 
-                var almacenExiste = await _context.Almacenes.AnyAsync(x => x.Id == orden.AlmacenId && x.Activo);
+                var almacenExiste = await _context.Almacenes.AnyAsync(x => x.Id == orden.AlmacenId && x.EmpresaId == empresaId && x.Activo);
                 if (!almacenExiste)
                     return BadRequest("El almacen no existe o esta inactivo");
 
+                orden.EmpresaId = empresaId;
                 orden.Fecha = DateTime.Now;
 
                 if (string.IsNullOrWhiteSpace(orden.Estado))
@@ -157,7 +171,7 @@ namespace Crit.Controllers
                 var creada = await _context.OrdenesReabastecimiento
                     .Include(x => x.Producto)
                     .Include(x => x.Almacen)
-                    .FirstOrDefaultAsync(x => x.Id == orden.Id);
+                    .FirstOrDefaultAsync(x => x.Id == orden.Id && x.EmpresaId == empresaId);
 
                 return CreatedAtAction(nameof(GetOrdenes), new { id = orden.Id }, creada);
             }
@@ -173,7 +187,13 @@ namespace Crit.Controllers
         {
             try
             {
-                var orden = await _context.OrdenesReabastecimiento.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var orden = await _context.OrdenesReabastecimiento
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
                 if (orden == null)
                     return NotFound("Orden no encontrada");
 
@@ -187,7 +207,7 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al solicitar orden de reabastecimiento {Id}", id);
+                _logger.LogError(ex, "Error al solicitar orden {Id}", id);
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -197,7 +217,13 @@ namespace Crit.Controllers
         {
             try
             {
-                var orden = await _context.OrdenesReabastecimiento.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var orden = await _context.OrdenesReabastecimiento
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
                 if (orden == null)
                     return NotFound("Orden no encontrada");
 
@@ -211,7 +237,7 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al completar orden de reabastecimiento {Id}", id);
+                _logger.LogError(ex, "Error al completar orden {Id}", id);
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -221,7 +247,13 @@ namespace Crit.Controllers
         {
             try
             {
-                var orden = await _context.OrdenesReabastecimiento.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var orden = await _context.OrdenesReabastecimiento
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
                 if (orden == null)
                     return NotFound("Orden no encontrada");
 
@@ -235,155 +267,29 @@ namespace Crit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cancelar orden de reabastecimiento {Id}", id);
+                _logger.LogError(ex, "Error al cancelar orden {Id}", id);
                 return StatusCode(500, "Error interno del servidor");
             }
         }
-        [HttpPost("{id}/crear-compra")]
-        public async Task<IActionResult> CrearCompraDesdeOrden(int id, [FromBody] CrearCompraDesdeReabastecimientoDto dto)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            try
-            {
-                var orden = await _context.OrdenesReabastecimiento
-                    .Include(x => x.Producto)
-                    .FirstOrDefaultAsync(x => x.Id == id);
-
-                if (orden == null)
-                    return NotFound("Orden no encontrada");
-
-                if (orden.Estado == "Completada" || orden.Estado == "Cancelada")
-                    return BadRequest("La orden ya no puede procesarse");
-
-                if (dto.Cantidad <= 0)
-                    return BadRequest("La cantidad debe ser mayor a cero");
-
-                var proveedor = await _context.Proveedores.FindAsync(dto.ProveedorId);
-                if (proveedor == null)
-                    return BadRequest("Proveedor no encontrado");
-
-                var compra = new Compra
-                {
-                    Fecha = DateTime.Now,
-                    ProveedorId = dto.ProveedorId,
-                    AlmacenId = dto.AlmacenId,
-                    SerieFactura = dto.SerieFactura,
-                    FolioFactura = dto.FolioFactura,
-                    RFCProveedor = string.IsNullOrWhiteSpace(dto.RFCProveedor) ? proveedor.RFC : dto.RFCProveedor,
-                    FechaFactura = dto.FechaFactura,
-                    EsCredito = dto.EsCredito,
-                    DiasCredito = dto.DiasCredito,
-                    Detalles = new List<DetalleCompra>
-            {
-                new DetalleCompra
-                {
-                    ProductoId = orden.ProductoId,
-                    Cantidad = (int)dto.Cantidad,
-                    PrecioUnitario = dto.PrecioUnitario,
-                    Subtotal = dto.Cantidad * dto.PrecioUnitario
-                }
-            }
-                };
-
-                _context.Compra.Add(compra);
-                await _context.SaveChangesAsync();
-
-                orden.Estado = "Solicitada";
-                orden.TipoSugerido = "Compra";
-                orden.CompraId = compra.Id;
-                orden.Observaciones = $"Orden vinculada a compra #{compra.Id}";
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return Ok(new
-                {
-                    message = "Compra creada desde orden de reabastecimiento",
-                    compraId = compra.Id
-                });
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error al crear compra desde orden {Id}", id);
-                return StatusCode(500, "Error interno del servidor");
-            }
-        }
-        [HttpPost("{id}/crear-traspaso")]
-        public async Task<IActionResult> CrearTraspasoDesdeOrden(int id, [FromBody] CrearTraspasoDesdeReabastecimientoDto dto)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
-            try
-            {
-                var orden = await _context.OrdenesReabastecimiento
-                    .Include(x => x.Producto)
-                    .FirstOrDefaultAsync(x => x.Id == id);
-
-                if (orden == null)
-                    return NotFound("Orden no encontrada");
-
-                if (orden.Estado == "Completada" || orden.Estado == "Cancelada")
-                    return BadRequest("La orden ya no puede procesarse");
-
-                if (dto.Cantidad <= 0)
-                    return BadRequest("La cantidad debe ser mayor a cero");
-
-                if (dto.AlmacenOrigenId == dto.AlmacenDestinoId)
-                    return BadRequest("El almacén origen y destino no pueden ser el mismo");
-
-                var inventarioOrigen = await _context.InventarioPorAlmacen
-                    .FirstOrDefaultAsync(x => x.ProductoId == dto.ProductoId && x.AlmacenId == dto.AlmacenOrigenId);
-
-                if (inventarioOrigen == null || inventarioOrigen.Stock < dto.Cantidad)
-                    return BadRequest("No hay stock suficiente en el almacén origen");
-
-                var traspaso = new TraspasoAlmacen
-                {
-                    Fecha = DateTime.Now,
-                    AlmacenOrigenId = dto.AlmacenOrigenId,
-                    AlmacenDestinoId = dto.AlmacenDestinoId,
-                    ProductoId = dto.ProductoId,
-                    Cantidad = dto.Cantidad,
-                    Estado = "Completado",
-                    Observaciones = dto.Observaciones
-                };
-
-                _context.TraspasosAlmacen.Add(traspaso);
-                await _context.SaveChangesAsync();
-
-                orden.Estado = "Solicitada";
-                orden.TipoSugerido = "Traspaso";
-                orden.TraspasoAlmacenId = traspaso.Id;
-                orden.Observaciones = $"Orden vinculada a traspaso #{traspaso.Id}";
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return Ok(new
-                {
-                    message = "Traspaso creado desde orden de reabastecimiento",
-                    traspasoId = traspaso.Id
-                });
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error al crear traspaso desde orden {Id}", id);
-                return StatusCode(500, "Error interno del servidor");
-            }
-        }
         [HttpPost("{id}/vincular-compra/{compraId}")]
         public async Task<IActionResult> VincularCompra(int id, int compraId)
         {
             try
             {
-                var orden = await _context.OrdenesReabastecimiento.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var orden = await _context.OrdenesReabastecimiento
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
                 if (orden == null)
                     return NotFound("Orden no encontrada");
 
-                var compra = await _context.Compra.FindAsync(compraId);
+                var compra = await _context.Compra
+                    .FirstOrDefaultAsync(x => x.Id == compraId && x.EmpresaId == empresaId);
+
                 if (compra == null)
                     return BadRequest("Compra no encontrada");
 
@@ -403,17 +309,24 @@ namespace Crit.Controllers
             }
         }
 
-
         [HttpPost("{id}/vincular-traspaso/{traspasoId}")]
         public async Task<IActionResult> VincularTraspaso(int id, int traspasoId)
         {
             try
             {
-                var orden = await _context.OrdenesReabastecimiento.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var orden = await _context.OrdenesReabastecimiento
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
                 if (orden == null)
                     return NotFound("Orden no encontrada");
 
-                var traspaso = await _context.TraspasosAlmacen.FindAsync(traspasoId);
+                var traspaso = await _context.TraspasosAlmacen
+                    .FirstOrDefaultAsync(x => x.Id == traspasoId && x.EmpresaId == empresaId);
+
                 if (traspaso == null)
                     return BadRequest("Traspaso no encontrado");
 
@@ -432,16 +345,25 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
         [HttpPost("{id}/completar-desde-compra/{compraId}")]
         public async Task<IActionResult> CompletarDesdeCompra(int id, int compraId)
         {
             try
             {
-                var orden = await _context.OrdenesReabastecimiento.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var orden = await _context.OrdenesReabastecimiento
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
                 if (orden == null)
                     return NotFound("Orden no encontrada");
 
-                var compra = await _context.Compra.FindAsync(compraId);
+                var compra = await _context.Compra
+                    .FirstOrDefaultAsync(x => x.Id == compraId && x.EmpresaId == empresaId);
+
                 if (compra == null)
                     return BadRequest("Compra no encontrada");
 
@@ -466,11 +388,19 @@ namespace Crit.Controllers
         {
             try
             {
-                var orden = await _context.OrdenesReabastecimiento.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var orden = await _context.OrdenesReabastecimiento
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
                 if (orden == null)
                     return NotFound("Orden no encontrada");
 
-                var traspaso = await _context.TraspasosAlmacen.FindAsync(traspasoId);
+                var traspaso = await _context.TraspasosAlmacen
+                    .FirstOrDefaultAsync(x => x.Id == traspasoId && x.EmpresaId == empresaId);
+
                 if (traspaso == null)
                     return BadRequest("Traspaso no encontrado");
 
@@ -489,9 +419,5 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
-
-
-
-
     }
 }

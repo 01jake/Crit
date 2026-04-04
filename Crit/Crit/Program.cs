@@ -45,6 +45,8 @@ builder.Services.AddScoped<InventarioAlmacenHttpService>();
 builder.Services.AddScoped<CajaHttpService>();
 builder.Services.AddScoped<GastoHttpService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<UsuariosHttpService>();
+
 builder.Services.AddScoped<IEmpresaProvider, EmpresaProvider>();
 builder.Services.AddScoped<SesionHttpService>();
 builder.Services.AddScoped<AlmacenHttpService>();
@@ -312,6 +314,8 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
+await SeedData.Initialize(app.Services);
+
 
 app.Run();
 
@@ -320,11 +324,17 @@ public static class SeedData
 {
     public static async Task Initialize(IServiceProvider serviceProvider)
     {
-        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        using var scope = serviceProvider.CreateScope();
+
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        //await context.Database.MigrateAsync();
 
         // Crear roles
-        string[] roleNames = { "Administrador", "Empleado", "Usuario" };
+        string[] roleNames = { "Admin", "Supervisor", "Usuario" };
+
         foreach (var roleName in roleNames)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
@@ -333,39 +343,136 @@ public static class SeedData
             }
         }
 
+        // Crear empresa principal
+        var empresaPrincipal = await context.Empresas
+            .FirstOrDefaultAsync(x => x.Nombre == "Empresa Principal");
+
+        if (empresaPrincipal == null)
+        {
+            empresaPrincipal = new Empresa
+            {
+                Nombre = "Empresa Principal",
+                RFC = "XAXX010101000",
+                Activa = true,
+                FechaRegistro = DateTime.Now
+            };
+
+            context.Empresas.Add(empresaPrincipal);
+            await context.SaveChangesAsync();
+        }
+
         // Crear usuario admin
         var adminEmail = "admin@crit.com";
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
         if (adminUser == null)
         {
             adminUser = new ApplicationUser
             {
                 UserName = adminEmail,
                 Email = adminEmail,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                NombreCompleto = "Administrador General",
+                EmpresaId = empresaPrincipal.Id
             };
+
             var result = await userManager.CreateAsync(adminUser, "Admin123!");
+
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(adminUser, "Administrador");
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+        }
+        else if (adminUser.EmpresaId == null)
+        {
+            adminUser.EmpresaId = empresaPrincipal.Id;
+            await userManager.UpdateAsync(adminUser);
+
+            if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+            {
+                await RemoveLegacyRoles(userManager, adminUser);
+                await userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
 
-        // Crear usuario empleado
-        var empleadoEmail = "empleado@crit.com";
-        var empleadoUser = await userManager.FindByEmailAsync(empleadoEmail);
-        if (empleadoUser == null)
+        // Crear usuario supervisor
+        var supervisorEmail = "supervisor@crit.com";
+        var supervisorUser = await userManager.FindByEmailAsync(supervisorEmail);
+
+        if (supervisorUser == null)
         {
-            empleadoUser = new ApplicationUser
+            supervisorUser = new ApplicationUser
             {
-                UserName = empleadoEmail,
-                Email = empleadoEmail,
-                EmailConfirmed = true
+                UserName = supervisorEmail,
+                Email = supervisorEmail,
+                EmailConfirmed = true,
+                NombreCompleto = "Supervisor General",
+                EmpresaId = empresaPrincipal.Id
             };
-            var result = await userManager.CreateAsync(empleadoUser, "Empleado123!");
+
+            var result = await userManager.CreateAsync(supervisorUser, "Supervisor123!");
+
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(empleadoUser, "Empleado");
+                await userManager.AddToRoleAsync(supervisorUser, "Supervisor");
+            }
+        }
+        else if (supervisorUser.EmpresaId == null)
+        {
+            supervisorUser.EmpresaId = empresaPrincipal.Id;
+            await userManager.UpdateAsync(supervisorUser);
+
+            if (!await userManager.IsInRoleAsync(supervisorUser, "Supervisor"))
+            {
+                await RemoveLegacyRoles(userManager, supervisorUser);
+                await userManager.AddToRoleAsync(supervisorUser, "Supervisor");
+            }
+        }
+
+        // Crear usuario operativo
+        var usuarioEmail = "usuario@crit.com";
+        var usuario = await userManager.FindByEmailAsync(usuarioEmail);
+
+        if (usuario == null)
+        {
+            usuario = new ApplicationUser
+            {
+                UserName = usuarioEmail,
+                Email = usuarioEmail,
+                EmailConfirmed = true,
+                NombreCompleto = "Usuario Operativo",
+                EmpresaId = empresaPrincipal.Id
+            };
+
+            var result = await userManager.CreateAsync(usuario, "Usuario123!");
+
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(usuario, "Usuario");
+            }
+        }
+        else if (usuario.EmpresaId == null)
+        {
+            usuario.EmpresaId = empresaPrincipal.Id;
+            await userManager.UpdateAsync(usuario);
+
+            if (!await userManager.IsInRoleAsync(usuario, "Usuario"))
+            {
+                await RemoveLegacyRoles(userManager, usuario);
+                await userManager.AddToRoleAsync(usuario, "Usuario");
+            }
+        }
+    }
+
+    private static async Task RemoveLegacyRoles(UserManager<ApplicationUser> userManager, ApplicationUser user)
+    {
+        var legacyRoles = new[] { "Administrador", "Empleado" };
+
+        foreach (var role in legacyRoles)
+        {
+            if (await userManager.IsInRoleAsync(user, role))
+            {
+                await userManager.RemoveFromRoleAsync(user, role);
             }
         }
     }

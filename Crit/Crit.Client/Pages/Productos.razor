@@ -19,8 +19,8 @@
             <p class="text-muted small">Control de existencias, precios y categorías</p>
         </div>
 
-        <button class="btn btn-primary shadow-sm px-4" @onclick="MostrarModalNuevo">
-            <i class="bi bi-plus-lg me-2"></i> Nuevo Producto
+        <button class="btn saas-btn-primary shadow-sm px-4" @onclick="MostrarModalNuevo">
+            <i class="bi bi-box-seam-fill me-2"></i> Nuevo Producto
         </button>
     </div>
 
@@ -153,99 +153,106 @@
 
 @if (mostrarModal)
 {
-    <div class="modal-backdrop fade show"></div>
-    <div class="modal fade show d-block" tabindex="-1">
+     <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block saas-modal-backdrop" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-primary text-white border-0">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi @(productoActual.Id == 0 ? "bi-box-seam" : "bi-pencil-square") me-2"></i>
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-1">
+                            <i class="bi @(productoActual.Id == 0 ? "bi-box-seam" : "bi-pencil-square") me-2"></i>
                         @(productoActual.Id == 0 ? "Nuevo Producto" : "Editar Producto")
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                   </div>
+                    <button type="button" class="btn-close shadow-none " @onclick="CerrarModal"></button>
                 </div>
 
-                <div class="modal-body p-4">
+                <div class="modal-body px-4 py-4">
                     <EditForm Model="productoActual" OnValidSubmit="GuardarProducto">
                         <DataAnnotationsValidator />
-
-                        <div class="row g-3">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold small">Código de Barras/SKU *</label>
-                                <InputText class="form-control custom-input" @bind-Value="productoActual.Codigo" />
+                         <div class="p-3 mb-4 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <h6 class="fw-bold mb-3" style="color: #334155;"><i class="bi bi-box-seam-fill me-2"></i>Información del Producto</h6>
+                          <div class="row g-3">
+                                <div class="col-md-4 mb-3">
+                                    <label class="saas-label">Código de Barras/SKU *</label>
+                                    <InputText class="form-control saas-input" @bind-Value="productoActual.Codigo" />
                                 <ValidationMessage For="@(() => productoActual.Codigo)" class="text-danger small" />
                             </div>
-
-                            <div class="col-md-8 mb-3">
-                                <label class="form-label fw-bold small">Nombre del Producto *</label>
-                                <InputText class="form-control custom-input" @bind-Value="productoActual.Nombre" />
+                                <div class="col-md-4 mb-3">
+                                    <label class="saas-label">Nombre del Producto *</label>
+                                    <InputText class="form-control saas-input" @bind-Value="productoActual.Nombre" />
                                 <ValidationMessage For="@(() => productoActual.Nombre)" class="text-danger small" />
                             </div>
-
                             <div class="col-12 mb-3">
-                                <label class="form-label fw-bold small">Descripción Detallada</label>
-                                <InputTextArea class="form-control custom-input" @bind-Value="productoActual.Descripcion" rows="2" />
-                            </div>
+                                    <label class="saas-label">Descripción Detallada</label>
+                                    <InputTextArea class="form-control saas-input" @bind-Value="productoActual.Descripcion" rows="2" />
 
-                            <div class="col-md-6">
-                                <div class="p-3 bg-light rounded shadow-sm h-100">
-                                    <h6 class="section-title"><i class="bi bi-tags me-2"></i>Clasificación</h6>
-                                    <div class="mb-3">
-                                        <label class="form-label small">Categoría</label>
-                                        <InputText class="form-control custom-input bg-white" @bind-Value="productoActual.Categoria" />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label small">Unidad de Medida</label>
-                                        <InputText class="form-control custom-input bg-white" @bind-Value="productoActual.Unidad" placeholder="Pieza, Kg, Litro..." />
-                                    </div>
-                                </div>
                             </div>
-
-                            <div class="col-md-6">
-                                <div class="p-3 bg-light rounded shadow-sm h-100">
-                                    <h6 class="section-title"><i class="bi bi-currency-dollar me-2"></i>Precios e Inventario</h6>
-                                    <div class="row g-2">
-                                        <div class="col-6 mb-2">
-                                            <label class="form-label small">Costo Compra</label>
-                                            <InputNumber class="form-control custom-input bg-white" @bind-Value="productoActual.PrecioCompra" />
-                                        </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="form-label small">Precio Venta</label>
-                                            <InputNumber class="form-control custom-input bg-white" @bind-Value="productoActual.PrecioVenta" />
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="form-label small">Stock Actual</label>
-                                            <InputNumber class="form-control custom-input bg-white fw-bold" @bind-Value="productoActual.Stock" />
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="form-label small">Stock Mínimo</label>
-                                            <InputNumber class="form-control custom-input bg-white" @bind-Value="productoActual.StockMinimo" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-12 mt-3">
-                                <div class="form-check form-switch p-3 bg-light rounded ps-5">
-                                    <InputCheckbox class="form-check-input ms-0" @bind-Value="productoActual.Activo" id="chkProductoActivo" />
-                                    <label class="form-check-label ms-2 fw-bold" for="chkProductoActivo">Producto disponible para la venta</label>
-                                </div>
-                            </div>
+                         </div>
                         </div>
 
+
+                         <div class="p-3 mb-4 rounded-3" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                            <h6 class="section-title"><i class="bi bi-tags me-2"></i>Clasificación</h6>
+                                            <div class="mb-3">
+                                        <label class="saas-label">Categoría</label>
+                                        <InputText class="form-control saas-input" @bind-Value="productoActual.Categoria" />
+                                            </div>
+                                            <div class="mb-3">
+                                        <label class="saas-label">Unidad de Medida</label>
+                                        <InputText class="form-control saas-input" @bind-Value="productoActual.Unidad" placeholder="Pieza, Kg, Litro..." />
+                                            </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                            <h6 class="section-title"><i class="bi bi-currency-dollar me-2"></i>Precios e Inventario</h6>
+                                            <div class="row g-2">
+                                                <div class="col-6 mb-2">
+                                            <label class="saas-label">Costo Compra</label>
+                                            <InputNumber class="form-control saas-input" @bind-Value="productoActual.PrecioCompra" />
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                            <label class="saas-label">Precio Venta</label>
+                                            <InputNumber class="form-control saas-input" @bind-Value="productoActual.PrecioVenta" />
+                                                </div>
+                                                <div class="col-6">
+                                            <label class="saas-label">Stock Actual</label>
+                                            <InputNumber class="form-control saas-input" @bind-Value="productoActual.Stock" />
+                                                </div>
+                                                <div class="col-6">
+                                            <label class="saas-label">Stock Mínimo</label>
+                                            <InputNumber class="form-control saas-input" @bind-Value="productoActual.StockMinimo" />
+                                                </div>
+                                            </div>
+                                    </div>
+                                </div>
+                        </div>
+                        <div class="d-flex align-items-center p-3 rounded-3 mb-3" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+                            <div class="form-check form-switch m-0 d-flex align-items-center p-0">
+                                <InputCheckbox class="form-check-input saas-switch m-0" @bind-Value="productoActual.Activo" id="chkProductoActivo" style="width: 2.5em; height: 1.25em; cursor: pointer;" />
+                                <label class="form-check-label ms-3 fw-bold text-dark" for="chkProductoActivo" style="cursor: pointer;">
+                                    Producto disponible para la venta
+                                </label>
+                            </div>
+                        </div>
                         @if (!string.IsNullOrEmpty(mensajeError))
                         {
-                            <div class="alert alert-danger-custom mt-3">@mensajeError</div>
+                            <div class="alert saas-alert-error py-2 small shadow-sm">
+                                <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
+                            </div>
                         }
 
-                        <div class="modal-footer border-0 px-0 pb-0 mt-4">
-                            <button type="button" class="btn btn-light-hover px-4" @onclick="CerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary px-5 shadow" disabled="@guardando">
+                        <div class="row g-3">
+                            <button type="button" class="btn btn-light text-muted fw-semibold shadow-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn saas-btn-primary px-4 shadow-sm" disabled="@guardando">
                                 @if (guardando)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Guardando...</span>
                                 }
-                                <i class="bi bi-check-lg me-1"></i> Guardar Producto
+                                <i class="bi bi-save me-2"></i> Guardar Producto
                             </button>
                         </div>
                     </EditForm>

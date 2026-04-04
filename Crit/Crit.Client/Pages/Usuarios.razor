@@ -1,0 +1,498 @@
+﻿@page "/usuarios"
+@using System.ComponentModel.DataAnnotations
+@using Crit.Client.Services
+@using Crit.Shared.Models
+@inject UsuariosHttpService UsuariosHttpService
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Usuarios - Polynex</PageTitle>
+
+<div class="container-fluid py-4 saas-page-container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #1e293b;">Gestión de Usuarios</h2>
+            <p class="text-muted mb-0" style="font-size: 0.95rem;">Administra los accesos y roles del equipo de trabajo.</p>
+        </div>
+        <button class="btn saas-btn-primary px-4 shadow-sm" @onclick="AbrirModalCrear">
+            <i class="bi bi-plus-lg me-2"></i>Nuevo Usuario
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="alert @(esError ? "saas-alert-error" : "saas-alert-success") shadow-sm mb-4" role="alert">
+            <i class="bi @(esError ? "bi-exclamation-triangle" : "bi-check-circle") me-2"></i> @mensaje
+        </div>
+    }
+
+    <div class="card saas-card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 saas-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">NOMBRE Y CORREO</th>
+                            <th>ROL</th>
+                            <th>ESTADO</th>
+                            <th class="text-end pe-4">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (cargando)
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                    Cargando directorio...
+                                </td>
+                            </tr>
+                        }
+                        else if (!usuarios.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="bi bi-people fs-2 d-block mb-2 text-black-50"></i>
+                                    No hay usuarios registrados en el sistema.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var usuario in usuarios)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-circle bg-light text-secondary fw-bold rounded-circle d-flex align-items-center justify-content-center border" style="width: 40px; height: 40px;">
+                                                @(ObtenerIniciales(usuario.NombreCompleto))
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">@usuario.NombreCompleto</div>
+                                                <div class="text-muted small">@usuario.Email</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge saas-badge-role">@usuario.Rol</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(usuario.Activo ? "saas-badge-success" : "saas-badge-danger")">
+                                            <i class="bi @(usuario.Activo ? "bi-check-circle-fill" : "bi-x-circle-fill") me-1"></i>
+                                            @(usuario.Activo ? "Activo" : "Inactivo")
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-inline-flex gap-2 align-items-center">
+                                            <select class="form-select form-select-sm saas-select-sm shadow-none" style="width: 130px;"
+                                                    value="@usuario.Rol"
+                                                    @onchange="async e => await CambiarRol(usuario, e.Value?.ToString())">
+                                                <option value="Admin">Admin</option>
+                                                <option value="Supervisor">Supervisor</option>
+                                                <option value="Usuario">Usuario</option>
+                                            </select>
+
+                                            @if (usuario.Activo)
+                                            {
+                                                <button class="btn btn-sm saas-btn-outline-danger" title="Desactivar" @onclick="() => Desactivar(usuario)">
+                                                    <i class="bi bi-power"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm saas-btn-outline-success" title="Activar" @onclick="() => Activar(usuario)">
+                                                    <i class="bi bi-power"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (mostrarModalCrear)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block saas-modal-backdrop" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-1">
+                            <i class=" bi-person-plus"></i>
+                            Registrar Nuevo Usuario
+                            </h5>
+                        <p class="text-muted small mb-0">Ingresa los datos para dar acceso al sistema.</p>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" @onclick="CerrarModalCrear"></button>
+                </div>
+                <div class="modal-body px-4 py-4">
+
+                <EditForm Model="nuevoUsuario" OnValidSubmit="GuardarUsuario" FormName="crear-usuario">
+                    <DataAnnotationsValidator />
+                    <div class="p-3 mb-4 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="saas-label">NOMBRE COMPLETO</label>
+                                <InputText class="form-control saas-input" @bind-Value="nuevoUsuario.NombreCompleto" placeholder="Ej. Juan Pérez" />
+                                <ValidationMessage For="() => nuevoUsuario.NombreCompleto" class="saas-validation-message" />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="saas-label">CORREO ELECTRÓNICO</label>
+                                <InputText class="form-control saas-input" @bind-Value="nuevoUsuario.Email" placeholder="correo@empresa.com" />
+                                <ValidationMessage For="() => nuevoUsuario.Email" class="saas-validation-message" />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="saas-label">CONTRASEÑA</label>
+                                <InputText type="password" class="form-control saas-input" @bind-Value="nuevoUsuario.Password" placeholder="••••••••" />
+                                <ValidationMessage For="() => nuevoUsuario.Password" class="saas-validation-message" />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="saas-label">ROL DE ACCESO</label>
+                                <InputSelect class="form-select saas-input" @bind-Value="nuevoUsuario.Rol">
+                                    <option value="Usuario">Usuario (Acceso Básico)</option>
+                                    <option value="Supervisor">Supervisor (Control Operativo)</option>
+                                    <option value="Admin">Administrador (Acceso Total)</option>
+                                </InputSelect>
+                                <ValidationMessage For="() => nuevoUsuario.Rol" class="saas-validation-message" />
+                            </div>
+                        </div>
+                    </div>
+                        <div class="row g-3">
+                        <button type="button" class="btn btn-light text-muted fw-semibold shadow-sm px-4" @onclick="CerrarModalCrear">Cancelar</button>
+                        <button type="submit" class="btn saas-btn-primary px-4 shadow-sm" disabled="@guardando">
+                            @if (guardando)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Procesando...</span>
+                            }
+                            else
+                            {
+                                <span><i class="bi bi-check-lg me-2"></i>Crear Cuenta</span>
+                            }
+                        </button>
+                    </div>
+                 </EditForm>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+                                <style>
+    /* ---- Entorno Administrativo (Tablas y Badges) ---- */
+    .saas-page-container {
+        min-height: 100vh;
+    }
+
+    .saas-table thead {
+        background-color: #f1f5f9;
+    }
+
+    .saas-table th {
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border-bottom: 2px solid #e2e8f0;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .saas-table td {
+        border-bottom: 1px solid #f1f5f9;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        vertical-align: middle;
+    }
+
+    /* Badges de Roles y Estados */
+    .saas-badge-role {
+        background-color: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        font-weight: 600;
+        padding: 0.4em 0.8em;
+        border-radius: 6px;
+    }
+
+    .saas-badge-success {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: #15803d;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        font-weight: 600;
+        padding: 0.4em 0.8em;
+        border-radius: 6px;
+    }
+
+    .saas-badge-danger {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        font-weight: 600;
+        padding: 0.4em 0.8em;
+        border-radius: 6px;
+    }
+
+    /* Botones de acción en tabla */
+    .saas-select-sm {
+        border-color: #cbd5e1;
+        color: #334155;
+        border-radius: 6px;
+        font-size: 0.85rem;
+    }
+
+    .saas-btn-outline-danger {
+        color: #ef4444;
+        border: 1px solid #ef4444;
+        background: transparent;
+        transition: all 0.2s;
+    }
+
+        .saas-btn-outline-danger:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+    .saas-btn-outline-success {
+        color: #22c59e;
+        border: 1px solid #22c59e;
+        background: transparent;
+        transition: all 0.2s;
+    }
+
+        .saas-btn-outline-success:hover {
+            background: #22c59e;
+            color: white;
+        }
+
+    /* ---- Estilos para Formularios y Modales ---- */
+   /*  .saas-modal-backdrop {
+        background-color: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(2px);
+    } */
+
+    .saas-input {
+        background-color: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 0.65rem 1rem;
+        font-size: 0.95rem;
+        box-shadow: none !important;
+        transition: all 0.2s;
+    }
+/* 
+        .saas-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        } */
+
+    /* Alertas de Éxito / Error adaptadas al diseño */
+    .saas-alert-success {
+        background-color: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+    }
+
+    .saas-validation-message {
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+                    </style>
+
+@code {
+    private List<UsuarioEmpresaDto> usuarios = new();
+    private CrearUsuarioFormModel nuevoUsuario = new();
+    private bool cargando = true;
+    private bool guardando;
+    private bool mostrarModalCrear;
+    private string? mensaje;
+    private bool esError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarUsuarios();
+    }
+
+    private async Task CargarUsuarios()
+    {
+        try
+        {
+            cargando = true;
+            usuarios = await UsuariosHttpService.GetUsuariosAsync();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al cargar usuarios: {ex.Message}";
+            esError = true;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void AbrirModalCrear()
+    {
+        nuevoUsuario = new CrearUsuarioFormModel
+        {
+            Rol = "Usuario"
+        };
+        mostrarModalCrear = true;
+        mensaje = null;
+    }
+
+    private void CerrarModalCrear()
+    {
+        mostrarModalCrear = false;
+    }
+
+    private async Task GuardarUsuario()
+    {
+        try
+        {
+            guardando = true;
+            mensaje = null;
+
+            await UsuariosHttpService.CrearUsuarioAsync(new CrearUsuarioDto
+            {
+                NombreCompleto = nuevoUsuario.NombreCompleto,
+                Email = nuevoUsuario.Email,
+                Password = nuevoUsuario.Password,
+                Rol = nuevoUsuario.Rol
+            });
+
+            mostrarModalCrear = false;
+            mensaje = "Usuario creado correctamente.";
+            esError = false;
+
+            await CargarUsuarios();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al crear usuario: {ex.Message}";
+            esError = true;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private async Task CambiarRol(UsuarioEmpresaDto usuario, string? rol)
+    {
+        if (string.IsNullOrWhiteSpace(rol) || rol == usuario.Rol)
+            return;
+
+        try
+        {
+            await UsuariosHttpService.CambiarRolAsync(usuario.Id, new CambiarRolUsuarioDto
+            {
+                Rol = rol
+            });
+
+            mensaje = "Rol actualizado correctamente.";
+            esError = false;
+
+            await CargarUsuarios();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al cambiar rol: {ex.Message}";
+            esError = true;
+        }
+    }
+
+    private async Task Desactivar(UsuarioEmpresaDto usuario)
+    {
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"¿Desactivar a {usuario.NombreCompleto}?");
+        if (!confirmado)
+            return;
+
+        try
+        {
+            await UsuariosHttpService.DesactivarUsuarioAsync(usuario.Id);
+            mensaje = "Usuario desactivado correctamente.";
+            esError = false;
+
+            await CargarUsuarios();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al desactivar usuario: {ex.Message}";
+            esError = true;
+        }
+    }
+
+    private async Task Activar(UsuarioEmpresaDto usuario)
+    {
+        try
+        {
+            await UsuariosHttpService.ActivarUsuarioAsync(usuario.Id);
+            mensaje = "Usuario activado correctamente.";
+            esError = false;
+
+            await CargarUsuarios();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al activar usuario: {ex.Message}";
+            esError = true;
+        }
+    }
+    private static string ObtenerIniciales(string? nombreCompleto)
+    {
+        if (string.IsNullOrWhiteSpace(nombreCompleto))
+            return "--";
+
+        var partes = nombreCompleto
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (partes.Length == 0)
+            return "--";
+
+        if (partes.Length == 1)
+            return partes[0].Length >= 2
+                ? partes[0].Substring(0, 2).ToUpper()
+                : partes[0].ToUpper();
+
+        var primera = partes[0].Length > 0 ? partes[0][0].ToString() : "";
+        var segunda = partes[1].Length > 0 ? partes[1][0].ToString() : "";
+
+        var iniciales = (primera + segunda).ToUpper();
+
+        return string.IsNullOrWhiteSpace(iniciales) ? "--" : iniciales;
+    }
+
+
+    private sealed class CrearUsuarioFormModel
+    {
+        [Required(ErrorMessage = "El nombre completo es obligatorio.")]
+        public string NombreCompleto { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El correo es obligatorio.")]
+        [EmailAddress(ErrorMessage = "Correo inválido.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La contraseña es obligatoria.")]
+        [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres.")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El rol es obligatorio.")]
+        public string Rol { get; set; } = "Usuario";
+    }
+}

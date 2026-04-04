@@ -1,105 +1,93 @@
-/* Estructura Principal */
-.login-split-container[b-vav0nz9db3] {
+/* Contenedor Principal (Login y Register) */
+.saas-auth-container[b-vav0nz9db3] {
     display: flex;
     min-height: 100vh;
-    width: 100%;
+    background-color: #ffffff;
 }
 
-/* Panel Azul (Izquierda) */
-.brand-panel[b-vav0nz9db3] {
+/* Panel Izquierdo Branding */
+.saas-brand-panel[b-vav0nz9db3] {
     flex: 1;
     background: linear-gradient(135deg, #3c3c3c 0%, #111827 100%);
-    display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
+    padding: 3rem;
 }
 
-.logo-circle[b-vav0nz9db3] {
-    width: 100px;
-    height: 100px;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(5px);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    border: 2px solid rgba(255,255,255,0.2);
-}
-
-/* Panel Formulario (Derecha) */
-.form-panel[b-vav0nz9db3] {
+/* Panel Derecho Formulario */
+.saas-form-panel[b-vav0nz9db3] {
     flex: 1;
-    background-color: #fcfcfc;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: 2rem;
+    background-color: #ffffff;
 }
 
 .form-wrapper[b-vav0nz9db3] {
-    max-width: 400px;
     width: 100%;
+    max-width: 450px;
 }
 
-/* Controles Personalizados */
-.custom-control[b-vav0nz9db3] {
-    border: 2px solid #f0f0f0;
-    background-color: #fff;
-    padding: 12px 15px;
+/* Inputs Estilo SaaS */
+.saas-input-group[b-vav0nz9db3] {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
+    overflow: hidden;
 }
 
-    .custom-control:focus[b-vav0nz9db3] {
-        border-color: #1F2A44;
-        box-shadow: none;
+    .saas-input-group:focus-within[b-vav0nz9db3] {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
-.pw-eye-btn[b-vav0nz9db3] {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #adb5bd;
-}
+    .saas-input-group .input-group-text[b-vav0nz9db3] {
+        background-color: transparent;
+        border: none;
+        color: #94a3b8;
+        padding-left: 1rem;
+    }
 
-/* Botón Principal usando el color del Nav */
-.btn-main-login[b-vav0nz9db3] {
-    background-color: #3c3c3c; /* Color de tu NAV */
+    .saas-input-group .form-control[b-vav0nz9db3] {
+        border: none !important;
+        padding: 0.75rem 1rem;
+        box-shadow: none !important;
+    }
+
+/* Botón Principal (Negro/Azul muy oscuro) */
+.saas-btn-primary[b-vav0nz9db3] {
+    background: linear-gradient(135deg, #3c3c3c 0%, #111827 100%);
     color: white;
+    border: none;
     border-radius: 8px;
+    padding: 0.85rem;
     font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
 }
 
-    .btn-main-login:hover[b-vav0nz9db3] {
-        background-color: #1F2A44; /* Cambia al azul del Dashboard al hover */
+    .saas-btn-primary:hover[b-vav0nz9db3] {
+        background-color: #0f172a;
         color: white;
-        transform: translateY(-2px);
     }
 
-.alert-custom[b-vav0nz9db3] {
-    background-color: #fff5f5;
-    color: #e53e3e;
-    border-left: 4px solid #e53e3e;
+/* Labels y Textos */
+.saas-label[b-vav0nz9db3] {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
 }
 
-.text-white-300[b-vav0nz9db3] {
-    color: rgba(255,255,255,0.3);
+.saas-link-subtle[b-vav0nz9db3] {
+    font-size: 0.75rem;
+    color: #3b82f6;
+    text-decoration: none;
 }
 
-/* Responsive */
-@media (max-width: 991px) {
-    .brand-panel[b-vav0nz9db3] {
-        display: none;
-    }
-
-    .form-panel[b-vav0nz9db3] {
-        background-color: #fff;
-    }
+.saas-link-bold[b-vav0nz9db3] {
+    color: #1e293b;
+    font-weight: 700;
+    text-decoration: none;
 }

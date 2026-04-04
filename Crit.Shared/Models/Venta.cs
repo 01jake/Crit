@@ -11,7 +11,7 @@ namespace Crit.Shared.Models
     public class Venta
     {
         public int Id { get; set; }
-        public int? EmpresaId { get; set; }
+        public int EmpresaId { get; set; }
         public Empresa? Empresa { get; set; }
 
         public string? NumeroVenta { get; set; }  // ← Nullable, el servidor lo genera

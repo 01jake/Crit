@@ -20,11 +20,12 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<ComprasController> _logger;
-
-        public ComprasController(ApplicationDbContext context, ILogger<ComprasController> logger)
+        private readonly IEmpresaProvider _empresaProvider;
+        public ComprasController(ApplicationDbContext context, ILogger<ComprasController> logger, IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
         // GET: api/compras
@@ -33,10 +34,16 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var compras = await _context.Compra
                     .Include(c => c.Proveedor)
                     .Include(c => c.Detalles)
                         .ThenInclude(d => d.Producto)
+                    .Where(c => c.EmpresaId == empresaId)
                     .OrderByDescending(c => c.Fecha)
                     .ToListAsync();
 
@@ -57,95 +64,47 @@ namespace Crit.Controllers
 
             try
             {
-                compra.Fecha = DateTime.Now;
-                var almacenExiste = await _context.Almacenes.AnyAsync(a => a.Id == compra.AlmacenId && a.Activo);
-                if (!almacenExiste)
-                    return BadRequest("Debes seleccionar un almacén válido para la compra.");
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
 
-                var movimientosPendientes = new List<MovimientoInventario>();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                compra.EmpresaId = empresaId;
+                compra.Fecha = DateTime.Now;
 
                 decimal total = 0;
 
                 foreach (var d in compra.Detalles)
                 {
-                    var producto = await _context.Productos.FindAsync(d.ProductoId);
+                    var producto = await _context.Productos
+                        .FirstOrDefaultAsync(p => p.Id == d.ProductoId && p.EmpresaId == empresaId);
 
                     if (producto == null)
                         return BadRequest("Producto no existe");
 
-                    int stockAnteriorGlobal = producto.Stock;
-
-                    var inventarioAlmacen = await _context.InventarioPorAlmacen
-                        .FirstOrDefaultAsync(x => x.ProductoId == d.ProductoId && x.AlmacenId == compra.AlmacenId);
-
-                    if (inventarioAlmacen == null)
-                    {
-                        inventarioAlmacen = new InventarioPorAlmacen
-                        {
-                            ProductoId = d.ProductoId,
-                            AlmacenId = compra.AlmacenId.Value,
-                            Stock = 0,
-                            StockMinimo = producto.StockMinimo,
-                            StockMaximo = 0
-                        };
-
-                        _context.InventarioPorAlmacen.Add(inventarioAlmacen);
-                    }
-
-                    var stockAnteriorAlmacen = inventarioAlmacen.Stock;
-
                     d.Subtotal = d.Cantidad * d.PrecioUnitario;
-
-                    producto.Stock += d.Cantidad;
-
-                    producto.PrecioCompra =
-                        ((producto.PrecioCompra * stockAnteriorGlobal) +
-                        (d.PrecioUnitario * d.Cantidad))
-                        / (stockAnteriorGlobal + d.Cantidad);
-
-                    inventarioAlmacen.Stock += d.Cantidad;
-
-                    movimientosPendientes.Add(new MovimientoInventario
-                    {
-                        Fecha = compra.Fecha,
-                        ProductoId = d.ProductoId,
-                        AlmacenId = compra.AlmacenId.Value,
-                        TipoMovimiento = "EntradaCompra",
-                        Cantidad = d.Cantidad,
-                        StockAnterior = stockAnteriorAlmacen,
-                        StockNuevo = inventarioAlmacen.Stock,
-                        Referencia = $"{compra.SerieFactura}-{compra.FolioFactura}",
-                        Observaciones = "Entrada generada desde compra"
-                    });
-
                     total += d.Subtotal;
                 }
+
                 compra.Subtotal = total;
                 compra.IVA = total * 0.16m;
                 compra.Total = compra.Subtotal + compra.IVA;
 
                 _context.Compra.Add(compra);
                 await _context.SaveChangesAsync();
-                foreach (var movimiento in movimientosPendientes)
-                {
-                    movimiento.CompraId = compra.Id;
-                    _context.MovimientosInventario.Add(movimiento);
-                }
 
-                await _context.SaveChangesAsync();
                 if (compra.EsCredito)
                 {
                     var cuentaPorPagar = new CuentaPorPagar
                     {
+                        EmpresaId = empresaId,
                         ProveedorId = compra.ProveedorId,
                         CompraId = compra.Id,
                         FolioFactura = string.IsNullOrWhiteSpace(compra.FolioFactura)
                             ? $"{compra.SerieFactura}-{compra.Id}"
                             : compra.FolioFactura,
                         FechaEmision = compra.Fecha,
-                        FechaVencimiento = compra.EsCredito
-                        ? compra.Fecha.AddDays(compra.DiasCredito ?? 30)
-                        : null,
+                        FechaVencimiento = compra.Fecha.AddDays(compra.DiasCredito ?? 30),
                         Subtotal = compra.Subtotal,
                         Descuento = 0m,
                         IVA = compra.IVA,
@@ -159,21 +118,28 @@ namespace Crit.Controllers
                     _context.CuentasPorPagar.Add(cuentaPorPagar);
                     await _context.SaveChangesAsync();
                 }
-                await transaction.CommitAsync();
 
+                await transaction.CommitAsync();
                 return Ok(compra);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return StatusCode(500, ex.Message);
+                _logger.LogError(ex, "Error al crear compra");
+                return StatusCode(500, "Error interno del servidor");
             }
         }
         [HttpGet("historial")]
         public async Task<IActionResult> Historial()
         {
+            var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+            if (empresaId <= 0)
+                return Unauthorized("No se pudo determinar la empresa del usuario.");
+
             var data = await _context.Compra
                 .Include(c => c.Proveedor)
+                .Where(c => c.EmpresaId == empresaId)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync();
 
@@ -187,20 +153,25 @@ namespace Crit.Controllers
 
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var compra = await _context.Compra
                     .Include(c => c.Detalles)
-                    .FirstOrDefaultAsync(c => c.Id == id);
+                    .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
 
                 if (compra == null)
                     return NotFound();
 
                 foreach (var d in compra.Detalles)
                 {
-                    var producto = await _context.Productos.FindAsync(d.ProductoId);
+                    var producto = await _context.Productos
+                        .FirstOrDefaultAsync(p => p.Id == d.ProductoId && p.EmpresaId == empresaId);
 
                     if (producto != null)
                     {
-                        // 🔥 REVERSAR STOCK
                         producto.Stock -= d.Cantidad;
                     }
                 }
@@ -215,21 +186,25 @@ namespace Crit.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-
                 _logger.LogError(ex, "Error al cancelar compra");
-
                 return StatusCode(500, "Error al cancelar compra");
             }
         }
 
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCompra(int id)
         {
+            var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+            if (empresaId <= 0)
+                return Unauthorized("No se pudo determinar la empresa del usuario.");
+
             var compra = await _context.Compra
                 .Include(c => c.Proveedor)
                 .Include(c => c.Detalles)
                     .ThenInclude(d => d.Producto)
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
 
             if (compra == null)
                 return NotFound();
@@ -241,11 +216,16 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var compras = await _context.Compra
                     .Include(c => c.Proveedor)
                     .Include(c => c.Detalles)
                         .ThenInclude(d => d.Producto)
-                    .Where(c => c.ProveedorId == proveedorId)
+                    .Where(c => c.ProveedorId == proveedorId && c.EmpresaId == empresaId)
                     .OrderByDescending(c => c.Fecha)
                     .ToListAsync();
 
@@ -257,21 +237,25 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
         [HttpGet("{id}/pdf")]
         public async Task<IActionResult> DescargarCompraPdf(int id)
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var compra = await _context.Compra
                     .Include(c => c.Proveedor)
                     .Include(c => c.Detalles)
                         .ThenInclude(d => d.Producto)
-                    .FirstOrDefaultAsync(c => c.Id == id);
+                    .FirstOrDefaultAsync(c => c.Id == id && c.EmpresaId == empresaId);
 
                 if (compra == null)
-                {
                     return NotFound($"Compra {id} no encontrada");
-                }
 
                 var pdfBytes = GenerarPdfCompra(compra);
 
@@ -285,6 +269,7 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error al generar el PDF");
             }
         }
+
 
         private byte[] GenerarPdfCompra(Compra compra)
         {

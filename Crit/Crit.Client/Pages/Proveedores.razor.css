@@ -1,138 +1,86 @@
-﻿
+﻿/* Colores y Variables */
 :root {
-    --primary-brand: #4f46e5;
-    --bg-body: #f1f5f9;
-    --success-status: #10b981;
+    --industrial-navy: #1F2A44;
+    --status-green: #28a745;
+    --status-red: #dc3545;
 }
 
 .admin-container {
-    padding: 2rem;
-    background-color: var(--bg-body);
-    min-height: 100vh;
+    padding: 1.5rem;
 }
 
 .page-title {
-    font-weight: 800;
-    color: #0f172a;
+    color: var(--industrial-navy);
+    font-weight: 700;
     letter-spacing: -0.5px;
 }
 
-/* Buscador */
+/* Botones Personalizados */
+.btn-primary {
+    background-color: var(--industrial-navy);
+    border-color: var(--industrial-navy);
+}
+
+    .btn-primary:hover {
+        background-color: #162035;
+    }
+
+/* Input de Búsqueda Industrial */
 .search-box-container {
     position: relative;
 }
 
     .search-box-container i {
         position: absolute;
-        left: 15px;
+        left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: #94a3b8;
+        color: #6c757d;
     }
 
-    .search-box-container .form-control {
-        padding-left: 45px;
-        border-radius: 12px;
-        height: 45px;
-        border-color: #e2e8f0;
+    .search-box-container input {
+        padding-left: 35px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
     }
 
-/* Tabla */
-.table thead th {
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    color: #64748b;
-    padding-top: 15px;
-    padding-bottom: 15px;
-}
-
-.table tbody tr:hover {
-    background-color: #f8fafc;
-}
-
-.btn-white {
-    background: white;
-    border: 1px solid #e2e8f0;
-}
-
-    .btn-white:hover {
-        background: #f1f5f9;
-    }
-
-/* Status Badges */
+/* Badges de Estado */
 .status-badge {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
     text-transform: uppercase;
 }
 
 .status-active {
-    background: #dcfce7;
-    color: #15803d;
+    background-color: #e8f5e9;
+    color: var(--status-green);
 }
 
 .status-inactive {
-    background: #f1f5f9;
-    color: #64748b;
+    background-color: #ffebee;
+    color: var(--status-red);
 }
 
-/* Modal e Inputs */
-.section-title {
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: #64748b;
-    text-transform: uppercase;
-    margin-bottom: 1.25rem;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 5px;
+/* Spinner Personalizado */
+.spinner-custom {
+    width: 3rem;
+    height: 3rem;
+    border: 0.25em solid #e9ecef;
+    border-right-color: var(--industrial-navy);
+    border-radius: 50%;
+    animation: spinner-border .75s linear infinite;
 }
-
-.custom-input {
-    border-radius: 8px;
-    border: 1.5px solid #e2e8f0;
-    padding: 10px 15px;
-    font-size: 0.9rem;
-}
-
-    .custom-input:focus {
-        border-color: var(--primary-brand);
-        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-    }
 
 .extra-small {
     font-size: 0.7rem;
 }
 
-.btn-light-hover:hover {
-    background-color: #f1f5f9;
+.section-title {
+    color: var(--industrial-navy);
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    font-weight: 600;
 }
-
-.alert-danger-custom {
-    background: #fef2f2;
-    border: 1px solid #fee2e2;
-    color: #991b1b;
-    border-radius: 10px;
-    padding: 12px;
-    font-size: 0.85rem;
-}
-
-/* Spinner */
-.spinner-custom {
-    width: 3rem;
-    height: 3rem;
-    border: 4px solid #e2e8f0;
-    border-top-color: var(--primary-brand);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-

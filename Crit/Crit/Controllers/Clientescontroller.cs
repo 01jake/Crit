@@ -87,10 +87,16 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var clientes = await _context.Clientes
-                    .Where(c => c.Activo)
+                    .Where(c => c.EmpresaId == empresaId && c.Activo)
                     .OrderBy(c => c.Nombre)
                     .ToListAsync();
+
                 return Ok(clientes);
             }
             catch (Exception ex)
@@ -99,6 +105,7 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
 
         [HttpPost]
         public async Task<ActionResult<Cliente>> CreateCliente([FromBody] Cliente cliente)
@@ -218,20 +225,14 @@ namespace Crit.Controllers
         [HttpGet("count")]
         public async Task<ActionResult<int>> GetClientesCount()
         {
-            var count = await _context.Clientes.CountAsync(c => c.Activo);
-            return Ok(count);
-        }
-        [HttpGet("debug-empresa")]
-        public async Task<IActionResult> DebugEmpresa()
-        {
-            var userId = _empresaProvider.GetUserId();
             var empresaId = await _empresaProvider.GetEmpresaIdAsync();
 
-            return Ok(new
-            {
-                UserId = userId,
-                EmpresaId = empresaId
-            });
+            if (empresaId <= 0)
+                return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+            var count = await _context.Clientes.CountAsync(c => c.EmpresaId == empresaId && c.Activo);
+            return Ok(count);
         }
+
     }
 }

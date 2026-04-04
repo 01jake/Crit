@@ -5,35 +5,36 @@
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject CuentaPorCobrarHttpService CuentaPorCobrarHttpService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ClienteHttpService ClienteHttpService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Gestión de Clientes</PageTitle>
 
-<div class="admin-container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid py-4 saas-page-container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h2 class="page-title mb-0">Gestión de Clientes</h2>
-            <p class="text-muted small">Administra la base de datos de compradores y sus datos fiscales para pre-facturación</p>
+            <h2 class="fw-bold mb-1" style="color: #1e293b;">Gestión de Clientes</h2>
+            <p class="text-muted mb-0" style="font-size: 0.95rem;">Administra la base de datos de compradores y sus datos fiscales para pre-facturación.</p>
         </div>
 
-        <button class="btn btn-primary shadow-sm px-4" @onclick="MostrarModalNuevo">
-            <i class="bi bi-person-plus-fill me-2"></i> Nuevo Cliente
+        <button class="btn saas-btn-primary shadow-sm px-4" @onclick="MostrarModalNuevo">
+            <i class="bi bi-person-plus-fill me-2"></i>Nuevo Cliente
         </button>
     </div>
 
-    @* Buscador y Filtros *@
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
+    <div class="card saas-card shadow-sm border-0 mb-4 rounded-3">
+        <div class="card-body p-3">
             <div class="row g-3">
                 <div class="col-md-8">
-                    <div class="search-box-container">
-                        <input type="text" class="form-control" placeholder="Buscar por nombre, email o RFC..."
+                    <div class="position-relative">
+                        <i class="bi bi-search position-absolute text-muted" style="top: 50%; left: 15px; transform: translateY(-50%);"></i>
+                        <input type="text" class="form-control saas-input ps-5" placeholder="Buscar por nombre, email o RFC..."
                                @bind="terminoBusqueda" @bind:event="oninput" />
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <select class="form-select border-light-subtle" @bind="filtroEstado">
+                    <select class="form-select saas-input" @bind="filtroEstado">
                         <option value="todos">Todos los estados</option>
                         <option value="activos">Solo Activos</option>
                         <option value="inactivos">Solo Inactivos</option>
@@ -45,110 +46,121 @@
 
     @if (loading)
     {
-        <div class="d-flex justify-content-center py-5">
-            <div class="spinner-custom"></div>
+        <div class="d-flex justify-content-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            Cargando cartera de clientes...
         </div>
     }
     else
     {
-        <div class="card shadow-sm border-0 overflow-hidden">
+        <div class="card saas-card border-0 shadow-sm rounded-3 overflow-hidden">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                <table class="table table-hover align-middle mb-0 saas-table">
+                    <thead>
                         <tr>
-                            <th class="ps-4">Cliente</th>
-                            <th>Contacto</th>
-                            <th>Datos Fiscales</th>
-                            <th>Estado</th>
-                            <th>Resumen CxC</th>
-                            <th class="text-end pe-4">Acciones</th>
+                            <th class="ps-4">CLIENTE</th>
+                            <th>CONTACTO</th>
+                            <th>DATOS FISCALES</th>
+                            <th>ESTADO</th>
+                            <th>RESUMEN CXC</th>
+                            <th class="text-end pe-4">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var cliente in ClientesFiltrados)
+                        @if (!ClientesFiltrados.Any())
                         {
                             <tr>
-                                <td class="ps-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-circle me-3">
-                                            @cliente.Nombre.Substring(0, 1).ToUpper()
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold text-dark">@cliente.Nombre</div>
-                                            <div class="text-muted extra-small">ID: #@cliente.Id</div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="small">
-                                        <i class="bi bi-envelope me-1 text-muted"></i> @cliente.Email
-                                    </div>
-                                    <div class="small">
-                                        <i class="bi bi-telephone me-1 text-muted"></i> @(cliente.Telefono ?? "S/N")
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="small fw-bold text-secondary">
-                                        RFC: @(string.IsNullOrEmpty(cliente.RFC) ? "XAXX010101000" : cliente.RFC)
-                                    </div>
-                                    <div class="extra-small text-muted">CP: @(cliente.CodigoPostal ?? "S/N")</div>
-                                </td>
-
-                                <td>
-                                    <span class="status-badge @(cliente.Activo ? "status-active" : "status-inactive")">
-                                        @(cliente.Activo ? "Activo" : "Inactivo")
-                                    </span>
-                                </td>
-
-                                <td>
-                                    @{
-                                        var saldo = ObtenerSaldoCliente(cliente.Id);
-                                        var pendientes = ObtenerPendientesCliente(cliente.Id);
-                                        var vencida = TieneVencidasCliente(cliente.Id);
-                                    }
-
-                                    @if (saldo > 0)
-                                    {
-                                        <div class="fw-bold @(vencida ? "text-danger" : "text-primary")">
-                                            @saldo.ToString("C")
-                                        </div>
-                                        <div class="extra-small text-muted">@pendientes cuenta(s)</div>
-
-                                        @if (vencida)
-                                        {
-                                            <div class="extra-small text-danger">Con vencidas</div>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted small">Sin saldo</span>
-                                    }
-                                </td>
-
-                                <td class="text-end pe-4">
-                                    <div class="btn-group shadow-sm">
-                                        <button class="btn btn-white btn-sm" @onclick="() => EditarCliente(cliente)" title="Editar cliente">
-                                            <i class="bi bi-pencil-square text-primary"></i>
-                                        </button>
-
-                                        <a class="btn btn-white btn-sm" href="/cuentas-por-cobrar?clienteId=@cliente.Id" title="Ver cuentas por cobrar del cliente">
-                                            <i class="bi bi-cash-coin text-success"></i>
-                                        </a>
-
-                                        <button class="btn btn-white btn-sm" @onclick="() => EliminarCliente(cliente.Id)" title="Eliminar cliente">
-                                            <i class="bi bi-trash3 text-danger"></i>
-                                        </button>
-                                        <a class="btn btn-white btn-sm" href="/clientes/@cliente.Id" title="Ver ficha del cliente">
-                                            <i class="bi bi-person-vcard text-dark"></i>
-                                        </a>
-                                    </div>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-building fs-2 d-block mb-2 text-black-50"></i>
+                                    No se encontraron clientes con los filtros actuales.
                                 </td>
                             </tr>
                         }
-                    </tbody>
+                        else
+                        {
+                            @foreach (var cliente in ClientesFiltrados)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-circle bg-light text-secondary fw-bold rounded-circle d-flex align-items-center justify-content-center border" style="width: 40px; height: 40px; min-width: 40px;">
+                                                @cliente.Nombre.Substring(0, 1).ToUpper()
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">@cliente.Nombre</div>
+                                                <div class="text-muted" style="font-size: 0.75rem;">ID: #@cliente.Id</div>
+                                            </div>
+                                        </div>
+                                    </td>
 
+                                    <td>
+                                        <div class="text-dark" style="font-size: 0.85rem;">
+                                            <i class="bi bi-envelope me-1 text-muted"></i> @cliente.Email
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.85rem;">
+                                            <i class="bi bi-telephone me-1 text-muted"></i> @(cliente.Telefono ?? "S/N")
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="fw-bold" style="font-size: 0.85rem; color: #475569;">
+                                            RFC: @(string.IsNullOrEmpty(cliente.RFC) ? "XAXX010101000" : cliente.RFC)
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.8rem;">CP: @(cliente.CodigoPostal ?? "S/N")</div>
+                                    </td>
+
+                                    <td>
+                                      
+                                        <span class="status-badge @(cliente.Activo ? "status-active" : "status-inactive")">
+                                            @(cliente.Activo ? "Activo" : "Inactivo")
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @{
+                                            var saldo = ObtenerSaldoCliente(cliente.Id);
+                                            var pendientes = ObtenerPendientesCliente(cliente.Id);
+                                            var vencida = TieneVencidasCliente(cliente.Id);
+                                        }
+
+                                        @if (saldo > 0)
+                                        {
+                                            <div class="fw-bold @(vencida ? "text-danger" : "text-primary")" style="font-size: 0.95rem;">
+                                                @saldo.ToString("C")
+                                            </div>
+                                            <div class="text-muted" style="font-size: 0.75rem;">@pendientes cuenta(s)</div>
+
+                                            @if (vencida)
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle mt-1" style="font-size: 0.7rem;">Con vencidas</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted" style="font-size: 0.85rem;"><i class="bi bi-check2-all me-1"></i>Sin saldo</span>
+                                        }
+                                    </td>
+
+                                    <td class="text-end pe-4">
+                                        <div class="d-inline-flex gap-1">
+                                            <a class="btn btn-sm btn-light text-success border-0 shadow-none hover-bg-success" href="/cuentas-por-cobrar?clienteId=@cliente.Id" title="Cuentas por cobrar">
+                                                <i class="bi bi-cash-coin"></i>
+                                            </a>
+                                            <a class="btn btn-sm btn-light text-dark border-0 shadow-none hover-bg-dark" href="/clientes/@cliente.Id" title="Ver ficha">
+                                                <i class="bi bi-person-vcard"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-light text-primary border-0 shadow-none hover-bg-primary" @onclick="() => EditarCliente(cliente)" title="Editar">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-light text-danger border-0 shadow-none hover-bg-danger" @onclick="() => EliminarCliente(cliente.Id)" title="Eliminar">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -158,65 +170,64 @@
 @if (mostrarModal)
 {
     <div class="modal-backdrop fade show"></div>
-    <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal fade show d-block saas-modal-backdrop" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-dark text-white border-0">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi @(clienteActual.Id == 0 ? "bi-person-plus" : "bi-person-gear") me-2"></i>
-                        @(clienteActual.Id == 0 ? "Nuevo Cliente" : "Editar Cliente")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-1">
+                            <i class="bi @(clienteActual.Id == 0 ? "bi-person-plus" : "bi-person-gear") text-primary me-2"></i>
+                            @(clienteActual.Id == 0 ? "Registrar Nuevo Cliente" : "Editar Cliente")
+                        </h5>
+                        <p class="text-muted small mb-0">Completa la información de contacto y fiscalización.</p>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" @onclick="CerrarModal"></button>
                 </div>
 
-                <div class="modal-body p-4 bg-light">
+                <div class="modal-body px-4 py-4">
                     <EditForm Model="clienteActual" OnValidSubmit="GuardarCliente">
                         <DataAnnotationsValidator />
 
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3">
-                                <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-person-vcard me-2"></i>Información de Contacto</h6>
-                            </div>
-                            <div class="card-body row g-3">
+                        <div class="p-3 mb-4 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <h6 class="fw-bold mb-3" style="color: #334155;"><i class="bi bi-person-lines-fill me-2"></i>Información de Contacto</h6>
+                            <div class="row g-3">
                                 <div class="col-md-8">
-                                    <label class="form-label fw-bold small">Nombre / Razón Social *</label>
-                                    <InputText class="form-control" @bind-Value="clienteActual.Nombre" placeholder="Juan Pérez" />
-                                    <ValidationMessage For="@(() => clienteActual.Nombre)" class="text-danger small" />
+                                    <label class="saas-label">NOMBRE O RAZÓN SOCIAL <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="clienteActual.Nombre" placeholder="Ej. Constructora del Norte S.A." />
+                                    <ValidationMessage For="@(() => clienteActual.Nombre)" class="saas-validation-message" />
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold small">Teléfono</label>
-                                    <InputText class="form-control" @bind-Value="clienteActual.Telefono" />
+                                    <label class="saas-label">TELÉFONO</label>
+                                    <InputText class="form-control saas-input" @bind-Value="clienteActual.Telefono" placeholder="10 dígitos" />
                                 </div>
                                 <div class="col-md-12">
-                                    <label class="form-label fw-bold small">Correo Electrónico *</label>
-                                    <InputText class="form-control" @bind-Value="clienteActual.Email" />
-                                    <ValidationMessage For="@(() => clienteActual.Email)" class="text-danger small" />
+                                    <label class="saas-label">CORREO ELECTRÓNICO <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="clienteActual.Email" placeholder="contacto@empresa.com" />
+                                    <ValidationMessage For="@(() => clienteActual.Email)" class="saas-validation-message" />
                                 </div>
                             </div>
                         </div>
 
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3">
-                                <h6 class="mb-0 fw-bold text-success"><i class="bi bi-file-earmark-text me-2"></i>Datos SAT (Fiscales)</h6>
-                            </div>
-                            <div class="card-body row g-3">
+                        <div class="p-3 mb-4 rounded-3" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                            <h6 class="fw-bold mb-3" style="color: #166534;"><i class="bi bi-file-earmark-text me-2"></i>Datos Fiscales (SAT)</h6>
+                            <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small">RFC *</label>
-                                    <InputText class="form-control fw-bold"
+                                    <label class="saas-label">RFC <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input fw-bold"
                                                @bind-Value="clienteActual.RFC"
                                                @onblur="NormalizarRFC"
                                                placeholder="ABCD000000XXX"
                                                style="text-transform: uppercase;" />
-                                    <ValidationMessage For="@(() => clienteActual.RFC)" class="text-danger small" />
+                                    <ValidationMessage For="@(() => clienteActual.RFC)" class="saas-validation-message" />
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Código Postal *</label>
-                                    <InputText class="form-control" @bind-Value="clienteActual.CodigoPostal" maxlength="5" />
-                                    <ValidationMessage For="@(() => clienteActual.CodigoPostal)" class="text-danger small" />
+                                    <label class="saas-label">CÓDIGO POSTAL <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="clienteActual.CodigoPostal" maxlength="5" placeholder="00000" />
+                                    <ValidationMessage For="@(() => clienteActual.CodigoPostal)" class="saas-validation-message" />
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Régimen Fiscal</label>
-                                    <InputSelect class="form-select" @bind-Value="clienteActual.RegimenFiscal">
+                                    <label class="saas-label">RÉGIMEN FISCAL</label>
+                                    <InputSelect class="form-select saas-input" @bind-Value="clienteActual.RegimenFiscal">
                                         <option value="">Seleccione...</option>
                                         <option value="601">601 - General de Ley Personas Morales</option>
                                         <option value="612">612 - Actividades Empresariales y Prof.</option>
@@ -225,8 +236,8 @@
                                     </InputSelect>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Uso de CFDI</label>
-                                    <InputSelect class="form-select" @bind-Value="clienteActual.UsoCFDI">
+                                    <label class="saas-label">USO DE CFDI</label>
+                                    <InputSelect class="form-select saas-input" @bind-Value="clienteActual.UsoCFDI">
                                         <option value="">Seleccione...</option>
                                         <option value="G03">G03 - Gastos en general</option>
                                         <option value="G01">G01 - Adquisición de mercancías</option>
@@ -235,26 +246,41 @@
                                     </InputSelect>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label fw-bold small">Dirección Fiscal / Entrega</label>
-                                    <InputTextArea class="form-control" @bind-Value="clienteActual.Direccion" rows="2" />
+                                    <label class="saas-label">DIRECCIÓN FISCAL / ENTREGA</label>
+                                    <InputTextArea class="form-control saas-input" @bind-Value="clienteActual.Direccion" rows="2" placeholder="Calle, Número, Colonia..." />
                                 </div>
                             </div>
                         </div>
 
-                        <div class="form-check form-switch p-3 bg-white rounded ps-5 shadow-sm mb-3">
-                            <InputCheckbox class="form-check-input ms-0" @bind-Value="clienteActual.Activo" id="chkActivo" />
-                            <label class="form-check-label ms-2 fw-bold" for="chkActivo">Cliente habilitado para operaciones</label>
+                        <div class="d-flex align-items-center p-3 rounded-3 mb-3" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+                            <div class="form-check form-switch m-0 d-flex align-items-center p-0">
+                                <InputCheckbox class="form-check-input saas-switch m-0" @bind-Value="clienteActual.Activo" id="chkActivo" style="width: 2.5em; height: 1.25em; cursor: pointer;" />
+                                <label class="form-check-label ms-3 fw-bold text-dark" for="chkActivo" style="cursor: pointer;">
+                                    Cliente habilitado para operaciones
+                                    <span class="d-block text-muted fw-normal small">Si se desactiva, no se podrán crear nuevas ventas.</span>
+                                </label>
+                            </div>
                         </div>
 
                         @if (!string.IsNullOrEmpty(mensajeError))
                         {
-                            <div class="alert alert-danger py-2 small">@mensajeError</div>
+                            <div class="alert saas-alert-error py-2 small shadow-sm">
+                                <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
+                            </div>
                         }
 
-                        <div class="modal-footer border-0 px-0 pb-0">
-                            <button type="button" class="btn btn-outline-secondary px-4" @onclick="CerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary px-5" disabled="@guardando">
-                                @(guardando ? "Guardando..." : "Guardar Cliente")
+                        <div class="modal-footer border-top-0 px-0 pb-0 pt-3">
+                            <button type="button" class="btn btn-light text-muted fw-semibold shadow-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn saas-btn-primary px-4 shadow-sm" disabled="@guardando">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Guardando...</span>
+                                }
+                                else
+                                {
+                                    <span><i class="bi bi-save me-2"></i>Guardar Cliente</span>
+                                }
                             </button>
                         </div>
                     </EditForm>
@@ -263,7 +289,164 @@
         </div>
     </div>
 }
+@if (mostrarModal)
+{
+  <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block saas-modal-backdrop" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-1">
+                            <i class="bi @(clienteActual.Id == 0 ? "bi-person-plus" : "bi-person-gear") text-primary me-2"></i>
+                            @(clienteActual.Id == 0 ? "Nuevo Cliente" : "Editar Cliente")
+                        </h5>
+                        <p class="text-muted small mb-0">Completa la información de contacto y fiscalización.</p>
+                    </div>
 
+                    <button type="button" class="btn-close shadow-none" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body px-4 py-4">
+                    <EditForm Model="clienteActual" OnValidSubmit="GuardarCliente">
+                        <DataAnnotationsValidator />
+
+                        <div class="p-3 mb-4 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <h6 class="fw-bold mb-3" style="color: #334155;"><i class="bi bi-person-lines-fill me-2"></i>Información de Contacto</h6>
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="saas-label">NOMBRE O RAZÓN SOCIAL <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="clienteActual.Nombre" placeholder="Ej. Constructora del Norte S.A." />
+                                    <ValidationMessage For="@(() => clienteActual.Nombre)" class="saas-validation-message" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="saas-label">TELÉFONO</label>
+                                    <InputText class="form-control saas-input" @bind-Value="clienteActual.Telefono" placeholder="10 dígitos" />
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="saas-label">CORREO ELECTRÓNICO <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="clienteActual.Email" placeholder="contacto@empresa.com" />
+                                    <ValidationMessage For="@(() => clienteActual.Email)" class="saas-validation-message" />
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="p-3 mb-4 rounded-3" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                            <h6 class="fw-bold mb-3" style="color: #166534;"><i class="bi bi-file-earmark-text me-2"></i>Datos Fiscales (SAT)</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="saas-label">RFC <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input fw-bold"
+                                               @bind-Value="clienteActual.RFC"
+                                               @onblur="NormalizarRFC"
+                                               placeholder="ABCD000000XXX"
+                                               style="text-transform: uppercase;" />
+                                    <ValidationMessage For="@(() => clienteActual.RFC)" class="saas-validation-message" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="saas-label">CÓDIGO POSTAL <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="clienteActual.CodigoPostal" maxlength="5" placeholder="00000" />
+                                    <ValidationMessage For="@(() => clienteActual.CodigoPostal)" class="saas-validation-message" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="saas-label">RÉGIMEN FISCAL</label>
+                                    <InputSelect class="form-select saas-input" @bind-Value="clienteActual.RegimenFiscal">
+                                        <option value="">Seleccione...</option>
+                                        <option value="601">601 - General de Ley Personas Morales</option>
+                                        <option value="612">612 - Actividades Empresariales y Prof.</option>
+                                        <option value="626">626 - Régimen Simplificado de Confianza</option>
+                                        <option value="605">605 - Sueldos y Salarios</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class=" saas-label">Uso de CFDI</label>
+                                    <InputSelect class="form-select saas-input" @bind-Value="clienteActual.UsoCFDI">
+                                        <option value="">Seleccione...</option>
+                                        <option value="G03">G03 - Gastos en general</option>
+                                        <option value="G01">G01 - Adquisición de mercancías</option>
+                                        <option value="I01">I01 - Construcciones</option>
+                                        <option value="S01">S01 - Sin efectos fiscales</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="col-12">
+                                    <label class="saas-label">DIRECCIÓN FISCAL / ENTREGA</label>
+                                    <InputTextArea class="form-control saas-input" @bind-Value="clienteActual.Direccion" rows="2" placeholder="Calle, Número, Colonia..." />
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="d-flex align-items-center p-3 rounded-3 mb-3" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+                            <div class="form-check form-switch m-0 d-flex align-items-center p-0">
+                                <InputCheckbox class="form-check-input saas-switch m-0" @bind-Value="clienteActual.Activo" id="chkActivo" style="width: 2.5em; height: 1.25em; cursor: pointer;" />
+                                <label class="form-check-label ms-3 fw-bold text-dark" for="chkActivo" style="cursor: pointer;">
+                                    Cliente habilitado para operaciones
+                                    <span class="d-block text-muted fw-normal small">Si se desactiva, no se podrán crear nuevas ventas.</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(mensajeError))
+                        {
+                            <div class="alert saas-alert-error py-2 small shadow-sm">
+                                <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
+                            </div>
+                        }
+
+                        <div class="row g-3">
+                            <button type="button" class="btn btn-light text-muted fw-semibold shadow-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn saas-btn-primary px-4 shadow-sm" disabled="@guardando">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Guardando...</span>
+                                }
+                                else
+                                {
+                                    <span><i class="bi bi-save me-2"></i>Guardar Cliente</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<style>
+    .hover-bg-primary:hover {
+        background-color: #eff6ff !important;
+        color: #2563eb !important;
+    }
+
+    .hover-bg-danger:hover {
+        background-color: #fef2f2 !important;
+        color: #dc2626 !important;
+    }
+
+    .hover-bg-success:hover {
+        background-color: #f0fdf4 !important;
+        color: #16a34a !important;
+    }
+
+    .hover-bg-dark:hover {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+
+    /* Estilo para el switch/toggle en el modal */
+    .saas-switch:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .saas-switch:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+    }
+</style>
 @code {
     private List<Cliente> clientes = new();
     private Cliente clienteActual = new();
@@ -283,12 +466,24 @@
         (filtroEstado == "todos" || (filtroEstado == "activos" && c.Activo) || (filtroEstado == "inactivos" && !c.Activo))
     );
 
-    protected override async Task OnInitializedAsync()
+protected override async Task OnInitializedAsync()
+{
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    var user = authState.User;
+
+    if (user.Identity?.IsAuthenticated != true)
+        return;
+
+    await CargarDatos();
+
+    if (!clientes.Any())
     {
-        await CargarClientes();
-        await CargarCuentasPorCobrar();
-        loading = false;
+        await Task.Delay(300);
+        await CargarDatos();
     }
+}
+
+
 
     private async Task CargarClientes() => clientes = await ClienteHttpService.GetClientesAsync();
 
@@ -380,4 +575,24 @@
 
         return cuentas.Any(x => x.Activa && x.EstaVencida && x.Saldo > 0);
     }
+    private async Task CargarDatos()
+    {
+        loading = true;
+        mensajeError = "";
+
+        try
+        {
+            await CargarClientes();
+            await CargarCuentasPorCobrar();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
 }

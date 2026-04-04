@@ -10,7 +10,7 @@ namespace Crit.Shared.Models
     public class Cliente
     {
         public int Id { get; set; }
-        public int? EmpresaId { get; set; }
+        public int EmpresaId { get; set; }
         public Empresa? Empresa { get; set; }
         [Required(ErrorMessage = "El nombre o razón social es requerido")]
         [StringLength(100)]
@@ -35,6 +35,7 @@ namespace Crit.Shared.Models
         [Required(ErrorMessage = "El Código Postal es obligatorio para facturación")]
         [StringLength(5, MinimumLength = 5, ErrorMessage = "El CP debe ser de 5 dígitos")]
         [RegularExpression(@"^[0-9]{5}$", ErrorMessage = "CP inválido")]
+
         public string? CodigoPostal { get; set; }
 
         [StringLength(100)]

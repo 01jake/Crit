@@ -18,15 +18,23 @@ namespace Crit.Client.Services
         {
             try
             {
-                var clientes = await _httpClient.GetFromJsonAsync<List<Cliente>>("api/clientes");
+                var response = await _httpClient.GetAsync("api/clientes");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    return new List<Cliente>();
+
+                response.EnsureSuccessStatusCode();
+
+                var clientes = await response.Content.ReadFromJsonAsync<List<Cliente>>();
                 return clientes ?? new List<Cliente>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener clientes");
-                throw;
+                return new List<Cliente>();
             }
         }
+
 
         public async Task<Cliente?> GetClienteAsync(int id)
         {

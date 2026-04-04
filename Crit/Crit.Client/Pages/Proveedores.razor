@@ -8,17 +8,19 @@
 <PageTitle>Directorio de Proveedores</PageTitle>
 
 <div class="admin-container">
+    @* --- Cabecera y Botón Nuevo --- *@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="page-title mb-0">Gestión de Proveedores</h2>
             <p class="text-muted small">Administra tu red de suministro y datos fiscales</p>
         </div>
 
-        <button class="btn btn-primary shadow-sm px-4" @onclick="MostrarModalNuevo">
+        <button class="btn saas-btn-primary shadow-sm px-4" @onclick="MostrarModalNuevo">
             <i class="bi bi-plus-lg me-2"></i> Nuevo Proveedor
         </button>
     </div>
 
+    @* --- Filtros y Búsqueda --- *@
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
             <div class="row g-3 align-items-center">
@@ -51,16 +53,18 @@
     }
     else
     {
+        @* --- Tabla de Proveedores --- *@
         <div class="card shadow-sm border-0 overflow-hidden">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4">Proveedor / Razón Social</th>
-                            <th>RFC</th>
+                            <th>DATOS FISCALES</th>
                             <th>Contacto</th>
                             <th>Estado</th>
                             <th>Registro</th>
+                            <th>Saldo Pendiente</th>
                             <th class="text-end pe-4">Acciones</th>
                         </tr>
                     </thead>
@@ -72,17 +76,28 @@
                                     <div class="fw-bold text-dark">@p.Nombre</div>
                                     <div class="text-muted extra-small">@p.RazonSocial</div>
                                 </td>
-                                <td><code class="text-primary fw-bold">@p.RFC</code></td>
                                 <td>
-                                    <div class="small"><i class="bi bi-envelope me-1"></i> @p.Email</div>
-                                    <div class="small"><i class="bi bi-telephone me-1"></i> @p.Telefono</div>
+
+                                    <div class="text-dark" style="font-size: 0.85rem;">
+                                        <i class="bi bi-envelope me-1 text-muted"></i> @p.Email
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.85rem;">
+                                        <i class="bi bi-telephone me-1 text-muted"></i> @(p.Telefono ?? "S/N")
+                                    </div>
                                 </td>
+                                <td>
+                                    <div class="fw-bold" style="font-size: 0.85rem; color: #475569;">
+                                        RFC: @(string.IsNullOrEmpty(p.RFC) ? "XAXX010101000" : p.RFC)
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.8rem;">CP: @(p.CodigoPostal ?? "S/N")</div>
+
+                                </td>
+                               
                                 <td>
                                     <span class="status-badge @(p.Activo ? "status-active" : "status-inactive")">
                                         @(p.Activo ? "Activo" : "Inactivo")
                                     </span>
                                 </td>
-
                                 <td class="text-muted small">@p.FechaRegistro.ToString("dd/MM/yyyy")</td>
                                 <td>
                                     @{
@@ -105,24 +120,19 @@
                                         <span class="text-muted small">Sin deuda</span>
                                     }
                                 </td>
-
                                 <td class="text-end pe-4">
                                     <div class="btn-group shadow-sm">
                                         <button class="btn btn-white btn-sm" title="Editar" @onclick="() => Editar(p)">
                                             <i class="bi bi-pencil-square text-primary"></i>
                                         </button>
-                                        <a class="btn btn-white btn-sm" href="/cuentas-por-pagar?proveedorId=@p.Id" title="Ver cuentas por pagar del proveedor">
+                                        <a class="btn btn-white btn-sm" href="/cuentas-por-pagar?proveedorId=@p.Id" title="Ver cuentas">
                                             <i class="bi bi-wallet2 text-warning"></i>
                                         </a>
                                         <button class="btn btn-white btn-sm" title="Eliminar" @onclick="() => Eliminar(p.Id)">
                                             <i class="bi bi-trash3 text-danger"></i>
                                         </button>
-                                        <a class="btn btn-white btn-sm" href="/proveedores/@p.Id" title="Ver ficha del proveedor">
-                                            <i class="bi bi-building text-dark"></i>
-                                        </a>
                                     </div>
                                 </td>
-                               
                             </tr>
                         }
                     </tbody>
@@ -132,98 +142,112 @@
     }
 </div>
 
+@* --- Modal de Registro/Edición --- *@
 @if (mostrarModal)
 {
     <div class="modal-backdrop fade show"></div>
-    <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal fade show d-block saas-modal-backdrop" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-dark text-white border-0">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi @(proveedorActual.Id == 0 ? "bi-person-plus" : "bi-person-gear") me-2"></i>
-                        @(proveedorActual.Id == 0 ? "Registrar Nuevo Proveedor" : "Actualizar Información")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="Cerrar"></button>
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-1">
+                            <i class="bi @(proveedorActual.Id == 0 ? "bi-person-plus" : "bi-person-gear") text-primary me-2"></i>
+                            @(proveedorActual.Id == 0 ? "Registrar Nuevo Cliente" : "Editar Cliente")
+                        </h5>
+                        <p class="text-muted small mb-0">Completa la información de contacto y fiscalización.</p>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" @onclick="Cerrar"></button>
                 </div>
 
-                <div class="modal-body p-4">
+                <div class="modal-body px-4 py-4">
                     <EditForm Model="proveedorActual" OnValidSubmit="Guardar">
                         <DataAnnotationsValidator />
 
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <h6 class="section-title"><i class="bi bi-info-circle me-2"></i>Identificación</h6>
-                                <div class="mb-3">
-                                    <label class="form-label">Nombre Comercial *</label>
-                                    <InputText class="form-control custom-input" @bind-Value="proveedorActual.Nombre" placeholder="Ej. Materiales del Norte" />
-                                    <ValidationMessage For="@(() => proveedorActual.Nombre)" class="text-danger small" />
+                        <div class="p-3 mb-4 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <h6 class="fw-bold mb-3" style="color: #334155;"><i class="bi bi-person-lines-fill me-2"></i>Información de Contacto</h6>
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="saas-label">NOMBRE O RAZÓN SOCIAL <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="proveedorActual.Nombre" placeholder="Ej. Constructora del Norte S.A." />
+                                    <ValidationMessage For="@(() => proveedorActual.Nombre)" class="saas-validation-message" />
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Razón Social</label>
-                                    <InputText class="form-control custom-input" @bind-Value="proveedorActual.RazonSocial" />
+                                <div class="col-md-4">
+                                    <label class="saas-label">TELÉFONO</label>
+                                    <InputText class="form-control saas-input" @bind-Value="proveedorActual.Telefono" placeholder="10 dígitos" />
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">RFC</label>
-                                        <InputText class="form-control custom-input text-uppercase" @bind-Value="proveedorActual.RFC" />
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Régimen Fiscal</label>
-                                        <InputText class="form-control custom-input" @bind-Value="proveedorActual.RegimenFiscal" />
-                                    </div>
+                                <div class="col-md-12">
+                                    <label class="saas-label">CORREO ELECTRÓNICO <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="proveedorActual.Email" placeholder="contacto@empresa.com" />
+                                    <ValidationMessage For="@(() => proveedorActual.Email)" class="saas-validation-message" />
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-md-6">
-                                <h6 class="section-title"><i class="bi bi-person-lines-fill me-2"></i>Contacto</h6>
-                                <div class="mb-3">
-                                    <label class="form-label">Persona de Contacto</label>
-                                    <InputText class="form-control custom-input" @bind-Value="proveedorActual.Contacto" />
+                        <div class="p-3 mb-4 rounded-3" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                            <h6 class="fw-bold mb-3" style="color: #166534;"><i class="bi bi-file-earmark-text me-2"></i>Datos Fiscales (SAT)</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="saas-label">RFC <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input fw-bold"
+                                               @bind-Value="proveedorActual.RFC"
+                                               @onblur="NormalizarRFC"
+                                               placeholder="ABCD000000XXX"
+                                               style="text-transform: uppercase;" />
+                                    <ValidationMessage For="@(() => proveedorActual.RFC)" class="saas-validation-message" />
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Correo Electrónico</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                        <InputText class="form-control custom-input" @bind-Value="proveedorActual.Email" />
-                                    </div>
+                                <div class="col-md-6">
+                                    <label class="saas-label">CÓDIGO POSTAL <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="proveedorActual.CodigoPostal" maxlength="5" placeholder="00000" />
+                                    <ValidationMessage For="@(() => proveedorActual.CodigoPostal)" class="saas-validation-message" />
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Teléfono / WhatsApp</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                        <InputText class="form-control custom-input" @bind-Value="proveedorActual.Telefono" />
-                                    </div>
+                                <div class="col-md-6">
+                                    <label class="saas-label">RÉGIMEN FISCAL</label>
+                                    <InputSelect class="form-select saas-input" @bind-Value="proveedorActual.RegimenFiscal">
+                                        <option value="">Seleccione...</option>
+                                        <option value="601">601 - General de Ley Personas Morales</option>
+                                        <option value="612">612 - Actividades Empresariales y Prof.</option>
+                                        <option value="626">626 - Régimen Simplificado de Confianza</option>
+                                        <option value="605">605 - Sueldos y Salarios</option>
+                                    </InputSelect>
+                                </div>
+                               
+                                <div class="col-12">
+                                    <label class="saas-label">DIRECCIÓN FISCAL / ENTREGA</label>
+                                    <InputTextArea class="form-control saas-input" @bind-Value="proveedorActual.Direccion" rows="2" placeholder="Calle, Número, Colonia..." />
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-12">
-                                <label class="form-label">Dirección Fiscal / Bodega</label>
-                                <InputTextArea class="form-control custom-input" @bind-Value="proveedorActual.Direccion" rows="2" />
-                            </div>
-
-                            <div class="col-12">
-                                <div class="form-check form-switch p-2 bg-light rounded ps-5">
-                                    <InputCheckbox class="form-check-input ms-0" @bind-Value="proveedorActual.Activo" id="chkActivo" />
-                                    <label class="form-check-label ms-2 fw-bold" for="chkActivo">Proveedor Habilitado para Compras</label>
-                                </div>
+                        <div class="d-flex align-items-center p-3 rounded-3 mb-3" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+                            <div class="form-check form-switch m-0 d-flex align-items-center p-0">
+                                <InputCheckbox class="form-check-input saas-switch m-0" @bind-Value="proveedorActual.Activo" id="chkActivo" style="width: 2.5em; height: 1.25em; cursor: pointer;" />
+                                <label class="form-check-label ms-3 fw-bold text-dark" for="chkActivo" style="cursor: pointer;">
+                                    Cliente habilitado para operaciones
+                                    <span class="d-block text-muted fw-normal small">Si se desactiva, no se podrán crear nuevas ventas.</span>
+                                </label>
                             </div>
                         </div>
 
                         @if (!string.IsNullOrEmpty(mensajeError))
                         {
-                            <div class="alert alert-danger-custom mt-3">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i> @mensajeError
+                            <div class="alert saas-alert-error py-2 small shadow-sm">
+                                <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
                             </div>
                         }
 
-                        <div class="modal-footer border-0 px-0 pb-0 mt-4">
-                            <button type="button" class="btn btn-light-hover px-4" @onclick="Cerrar">Cancelar</button>
-                            <button type="submit" class="btn btn-primary px-5 shadow" disabled="@guardando">
+                        <div class="row g-3">
+                            <button type="button" class="btn btn-light text-muted fw-semibold shadow-sm px-4" @onclick="Cerrar">Cancelar</button>
+                            <button type="submit" class="btn saas-btn-primary px-4 shadow-sm" disabled="@guardando">
                                 @if (guardando)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Guardando...</span>
                                 }
-                                <i class="bi bi-check-lg me-1"></i> Guardar Proveedor
+                                else
+                                {
+                                    <span><i class="bi bi-save me-2"></i>Guardar Cliente</span>
+                                }
                             </button>
                         </div>
                     </EditForm>
@@ -232,6 +256,38 @@
         </div>
     </div>
 }
+ <style>
+    .hover-bg-primary:hover {
+        background-color: #eff6ff !important;
+        color: #2563eb !important;
+    }
+
+    .hover-bg-danger:hover {
+        background-color: #fef2f2 !important;
+        color: #dc2626 !important;
+    }
+
+    .hover-bg-success:hover {
+        background-color: #f0fdf4 !important;
+        color: #16a34a !important;
+    }
+
+    .hover-bg-dark:hover {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+
+    /* Estilo para el switch/toggle en el modal */
+    .saas-switch:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .saas-switch:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+    }
+</style>
 @code {
     private List<Proveedor> proveedores = new();
     private Proveedor proveedorActual = new();
@@ -301,7 +357,8 @@
             Telefono = p.Telefono,
             Direccion = p.Direccion,
             Activo = p.Activo,
-            FechaRegistro = p.FechaRegistro
+            FechaRegistro = p.FechaRegistro,
+            CodigoPostal = p.CodigoPostal
         };
 
         mensajeError = "";
@@ -314,7 +371,11 @@
         proveedorActual = new();
         mensajeError = "";
     }
-
+    private void NormalizarRFC()
+    {
+        if (!string.IsNullOrEmpty(proveedorActual.RFC))
+            proveedorActual.RFC = proveedorActual.RFC.ToUpper().Trim();
+    }
     private async Task Guardar()
     {
         try

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Crit.Server.Data;
+﻿using Crit.Server.Data;
 using Crit.Shared.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Crit.Controllers
 {
@@ -16,11 +11,16 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<TraspasosController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public TraspasosController(ApplicationDbContext context, ILogger<TraspasosController> logger)
+        public TraspasosController(
+            ApplicationDbContext context,
+            ILogger<TraspasosController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
         [HttpGet]
@@ -28,10 +28,16 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var traspasos = await _context.TraspasosAlmacen
                     .Include(x => x.AlmacenOrigen)
                     .Include(x => x.AlmacenDestino)
                     .Include(x => x.Producto)
+                    .Where(x => x.EmpresaId == empresaId)
                     .OrderByDescending(x => x.Fecha)
                     .ToListAsync();
 
@@ -49,11 +55,16 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var traspaso = await _context.TraspasosAlmacen
                     .Include(x => x.AlmacenOrigen)
                     .Include(x => x.AlmacenDestino)
                     .Include(x => x.Producto)
-                    .FirstOrDefaultAsync(x => x.Id == id);
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
 
                 if (traspaso == null)
                     return NotFound($"Traspaso con ID {id} no encontrado");
@@ -74,6 +85,11 @@ namespace Crit.Controllers
 
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
@@ -84,10 +100,10 @@ namespace Crit.Controllers
                     return BadRequest("La cantidad debe ser mayor a cero");
 
                 var almacenOrigen = await _context.Almacenes
-                    .FirstOrDefaultAsync(a => a.Id == traspaso.AlmacenOrigenId && a.Activo);
+                    .FirstOrDefaultAsync(a => a.Id == traspaso.AlmacenOrigenId && a.Activo && a.EmpresaId == empresaId);
 
                 var almacenDestino = await _context.Almacenes
-                    .FirstOrDefaultAsync(a => a.Id == traspaso.AlmacenDestinoId && a.Activo);
+                    .FirstOrDefaultAsync(a => a.Id == traspaso.AlmacenDestinoId && a.Activo && a.EmpresaId == empresaId);
 
                 if (almacenOrigen == null)
                     return BadRequest("El almacén origen no existe o está inactivo");
@@ -95,12 +111,16 @@ namespace Crit.Controllers
                 if (almacenDestino == null)
                     return BadRequest("El almacén destino no existe o está inactivo");
 
-                var producto = await _context.Productos.FindAsync(traspaso.ProductoId);
+                var producto = await _context.Productos
+                    .FirstOrDefaultAsync(p => p.Id == traspaso.ProductoId && p.EmpresaId == empresaId);
+
                 if (producto == null)
                     return BadRequest("El producto no existe");
 
                 var inventarioOrigen = await _context.InventarioPorAlmacen
-                    .FirstOrDefaultAsync(x => x.ProductoId == traspaso.ProductoId && x.AlmacenId == traspaso.AlmacenOrigenId);
+                    .FirstOrDefaultAsync(x => x.ProductoId == traspaso.ProductoId &&
+                                              x.AlmacenId == traspaso.AlmacenOrigenId &&
+                                              x.EmpresaId == empresaId);
 
                 if (inventarioOrigen == null)
                     return BadRequest("El producto no tiene inventario en el almacén origen");
@@ -109,12 +129,15 @@ namespace Crit.Controllers
                     return BadRequest($"Stock insuficiente en almacén origen. Disponible: {inventarioOrigen.Stock}");
 
                 var inventarioDestino = await _context.InventarioPorAlmacen
-                    .FirstOrDefaultAsync(x => x.ProductoId == traspaso.ProductoId && x.AlmacenId == traspaso.AlmacenDestinoId);
+                    .FirstOrDefaultAsync(x => x.ProductoId == traspaso.ProductoId &&
+                                              x.AlmacenId == traspaso.AlmacenDestinoId &&
+                                              x.EmpresaId == empresaId);
 
                 if (inventarioDestino == null)
                 {
                     inventarioDestino = new InventarioPorAlmacen
                     {
+                        EmpresaId = empresaId,
                         ProductoId = traspaso.ProductoId,
                         AlmacenId = traspaso.AlmacenDestinoId,
                         Stock = 0,
@@ -132,6 +155,7 @@ namespace Crit.Controllers
                 inventarioOrigen.Stock -= traspaso.Cantidad;
                 inventarioDestino.Stock += traspaso.Cantidad;
 
+                traspaso.EmpresaId = empresaId;
                 traspaso.Fecha = DateTime.Now;
                 traspaso.Estado = "Completado";
 
@@ -140,6 +164,7 @@ namespace Crit.Controllers
 
                 var movimientoSalida = new MovimientoInventario
                 {
+                    EmpresaId = empresaId,
                     Fecha = traspaso.Fecha,
                     ProductoId = traspaso.ProductoId,
                     AlmacenId = traspaso.AlmacenOrigenId,
@@ -154,6 +179,7 @@ namespace Crit.Controllers
 
                 var movimientoEntrada = new MovimientoInventario
                 {
+                    EmpresaId = empresaId,
                     Fecha = traspaso.Fecha,
                     ProductoId = traspaso.ProductoId,
                     AlmacenId = traspaso.AlmacenDestinoId,
@@ -176,7 +202,7 @@ namespace Crit.Controllers
                     .Include(x => x.AlmacenOrigen)
                     .Include(x => x.AlmacenDestino)
                     .Include(x => x.Producto)
-                    .FirstOrDefaultAsync(x => x.Id == traspaso.Id);
+                    .FirstOrDefaultAsync(x => x.Id == traspaso.Id && x.EmpresaId == empresaId);
 
                 return CreatedAtAction(nameof(GetTraspaso), new { id = traspaso.Id }, traspasoCreado);
             }
@@ -195,8 +221,13 @@ namespace Crit.Controllers
 
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var traspaso = await _context.TraspasosAlmacen
-                    .FirstOrDefaultAsync(x => x.Id == id);
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
 
                 if (traspaso == null)
                     return NotFound("Traspaso no encontrado");
@@ -205,10 +236,14 @@ namespace Crit.Controllers
                     return BadRequest("El traspaso ya está cancelado");
 
                 var inventarioOrigen = await _context.InventarioPorAlmacen
-                    .FirstOrDefaultAsync(x => x.ProductoId == traspaso.ProductoId && x.AlmacenId == traspaso.AlmacenOrigenId);
+                    .FirstOrDefaultAsync(x => x.ProductoId == traspaso.ProductoId &&
+                                              x.AlmacenId == traspaso.AlmacenOrigenId &&
+                                              x.EmpresaId == empresaId);
 
                 var inventarioDestino = await _context.InventarioPorAlmacen
-                    .FirstOrDefaultAsync(x => x.ProductoId == traspaso.ProductoId && x.AlmacenId == traspaso.AlmacenDestinoId);
+                    .FirstOrDefaultAsync(x => x.ProductoId == traspaso.ProductoId &&
+                                              x.AlmacenId == traspaso.AlmacenDestinoId &&
+                                              x.EmpresaId == empresaId);
 
                 if (inventarioOrigen == null || inventarioDestino == null)
                     return BadRequest("No se encontró inventario relacionado al traspaso");
@@ -226,6 +261,7 @@ namespace Crit.Controllers
 
                 var movimientoSalidaCancelacion = new MovimientoInventario
                 {
+                    EmpresaId = empresaId,
                     Fecha = DateTime.Now,
                     ProductoId = traspaso.ProductoId,
                     AlmacenId = traspaso.AlmacenDestinoId,
@@ -240,6 +276,7 @@ namespace Crit.Controllers
 
                 var movimientoEntradaCancelacion = new MovimientoInventario
                 {
+                    EmpresaId = empresaId,
                     Fecha = DateTime.Now,
                     ProductoId = traspaso.ProductoId,
                     AlmacenId = traspaso.AlmacenOrigenId,

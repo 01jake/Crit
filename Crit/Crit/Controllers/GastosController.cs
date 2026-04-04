@@ -1,170 +1,210 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Crit.Server.Data;
+﻿using Crit.Server.Data;
+using Crit.Shared.DTOs;
 using Crit.Shared.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Crit.Controllers
 {
-    public class GastosController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class GastosController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<GastosController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public GastosController(ApplicationDbContext context)
+        public GastosController(
+            ApplicationDbContext context,
+            ILogger<GastosController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
+            _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
-        // GET: Gastos
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Gasto>>> GetGastos()
         {
-            var applicationDbContext = _context.Gastos.Include(g => g.CajaSesion).Include(g => g.Proveedor);
-            return View(await applicationDbContext.ToListAsync());
-        }
-
-        // GET: Gastos/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
+            try
             {
-                return NotFound();
-            }
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
 
-            var gasto = await _context.Gastos
-                .Include(g => g.CajaSesion)
-                .Include(g => g.Proveedor)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (gasto == null)
+                var gastos = await _context.Gastos
+                    .Include(x => x.Proveedor)
+                    .Where(x => x.EmpresaId == empresaId && x.Activo)
+                    .OrderByDescending(x => x.Fecha)
+                    .ToListAsync();
+
+                return Ok(gastos);
+            }
+            catch (Exception ex)
             {
-                return NotFound();
+                _logger.LogError(ex, "Error al obtener gastos");
+                return StatusCode(500, "Error interno del servidor");
             }
-
-            return View(gasto);
         }
 
-        // GET: Gastos/Create
-        public IActionResult Create()
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Gasto>> GetGasto(int id)
         {
-            ViewData["CajaSesionId"] = new SelectList(_context.CajaSesiones, "Id", "Estado");
-            ViewData["ProveedorId"] = new SelectList(_context.Proveedores, "Id", "Nombre");
-            return View();
+            try
+            {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var gasto = await _context.Gastos
+                    .Include(x => x.Proveedor)
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
+                if (gasto == null)
+                    return NotFound("Gasto no encontrado");
+
+                return Ok(gasto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener gasto {Id}", id);
+                return StatusCode(500, "Error interno del servidor");
+            }
         }
 
-        // POST: Gastos/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Fecha,Concepto,Categoria,Monto,MetodoPago,Referencia,Observaciones,ProveedorId,CajaSesionId,CajaMovimientoId,UsuarioId,Activo")] Gasto gasto)
+        public async Task<ActionResult> CrearGasto([FromBody] RegistrarGastoDto dto)
         {
-            if (ModelState.IsValid)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                _context.Add(gasto);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var caja = await _context.CajaSesiones
+                    .Where(x => x.EmpresaId == empresaId)
+                    .OrderByDescending(x => x.FechaApertura)
+                    .FirstOrDefaultAsync(x => x.Estado == "Abierta");
+
+                if (caja == null)
+                    return BadRequest("No hay una caja abierta");
+
+                if (dto.Monto <= 0)
+                    return BadRequest("El monto debe ser mayor a cero");
+
+                if (dto.ProveedorId.HasValue)
+                {
+                    var proveedorExiste = await _context.Proveedores
+                        .AnyAsync(x => x.Id == dto.ProveedorId.Value && x.EmpresaId == empresaId);
+
+                    if (!proveedorExiste)
+                        return BadRequest("El proveedor no existe");
+                }
+
+                var saldoAnterior = caja.SaldoCalculado;
+                var saldoPosterior = saldoAnterior - dto.Monto;
+
+                var gasto = new Gasto
+                {
+                    EmpresaId = empresaId,
+                    Fecha = dto.Fecha == default ? DateTime.Now : dto.Fecha,
+                    Concepto = dto.Concepto,
+                    Categoria = dto.Categoria,
+                    Monto = dto.Monto,
+                    MetodoPago = dto.MetodoPago,
+                    Referencia = dto.Referencia,
+                    Observaciones = dto.Observaciones,
+                    ProveedorId = dto.ProveedorId,
+                    CajaSesionId = caja.Id,
+                    Activo = true
+                };
+
+                _context.Gastos.Add(gasto);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["CajaSesionId"] = new SelectList(_context.CajaSesiones, "Id", "Estado", gasto.CajaSesionId);
-            ViewData["ProveedorId"] = new SelectList(_context.Proveedores, "Id", "Nombre", gasto.ProveedorId);
-            return View(gasto);
-        }
 
-        // GET: Gastos/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var gasto = await _context.Gastos.FindAsync(id);
-            if (gasto == null)
-            {
-                return NotFound();
-            }
-            ViewData["CajaSesionId"] = new SelectList(_context.CajaSesiones, "Id", "Estado", gasto.CajaSesionId);
-            ViewData["ProveedorId"] = new SelectList(_context.Proveedores, "Id", "Nombre", gasto.ProveedorId);
-            return View(gasto);
-        }
-
-        // POST: Gastos/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Fecha,Concepto,Categoria,Monto,MetodoPago,Referencia,Observaciones,ProveedorId,CajaSesionId,CajaMovimientoId,UsuarioId,Activo")] Gasto gasto)
-        {
-            if (id != gasto.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
+                var movimiento = new CajaMovimiento
                 {
-                    _context.Update(gasto);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
+                    EmpresaId = empresaId,
+                    CajaSesionId = caja.Id,
+                    Fecha = gasto.Fecha,
+                    Tipo = "Egreso",
+                    Origen = "Gasto",
+                    Monto = gasto.Monto,
+                    SaldoAnterior = saldoAnterior,
+                    SaldoPosterior = saldoPosterior,
+                    GastoId = gasto.Id,
+                    Referencia = gasto.Referencia,
+                    Concepto = gasto.Concepto,
+                    MetodoPago = gasto.MetodoPago,
+                    Activo = true
+                };
+
+                _context.CajaMovimientos.Add(movimiento);
+                caja.TotalEgresos += gasto.Monto;
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(gasto);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error al crear gasto");
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
+
+        [HttpPost("{id}/cancelar")]
+        public async Task<ActionResult> CancelarGasto(int id)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var gasto = await _context.Gastos
+                    .FirstOrDefaultAsync(x => x.Id == id && x.EmpresaId == empresaId);
+
+                if (gasto == null)
+                    return NotFound("Gasto no encontrado");
+
+                if (!gasto.Activo)
+                    return BadRequest("El gasto ya está cancelado");
+
+                var caja = await _context.CajaSesiones
+                    .FirstOrDefaultAsync(x => x.Id == gasto.CajaSesionId && x.EmpresaId == empresaId);
+
+                var movimiento = await _context.CajaMovimientos
+                    .FirstOrDefaultAsync(x => x.GastoId == gasto.Id && x.Activo && x.EmpresaId == empresaId);
+
+                gasto.Activo = false;
+
+                if (movimiento != null)
                 {
-                    if (!GastoExists(gasto.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    movimiento.Activo = false;
+
+                    if (caja != null)
+                        caja.TotalEgresos -= movimiento.Monto;
                 }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["CajaSesionId"] = new SelectList(_context.CajaSesiones, "Id", "Estado", gasto.CajaSesionId);
-            ViewData["ProveedorId"] = new SelectList(_context.Proveedores, "Id", "Nombre", gasto.ProveedorId);
-            return View(gasto);
-        }
 
-        // GET: Gastos/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { message = "Gasto cancelado correctamente" });
+            }
+            catch (Exception ex)
             {
-                return NotFound();
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error al cancelar gasto {Id}", id);
+                return StatusCode(500, "Error interno del servidor");
             }
-
-            var gasto = await _context.Gastos
-                .Include(g => g.CajaSesion)
-                .Include(g => g.Proveedor)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (gasto == null)
-            {
-                return NotFound();
-            }
-
-            return View(gasto);
-        }
-
-        // POST: Gastos/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var gasto = await _context.Gastos.FindAsync(id);
-            if (gasto != null)
-            {
-                _context.Gastos.Remove(gasto);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool GastoExists(int id)
-        {
-            return _context.Gastos.Any(e => e.Id == id);
         }
     }
 }

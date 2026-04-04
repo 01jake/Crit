@@ -70,20 +70,27 @@
                     <span class="saas-brand-subtitle">Panel de gestión</span>
                 </div>
             </a>
-
-            
         </div>
 
         <div class="saas-sidebar-scroll">
             <AuthorizeView>
                 <Authorized Context="context">
                     <nav class="saas-nav-group" aria-label="Principal">
-                        <div class="saas-nav-group-title">Principal</div>
 
-                        <NavLink class="saas-nav-link" href="Dash" Match="NavLinkMatch.All" @onclick="CerrarMenu">
-                            <i class="bi bi-grid-1x2-fill"></i>
-                            <span>Dashboard</span>
-                        </NavLink>
+                        <AuthorizeView Roles="Admin,Supervisor" Context="dashContext">
+                            <div class="saas-nav-group-title">Principal</div>
+                            <NavLink class="saas-nav-link" href="Dash" Match="NavLinkMatch.All" @onclick="CerrarMenu">
+                                <i class="bi bi-grid-1x2-fill"></i>
+                                <span>Dashboard</span>
+                            </NavLink>
+                        </AuthorizeView>
+
+                        <AuthorizeView Roles="Admin" Context="adminContext">
+                            <NavLink class="saas-nav-link" href="usuarios" Match="NavLinkMatch.All" @onclick="CerrarMenu">
+                                <i class="bi bi-people"></i>
+                                <span>Usuarios</span>
+                            </NavLink>
+                        </AuthorizeView>
                     </nav>
 
                     <nav class="saas-nav-group" aria-label="Operaciones">
@@ -99,7 +106,7 @@
                             <span>Proveedores</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="Productos" @onclick="CerrarMenu">
+                        <NavLink class="saas-nav-link" href="productos" @onclick="CerrarMenu">
                             <i class="bi bi-box-seam-fill"></i>
                             <span>Productos</span>
                         </NavLink>
@@ -109,42 +116,47 @@
                             <span>Ventas</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="compras" @onclick="CerrarMenu">
-                            <i class="bi bi-bag-fill"></i>
-                            <span>Compras</span>
-                        </NavLink>
                         <NavLink class="saas-nav-link" href="cuentas-por-cobrar" @onclick="CerrarMenu">
                             <i class="bi bi-cash-coin"></i>
                             <span>CxC</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="cuentas-por-pagar" @onclick="CerrarMenu">
-                            <i class="bi bi-wallet2"></i>
-                            <span>CxP</span>
-                        </NavLink>
-                        <NavLink class="saas-nav-link" href="caja" @onclick="CerrarMenu">
-                            <i class="bi bi-safe2-fill"></i>
-                            <span>Caja</span>
-                        </NavLink>
                         <NavLink class="saas-nav-link" href="inventario-por-almacen" @onclick="CerrarMenu">
                             <i class="bi bi-box-seam"></i>
                             <span>Almacen</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="traspasos" @onclick="CerrarMenu">
-                            <i class="bi bi-arrow-left-right"></i>
-                            <span>Traspaso</span>
-                        </NavLink>
-
-                        <NavLink class="saas-nav-link" href="reabastecimiento" @onclick="CerrarMenu">
-                            <i class="bi bi-box-arrow-in-down"></i>
-                            <span>Reabastecimiento</span>
-                        </NavLink>
-                        <NavLink class="saas-nav-link" href="Kardex" @onclick="CerrarMenu">
+                        <NavLink class="saas-nav-link" href="kardex" @onclick="CerrarMenu">
                             <i class="bi bi-clipboard-data"></i>
                             <span>Kardex</span>
                         </NavLink>
 
+                        <AuthorizeView Roles="Admin,Supervisor" Context="opsContext">
+                            <NavLink class="saas-nav-link" href="compras" @onclick="CerrarMenu">
+                                <i class="bi bi-bag-fill"></i>
+                                <span>Compras</span>
+                            </NavLink>
+
+                            <NavLink class="saas-nav-link" href="cuentas-por-pagar" @onclick="CerrarMenu">
+                                <i class="bi bi-wallet2"></i>
+                                <span>CxP</span>
+                            </NavLink>
+
+                            <NavLink class="saas-nav-link" href="caja" @onclick="CerrarMenu">
+                                <i class="bi bi-safe2-fill"></i>
+                                <span>Caja</span>
+                            </NavLink>
+
+                            <NavLink class="saas-nav-link" href="traspasos" @onclick="CerrarMenu">
+                                <i class="bi bi-arrow-left-right"></i>
+                                <span>Traspaso</span>
+                            </NavLink>
+
+                            <NavLink class="saas-nav-link" href="reabastecimiento" @onclick="CerrarMenu">
+                                <i class="bi bi-box-arrow-in-down"></i>
+                                <span>Reabastecimiento</span>
+                            </NavLink>
+                        </AuthorizeView>
                     </nav>
 
                     <nav class="saas-nav-group" aria-label="Soporte">
@@ -178,7 +190,7 @@
 
                         <NavLink class="saas-nav-link py-1" href="Account/Register" @onclick="CerrarMenu">
                             <i class="bi bi-person-plus" style="font-size: 0.9rem;"></i>
-                            <span style="font-size: 0.8rem;">Registro</span>
+                            <span style="font-size: 0.8rem;">Crear cuenta administradora</span>
                         </NavLink>
 
                         <div class="mt-auto pb-2">
@@ -201,11 +213,9 @@
         <AuthorizeView>
             <Authorized Context="context">
                 <div class="nav-footer-container p-3 border-top bg-light bg-opacity-10">
-
                     <small class="text-uppercase fw-bold text-muted mb-2 d-block" style="font-size: 0.65rem; letter-spacing: 0.05rem;">Cuenta Activa</small>
 
                     <div class="saas-integrated-card shadow-sm border rounded-3 bg-white p-2">
-
                         <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
                             <div class="bg-primary bg-opacity-10 rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px;">
                                 <i class="bi bi-building text-primary" style="font-size: 0.9rem;"></i>
@@ -239,7 +249,6 @@
                                 </form>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </Authorized>
@@ -250,8 +259,8 @@
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChangedHandler;
-
     }
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -263,7 +272,6 @@
                 empresaNombre = string.IsNullOrWhiteSpace(sesion.EmpresaNombre)
                     ? "Sin empresa"
                     : sesion.EmpresaNombre;
-
             }
             else
             {
@@ -280,6 +288,7 @@
             StateHasChanged();
         }
     }
+
     private void OnLocationChangedHandler(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
@@ -289,9 +298,7 @@
     private string GetDisplayName(string? fullName)
     {
         if (string.IsNullOrWhiteSpace(fullName))
-        {
             return "Usuario";
-        }
 
         return fullName.Split('@')[0];
     }
@@ -299,22 +306,16 @@
     private string GetInitials(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
-        {
             return "US";
-        }
 
         var name = value.Split('@')[0];
         var parts = name.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         if (parts.Length >= 2)
-        {
             return $"{char.ToUpperInvariant(parts[0][0])}{char.ToUpperInvariant(parts[1][0])}";
-        }
 
         if (name.Length >= 2)
-        {
             return name[..2].ToUpperInvariant();
-        }
 
         return name.ToUpperInvariant();
     }

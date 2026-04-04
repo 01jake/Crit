@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Crit.Server.Data;
+﻿using Crit.Server.Data;
 using Crit.Shared.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Crit.Controllers
 {
@@ -16,11 +11,16 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AlmacenesController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public AlmacenesController(ApplicationDbContext context, ILogger<AlmacenesController> logger)
+        public AlmacenesController(
+            ApplicationDbContext context,
+            ILogger<AlmacenesController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
         [HttpGet]
@@ -28,7 +28,13 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var almacenes = await _context.Almacenes
+                    .Where(a => a.EmpresaId == empresaId)
                     .OrderBy(a => a.Nombre)
                     .ToListAsync();
 
@@ -46,7 +52,13 @@ namespace Crit.Controllers
         {
             try
             {
-                var almacen = await _context.Almacenes.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var almacen = await _context.Almacenes
+                    .FirstOrDefaultAsync(a => a.Id == id && a.EmpresaId == empresaId);
 
                 if (almacen == null)
                     return NotFound($"Almacén con ID {id} no encontrado");
@@ -65,8 +77,13 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var almacenes = await _context.Almacenes
-                    .Where(a => a.Activo)
+                    .Where(a => a.EmpresaId == empresaId && a.Activo)
                     .OrderBy(a => a.Nombre)
                     .ToListAsync();
 
@@ -84,14 +101,21 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
                 var existeNombre = await _context.Almacenes
-                    .AnyAsync(a => a.Nombre == almacen.Nombre);
+                    .AnyAsync(a => a.EmpresaId == empresaId && a.Nombre == almacen.Nombre);
 
                 if (existeNombre)
-                    return BadRequest("Ya existe un almacén con ese nombre");
+                    return BadRequest("Ya existe un almacén con ese nombre en esta empresa");
+
+                almacen.EmpresaId = empresaId;
 
                 _context.Almacenes.Add(almacen);
                 await _context.SaveChangesAsync();
@@ -110,21 +134,28 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 if (id != almacen.Id)
                     return BadRequest("El ID no coincide");
 
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var almacenExiste = await _context.Almacenes.FindAsync(id);
+                var almacenExiste = await _context.Almacenes
+                    .FirstOrDefaultAsync(a => a.Id == id && a.EmpresaId == empresaId);
+
                 if (almacenExiste == null)
                     return NotFound($"Almacén con ID {id} no encontrado");
 
                 var existeNombre = await _context.Almacenes
-                    .AnyAsync(a => a.Nombre == almacen.Nombre && a.Id != id);
+                    .AnyAsync(a => a.EmpresaId == empresaId && a.Nombre == almacen.Nombre && a.Id != id);
 
                 if (existeNombre)
-                    return BadRequest("Ya existe otro almacén con ese nombre");
+                    return BadRequest("Ya existe otro almacén con ese nombre en esta empresa");
 
                 almacenExiste.Nombre = almacen.Nombre;
                 almacenExiste.Clave = almacen.Clave;
@@ -147,12 +178,19 @@ namespace Crit.Controllers
         {
             try
             {
-                var almacen = await _context.Almacenes.FindAsync(id);
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
+                var almacen = await _context.Almacenes
+                    .FirstOrDefaultAsync(a => a.Id == id && a.EmpresaId == empresaId);
+
                 if (almacen == null)
                     return NotFound($"Almacén con ID {id} no encontrado");
 
                 var tieneInventario = await _context.InventarioPorAlmacen
-                    .AnyAsync(x => x.AlmacenId == id && x.Stock > 0);
+                    .AnyAsync(x => x.EmpresaId == empresaId && x.AlmacenId == id && x.Stock > 0);
 
                 if (tieneInventario)
                     return BadRequest("No se puede eliminar el almacén porque tiene inventario asignado");

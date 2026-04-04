@@ -1,99 +1,181 @@
-.login-split-container[b-jp93z01et8] {
+/* Contenedor Principal Split */
+.saas-register-container[b-jp93z01et8] {
     display: flex;
     min-height: 100vh;
-    width: 100%;
+    background-color: #f8fafc;
 }
 
-/* Panel Azul (Identidad) */
-.brand-panel[b-jp93z01et8] {
+/* Panel Izquierdo (Branding oscuro elegante) */
+.saas-brand-panel[b-jp93z01et8] {
     flex: 1;
     background: linear-gradient(135deg, #3c3c3c 0%, #111827 100%);
-    display: flex;
     align-items: center;
     justify-content: center;
+    padding: 3rem;
 }
 
 .logo-circle[b-jp93z01et8] {
-    width: 80px;
-    height: 80px;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(8px);
-    border-radius: 20px;
+    width: 90px;
+    height: 90px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Panel Formulario */
-.form-panel[b-jp93z01et8] {
+/* Panel Derecho (Formulario) */
+.saas-form-panel[b-jp93z01et8] {
     flex: 1;
-    background-color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: 2rem;
+    background-color: #ffffff;
 }
 
 .form-wrapper[b-jp93z01et8] {
-    max-width: 400px;
     width: 100%;
+    max-width: 500px; /* Ancho ideal para formularios */
 }
 
-.custom-control[b-jp93z01et8] {
-    border: 1px solid #e0e0e0;
-    background-color: #fdfdfd;
-    padding: 12px 15px;
+/* Tipografía de Labels */
+.saas-label[b-jp93z01et8] {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+/* Estilos de los Inputs (Bordes suaves y focus elegante) */
+.saas-input-group[b-jp93z01et8] {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease-in-out;
+    overflow: hidden;
 }
 
-    .custom-control:focus[b-jp93z01et8] {
-        border-color: #1F2A44;
-        background-color: #fff;
-        box-shadow: 0 0 0 4px rgba(31, 42, 68, 0.05);
+    .saas-input-group:focus-within[b-jp93z01et8] {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
-.pw-eye-btn[b-jp93z01et8] {
+    .saas-input-group .input-group-text[b-jp93z01et8] {
+        background-color: transparent;
+        border: none;
+        color: #94a3b8;
+        padding-left: 1rem;
+        padding-right: 0.5rem;
+    }
+
+    .saas-input-group .form-control[b-jp93z01et8] {
+        border: none;
+        background-color: transparent;
+        padding: 0.75rem 1rem 0.75rem 0.5rem;
+        font-size: 0.95rem;
+        color: #334155;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+        .saas-input-group .form-control[b-jp93z01et8]::placeholder {
+            color: #cbd5e1;
+        }
+
+/* Botón del Ojo para Contraseñas */
+.saas-eye-btn[b-jp93z01et8] {
     position: absolute;
-    right: 15px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #adb5bd;
+    color: #94a3b8;
+    z-index: 5;
+    padding: 0.2rem 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
 }
 
-/* Botón usando el color del Nav (#3c3c3c) */
-.btn-main-login[b-jp93z01et8] {
-    background-color: #3c3c3c;
-    color: white;
-    border-radius: 8px;
-    font-weight: 600;
-    border: none;
-    transition: all 0.3s ease;
-}
-
-    .btn-main-login:hover[b-jp93z01et8] {
-        background-color: #1F2A44;
-        transform: translateY(-2px);
-        color: white;
+    .saas-eye-btn:hover[b-jp93z01et8] {
+        color: #475569;
     }
 
-.alert-custom[b-jp93z01et8] {
-    background-color: #fff5f5;
-    color: #c53030;
-    border-left: 4px solid #c53030;
+/* Botón Principal (Oscuro como en tu captura) */
+.saas-btn-primary[b-jp93z01et8] {
+    background: linear-gradient(135deg, #3c3c3c 0%, #111827 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+    .saas-btn-primary:hover[b-jp93z01et8] {
+        background-color: #0f172a;
+        color: #ffffff;
+    }
+
+    .saas-btn-primary:active[b-jp93z01et8] {
+        transform: translateY(1px);
+    }
+
+/* Enlaces */
+.saas-back-link[b-jp93z01et8] {
+    text-decoration: none;
+    color: #64748b;
     font-size: 0.85rem;
+    font-weight: 500;
+    transition: color 0.2s;
 }
 
-.text-white-300[b-jp93z01et8] {
-    color: rgba(255,255,255,0.4);
+    .saas-back-link:hover[b-jp93z01et8] {
+        color: #0f172a;
+    }
+
+.saas-link-bold[b-jp93z01et8] {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
 }
 
-@@media (max-width: 991px) {
-    .brand-panel[b-jp93z01et8] {
-        display: none;
+    .saas-link-bold:hover[b-jp93z01et8] {
+        text-decoration: underline;
+    }
+
+/* Mensajes de Validación */
+.saas-validation-message[b-jp93z01et8] {
+    color: #ef4444;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.saas-alert-error[b-jp93z01et8] {
+    background-color: #fef2f2;
+    border-left: 4px solid #ef4444;
+    color: #b91c1c;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+/* Responsividad para móviles */
+@media (max-width: 991.98px) {
+    .saas-register-container[b-jp93z01et8] {
+        display: block;
+    }
+
+    .saas-form-panel[b-jp93z01et8] {
+        padding: 1.5rem;
+        min-height: 100vh;
+        align-items: flex-start;
+        padding-top: 3rem;
     }
 }

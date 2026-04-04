@@ -1,6 +1,4 @@
-﻿using System.Reflection.Emit;
-using Crit.Data;
-using Crit.Server.Data;
+﻿using Crit.Data;
 using Crit.Shared.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -14,140 +12,172 @@ namespace Crit.Server.Data
             : base(options)
         {
         }
+
+        // Core
+        public DbSet<Empresa> Empresas { get; set; }
         public DbSet<Cliente> Clientes { get; set; }
+        public DbSet<Proveedor> Proveedores { get; set; }
         public DbSet<Producto> Productos { get; set; }
+
+        // Ventas / Compras
         public DbSet<Venta> Ventas { get; set; }
         public DbSet<DetalleVenta> DetallesVenta { get; set; }
+        public DbSet<Compra> Compra { get; set; }
+
+        // Servicios / Cotizaciones
         public DbSet<Servicio> Servicios { get; set; }
         public DbSet<ServicioCliente> ServiciosCliente { get; set; }
         public DbSet<Cotizacion> Cotizaciones { get; set; }
         public DbSet<DetalleCotizacion> DetallesCotizacion { get; set; }
-        // DbSets para las entidades
+
+        // Soporte / Artículos
         public DbSet<ArticuloEntity> Articulos { get; set; }
         public DbSet<QuejaEntity> Quejas { get; set; }
-        public DbSet<Proveedor> Proveedores { get; set; }
+        public DbSet<Articulo> Articulo { get; set; } = default!;
+        public DbSet<Queja> Queja { get; set; } = default!;
+
+        // CxC / CxP
         public DbSet<CuentaPorCobrar> CuentasPorCobrar { get; set; }
         public DbSet<CuentaPorPagar> CuentasPorPagar { get; set; }
         public DbSet<PagoCliente> PagosCliente { get; set; }
         public DbSet<PagoProveedor> PagosProveedor { get; set; }
+
+        // Caja / Gastos
         public DbSet<CajaSesion> CajaSesiones { get; set; }
         public DbSet<CajaMovimiento> CajaMovimientos { get; set; }
         public DbSet<Gasto> Gastos { get; set; }
+
+        // Inventario
         public DbSet<Almacen> Almacenes { get; set; }
         public DbSet<InventarioPorAlmacen> InventarioPorAlmacen { get; set; }
         public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
         public DbSet<TraspasoAlmacen> TraspasosAlmacen { get; set; }
         public DbSet<OrdenReabastecimiento> OrdenesReabastecimiento { get; set; }
-        public DbSet<Empresa> Empresas { get; set; }
-
-
-
-        //public DbSet<Kardex> Kardex { get; set; }
-
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // Configuración para ArticuloEntity
+            ConfigureIdentity(builder);
+            ConfigureArticulos(builder);
+            ConfigureQuejas(builder);
+            ConfigureVentas(builder);
+            ConfigureServiciosYCotizaciones(builder);
+            ConfigureFinanzas(builder);
+            ConfigureCajaYGastos(builder);
+            ConfigureInventario(builder);
+            ConfigurePrecision(builder);
+        }
+
+        private static void ConfigureIdentity(ModelBuilder builder)
+        {
+            builder.Entity<ApplicationUser>()
+                .HasOne(u => u.Empresa)
+                .WithMany()
+                .HasForeignKey(u => u.EmpresaId)
+                .OnDelete(DeleteBehavior.NoAction);
+        }
+
+        private static void ConfigureArticulos(ModelBuilder builder)
+        {
             builder.Entity<ArticuloEntity>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
                 entity.HasOne(a => a.UsuarioQueRegistro)
-                      .WithMany()
-                      .HasForeignKey(a => a.UsuarioQueRegistroId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(a => a.UsuarioQueRegistroId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                entity.Property(q => q.Nombre)
-                   .IsRequired()
-                   .HasMaxLength(100);
+                entity.Property(a => a.Nombre)
+                    .IsRequired()
+                    .HasMaxLength(100);
 
                 entity.Property(a => a.Codigo)
-                      .IsRequired()
-                      .HasMaxLength(50);
+                    .IsRequired()
+                    .HasMaxLength(50);
 
                 entity.Property(a => a.Descripcion)
-                      .IsRequired()
-                      .HasMaxLength(500);
+                    .IsRequired()
+                    .HasMaxLength(500);
 
                 entity.Property(a => a.FechaRegistro)
-                      .HasDefaultValueSql("GETDATE()");
+                    .HasDefaultValueSql("GETDATE()");
 
                 entity.HasIndex(a => a.Codigo)
-                      .IsUnique();
+                    .IsUnique();
             });
+        }
 
-            // Configuración para QuejaEntity
+        private static void ConfigureQuejas(ModelBuilder builder)
+        {
             builder.Entity<QuejaEntity>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
                 entity.Property(q => q.NombreCliente)
-                      .IsRequired()
-                      .HasMaxLength(100);
+                    .IsRequired()
+                    .HasMaxLength(100);
 
                 entity.Property(q => q.NumeroAfiliacion)
-                      .HasMaxLength(50);
+                    .HasMaxLength(50);
 
                 entity.Property(q => q.Correo)
-                      .IsRequired()
-                      .HasMaxLength(256);
+                    .IsRequired()
+                    .HasMaxLength(256);
 
                 entity.Property(q => q.Titulo)
-                      .IsRequired()
-                      .HasMaxLength(200);
+                    .IsRequired()
+                    .HasMaxLength(200);
 
                 entity.Property(q => q.DescripcionQueja)
-                      .IsRequired()
-                      .HasMaxLength(1000);
+                    .IsRequired()
+                    .HasMaxLength(1000);
 
                 entity.Property(q => q.Categoria)
-                      .IsRequired()
-                      .HasMaxLength(100);
+                    .IsRequired()
+                    .HasMaxLength(100);
 
                 entity.Property(q => q.Fecha)
-                      .HasDefaultValueSql("GETDATE()");
+                    .HasDefaultValueSql("GETDATE()");
 
                 entity.Property(q => q.Estatus)
-                      .HasDefaultValue(EstatusQueja.Pendiente);
+                    .HasDefaultValue(EstatusQueja.Pendiente);
 
                 entity.Property(q => q.Prioridad)
-                      .HasDefaultValue(PrioridadQueja.Media);
+                    .HasDefaultValue(PrioridadQueja.Media);
 
                 entity.Property(q => q.ClienteId)
-                      .IsRequired(false);
+                    .IsRequired(false);
 
                 entity.HasOne(q => q.Cliente)
-                      .WithMany()
-                      .HasForeignKey(q => q.ClienteId)
-                      .OnDelete(DeleteBehavior.Restrict)
-                      .IsRequired(false);
+                    .WithMany()
+                    .HasForeignKey(q => q.ClienteId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
 
                 entity.HasOne(q => q.EmpleadoAsignado)
-                      .WithMany()
-                      .HasForeignKey(q => q.EmpleadoAsignadoId)
-                      .OnDelete(DeleteBehavior.SetNull)
-                      .IsRequired(false);
-            }); // ⭐ CERRAR AQUÍ QuejaEntity
+                    .WithMany()
+                    .HasForeignKey(q => q.EmpleadoAsignadoId)
+                    .OnDelete(DeleteBehavior.SetNull)
+                    .IsRequired(false);
+            });
+        }
 
-            // ✅ CONFIGURACIONES DE VENTAS (FUERA de QuejaEntity)
-            builder.Entity<ApplicationUser>()
-              .HasOne(u => u.Empresa)
-              .WithMany()
-              .HasForeignKey(u => u.EmpresaId)
-              .OnDelete(DeleteBehavior.NoAction);
-            // Cliente
+        private static void ConfigureVentas(ModelBuilder builder)
+        {
             builder.Entity<Cliente>()
-                .HasIndex(c => c.Email)
+                .HasIndex(c => new { c.Email, c.EmpresaId })
                 .IsUnique();
 
-            // Producto
+            builder.Entity<Proveedor>()
+                .HasIndex(p => new { p.Email, p.EmpresaId })
+                .IsUnique();
+
             builder.Entity<Producto>()
-                .HasIndex(p => p.Codigo)
+                .HasIndex(p => new { p.Codigo, p.EmpresaId })
                 .IsUnique();
 
-            // Venta
             builder.Entity<Venta>()
                 .HasOne(v => v.Cliente)
                 .WithMany(c => c.Ventas)
@@ -155,10 +185,15 @@ namespace Crit.Server.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Venta>()
+                .HasOne(v => v.Almacen)
+                .WithMany()
+                .HasForeignKey(v => v.AlmacenId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Venta>()
                 .HasIndex(v => v.NumeroVenta)
                 .IsUnique();
 
-            // DetalleVenta
             builder.Entity<DetalleVenta>()
                 .HasOne(dv => dv.Venta)
                 .WithMany(v => v.Detalles)
@@ -171,12 +206,19 @@ namespace Crit.Server.Data
                 .HasForeignKey(dv => dv.ProductoId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Servicio
+            builder.Entity<Compra>()
+                .HasOne(c => c.Almacen)
+                .WithMany()
+                .HasForeignKey(c => c.AlmacenId)
+                .OnDelete(DeleteBehavior.NoAction);
+        }
+
+        private static void ConfigureServiciosYCotizaciones(ModelBuilder builder)
+        {
             builder.Entity<Servicio>()
                 .HasIndex(s => s.Codigo)
                 .IsUnique();
 
-            // ServicioCliente
             builder.Entity<ServicioCliente>()
                 .HasOne(sc => sc.Servicio)
                 .WithMany(s => s.ServiciosCliente)
@@ -189,7 +231,6 @@ namespace Crit.Server.Data
                 .HasForeignKey(sc => sc.ClienteId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Cotizacion
             builder.Entity<Cotizacion>()
                 .HasOne(c => c.Cliente)
                 .WithMany(cl => cl.Cotizaciones)
@@ -200,7 +241,6 @@ namespace Crit.Server.Data
                 .HasIndex(c => c.NumeroCotizacion)
                 .IsUnique();
 
-            // DetalleCotizacion
             builder.Entity<DetalleCotizacion>()
                 .HasOne(dc => dc.Cotizacion)
                 .WithMany(c => c.Detalles)
@@ -212,10 +252,10 @@ namespace Crit.Server.Data
                 .WithMany(p => p.DetallesCotizacion)
                 .HasForeignKey(dc => dc.ProductoId)
                 .OnDelete(DeleteBehavior.Restrict);
+        }
 
-
-            base.OnModelCreating(builder);
-
+        private static void ConfigureFinanzas(ModelBuilder builder)
+        {
             builder.Entity<CuentaPorCobrar>()
                 .HasOne(c => c.Cliente)
                 .WithMany(c => c.CuentasPorCobrar)
@@ -245,23 +285,16 @@ namespace Crit.Server.Data
                 .WithOne(cmp => cmp.CuentaPorPagar)
                 .HasForeignKey<CuentaPorPagar>(c => c.CompraId)
                 .OnDelete(DeleteBehavior.NoAction);
-                        builder.Entity<Compra>()
-                .HasOne(c => c.Almacen)
-                .WithMany()
-                .HasForeignKey(c => c.AlmacenId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            builder.Entity<Venta>()
-                .HasOne(v => v.Almacen)
-                .WithMany()
-                .HasForeignKey(v => v.AlmacenId)
-                .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<PagoProveedor>()
                 .HasOne(p => p.CuentaPorPagar)
                 .WithMany(c => c.Pagos)
                 .HasForeignKey(p => p.CuentaPorPagarId)
                 .OnDelete(DeleteBehavior.NoAction);
+        }
+
+        private static void ConfigureCajaYGastos(ModelBuilder builder)
+        {
             builder.Entity<CajaMovimiento>()
                 .HasOne(x => x.CajaSesion)
                 .WithMany(x => x.Movimientos)
@@ -279,6 +312,10 @@ namespace Crit.Server.Data
                 .WithMany()
                 .HasForeignKey(x => x.ProveedorId)
                 .OnDelete(DeleteBehavior.NoAction);
+        }
+
+        private static void ConfigureInventario(ModelBuilder builder)
+        {
             builder.Entity<InventarioPorAlmacen>()
                 .HasIndex(x => new { x.ProductoId, x.AlmacenId })
                 .IsUnique();
@@ -294,6 +331,7 @@ namespace Crit.Server.Data
                 .WithMany()
                 .HasForeignKey(x => x.AlmacenId)
                 .OnDelete(DeleteBehavior.NoAction);
+
             builder.Entity<TraspasoAlmacen>()
                 .HasOne(x => x.AlmacenOrigen)
                 .WithMany()
@@ -311,6 +349,7 @@ namespace Crit.Server.Data
                 .WithMany()
                 .HasForeignKey(x => x.ProductoId)
                 .OnDelete(DeleteBehavior.NoAction);
+
             builder.Entity<OrdenReabastecimiento>()
                 .HasOne(x => x.Producto)
                 .WithMany()
@@ -322,6 +361,7 @@ namespace Crit.Server.Data
                 .WithMany()
                 .HasForeignKey(x => x.AlmacenId)
                 .OnDelete(DeleteBehavior.NoAction);
+
             builder.Entity<OrdenReabastecimiento>()
                 .HasOne(x => x.Compra)
                 .WithMany()
@@ -333,130 +373,50 @@ namespace Crit.Server.Data
                 .WithMany()
                 .HasForeignKey(x => x.TraspasoAlmacenId)
                 .OnDelete(DeleteBehavior.NoAction);
-            builder.Entity<ApplicationUser>()
-                .HasOne(u => u.Empresa)
-                .WithMany()
-                .HasForeignKey(u => u.EmpresaId)
-                .OnDelete(DeleteBehavior.NoAction);
-            builder.Entity<CuentaPorCobrar>()
-                .Property(x => x.Subtotal)
-                .HasColumnType("decimal(18,2)");
-
-                                builder.Entity<CuentaPorCobrar>()
-                .Property(x => x.Descuento)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<CuentaPorCobrar>()
-                .Property(x => x.IVA)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<CuentaPorCobrar>()
-                .Property(x => x.Total)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<CuentaPorCobrar>()
-                .Property(x => x.TotalPagado)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<CuentaPorPagar>()
-                .Property(x => x.Subtotal)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<CuentaPorPagar>()
-                .Property(x => x.Descuento)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<CuentaPorPagar>()
-                .Property(x => x.IVA)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<CuentaPorPagar>()
-                .Property(x => x.Total)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<CuentaPorPagar>()
-                .Property(x => x.TotalPagado)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<PagoCliente>()
-                .Property(x => x.Monto)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<PagoCliente>()
-                .Property(x => x.SaldoAnterior)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<PagoCliente>()
-                .Property(x => x.SaldoPosterior)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<PagoProveedor>()
-                .Property(x => x.Monto)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<PagoProveedor>()
-                .Property(x => x.SaldoAnterior)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<PagoProveedor>()
-                .Property(x => x.SaldoPosterior)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<CajaSesion>()
-                .Property(x => x.MontoInicial)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<CajaSesion>()
-                .Property(x => x.MontoFinal)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<CajaSesion>()
-                .Property(x => x.TotalIngresos)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<CajaSesion>()
-                .Property(x => x.TotalEgresos)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<CajaMovimiento>()
-                .Property(x => x.Monto)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<CajaMovimiento>()
-                .Property(x => x.SaldoAnterior)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<CajaMovimiento>()
-                .Property(x => x.SaldoPosterior)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<Gasto>()
-                .Property(x => x.Monto)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<InventarioPorAlmacen>()
-                .Property(x => x.Stock)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<InventarioPorAlmacen>()
-                .Property(x => x.StockMinimo)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<InventarioPorAlmacen>()
-                .Property(x => x.StockMaximo)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<TraspasoAlmacen>()
-                .Property(x => x.Cantidad)
-                .HasColumnType("decimal(18,2)");
-            builder.Entity<OrdenReabastecimiento>()
-                .Property(x => x.StockActual)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<OrdenReabastecimiento>()
-                .Property(x => x.StockMinimo)
-                .HasColumnType("decimal(18,2)");
-
-            builder.Entity<OrdenReabastecimiento>()
-                .Property(x => x.CantidadSugerida)
-                .HasColumnType("decimal(18,2)");
-
-
         }
-        //public DbSet<Producto> Producto { get; set; } = default!;
-        public DbSet<Queja> Queja { get; set; } = default!;
-        public DbSet<Articulo> Articulo { get; set; } = default!;
-        public DbSet<Crit.Shared.Models.Compra> Compra { get; set; } = default!;
+
+        private static void ConfigurePrecision(ModelBuilder builder)
+        {
+            builder.Entity<CuentaPorCobrar>().Property(x => x.Subtotal).HasColumnType("decimal(18,2)");
+            builder.Entity<CuentaPorCobrar>().Property(x => x.Descuento).HasColumnType("decimal(18,2)");
+            builder.Entity<CuentaPorCobrar>().Property(x => x.IVA).HasColumnType("decimal(18,2)");
+            builder.Entity<CuentaPorCobrar>().Property(x => x.Total).HasColumnType("decimal(18,2)");
+            builder.Entity<CuentaPorCobrar>().Property(x => x.TotalPagado).HasColumnType("decimal(18,2)");
+
+            builder.Entity<CuentaPorPagar>().Property(x => x.Subtotal).HasColumnType("decimal(18,2)");
+            builder.Entity<CuentaPorPagar>().Property(x => x.Descuento).HasColumnType("decimal(18,2)");
+            builder.Entity<CuentaPorPagar>().Property(x => x.IVA).HasColumnType("decimal(18,2)");
+            builder.Entity<CuentaPorPagar>().Property(x => x.Total).HasColumnType("decimal(18,2)");
+            builder.Entity<CuentaPorPagar>().Property(x => x.TotalPagado).HasColumnType("decimal(18,2)");
+
+            builder.Entity<PagoCliente>().Property(x => x.Monto).HasColumnType("decimal(18,2)");
+            builder.Entity<PagoCliente>().Property(x => x.SaldoAnterior).HasColumnType("decimal(18,2)");
+            builder.Entity<PagoCliente>().Property(x => x.SaldoPosterior).HasColumnType("decimal(18,2)");
+
+            builder.Entity<PagoProveedor>().Property(x => x.Monto).HasColumnType("decimal(18,2)");
+            builder.Entity<PagoProveedor>().Property(x => x.SaldoAnterior).HasColumnType("decimal(18,2)");
+            builder.Entity<PagoProveedor>().Property(x => x.SaldoPosterior).HasColumnType("decimal(18,2)");
+
+            builder.Entity<CajaSesion>().Property(x => x.MontoInicial).HasColumnType("decimal(18,2)");
+            builder.Entity<CajaSesion>().Property(x => x.MontoFinal).HasColumnType("decimal(18,2)");
+            builder.Entity<CajaSesion>().Property(x => x.TotalIngresos).HasColumnType("decimal(18,2)");
+            builder.Entity<CajaSesion>().Property(x => x.TotalEgresos).HasColumnType("decimal(18,2)");
+
+            builder.Entity<CajaMovimiento>().Property(x => x.Monto).HasColumnType("decimal(18,2)");
+            builder.Entity<CajaMovimiento>().Property(x => x.SaldoAnterior).HasColumnType("decimal(18,2)");
+            builder.Entity<CajaMovimiento>().Property(x => x.SaldoPosterior).HasColumnType("decimal(18,2)");
+
+            builder.Entity<Gasto>().Property(x => x.Monto).HasColumnType("decimal(18,2)");
+
+            builder.Entity<InventarioPorAlmacen>().Property(x => x.Stock).HasColumnType("decimal(18,2)");
+            builder.Entity<InventarioPorAlmacen>().Property(x => x.StockMinimo).HasColumnType("decimal(18,2)");
+            builder.Entity<InventarioPorAlmacen>().Property(x => x.StockMaximo).HasColumnType("decimal(18,2)");
+
+            builder.Entity<TraspasoAlmacen>().Property(x => x.Cantidad).HasColumnType("decimal(18,2)");
+
+            builder.Entity<OrdenReabastecimiento>().Property(x => x.StockActual).HasColumnType("decimal(18,2)");
+            builder.Entity<OrdenReabastecimiento>().Property(x => x.StockMinimo).HasColumnType("decimal(18,2)");
+            builder.Entity<OrdenReabastecimiento>().Property(x => x.CantidadSugerida).HasColumnType("decimal(18,2)");
+        }
     }
 }

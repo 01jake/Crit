@@ -6,7 +6,7 @@
 
 main {
     flex: 1;
-    background-color: #f8fafc;
+    background-color: #F1F5F9;
 }
 
 .main-container {
@@ -131,7 +131,7 @@ main {
     }
 
     main {
-        margin-left: 260px; /* Desplaza el contenido exactamente el ancho de la barra */
+        margin-left: 220px; /* Desplaza el contenido exactamente el ancho de la barra */
         width: calc(100% - 260px); /* Evita que el contenido se desborde */
         padding: 2rem;
         min-height: 100vh;

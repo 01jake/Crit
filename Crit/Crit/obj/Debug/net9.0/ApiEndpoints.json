@@ -608,16 +608,6 @@
     ]
   },
   {
-    "ContainingType": "Crit.Controllers.ClientesController",
-    "Method": "DebugEmpresa",
-    "RelativePath": "api/Clientes/debug-empresa",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "Crit.Controllers.ComprasController",
     "Method": "GetCompras",
     "RelativePath": "api/Compras",
@@ -739,7 +729,7 @@
   },
   {
     "ContainingType": "Crit.Controllers.CuentasPorCobrarController",
-    "Method": "GetAll",
+    "Method": "Get",
     "RelativePath": "api/CuentasPorCobrar",
     "HttpMethod": "GET",
     "IsController": true,
@@ -748,32 +738,6 @@
     "ReturnTypes": [
       {
         "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.Models.CuentaPorCobrar, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "Crit.Controllers.CuentasPorCobrarController",
-    "Method": "Create",
-    "RelativePath": "api/CuentasPorCobrar",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "cuenta",
-        "Type": "Crit.Shared.Models.CuentaPorCobrar",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "Crit.Shared.Models.CuentaPorCobrar",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -827,7 +791,7 @@
   },
   {
     "ContainingType": "Crit.Controllers.CuentasPorCobrarController",
-    "Method": "VerComprobantePago",
+    "Method": "ComprobantePago",
     "RelativePath": "api/CuentasPorCobrar/{id}/pagos/{pagoId}/comprobante",
     "HttpMethod": "GET",
     "IsController": true,
@@ -894,28 +858,8 @@
     ]
   },
   {
-    "ContainingType": "Crit.Controllers.CuentasPorCobrarController",
-    "Method": "GetPendientes",
-    "RelativePath": "api/CuentasPorCobrar/pendientes",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.Models.CuentaPorCobrar, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
     "ContainingType": "Crit.Controllers.CuentasPorPagarController",
-    "Method": "GetAll",
+    "Method": "Get",
     "RelativePath": "api/CuentasPorPagar",
     "HttpMethod": "GET",
     "IsController": true,
@@ -924,32 +868,6 @@
     "ReturnTypes": [
       {
         "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.Models.CuentaPorPagar, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "Crit.Controllers.CuentasPorPagarController",
-    "Method": "Create",
-    "RelativePath": "api/CuentasPorPagar",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "cuenta",
-        "Type": "Crit.Shared.Models.CuentaPorPagar",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "Crit.Shared.Models.CuentaPorPagar",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -1003,7 +921,7 @@
   },
   {
     "ContainingType": "Crit.Controllers.CuentasPorPagarController",
-    "Method": "VerComprobantePago",
+    "Method": "ComprobantePago",
     "RelativePath": "api/CuentasPorPagar/{id}/pagos/{pagoId}/comprobante",
     "HttpMethod": "GET",
     "IsController": true,
@@ -1042,26 +960,6 @@
       }
     ],
     "ReturnTypes": []
-  },
-  {
-    "ContainingType": "Crit.Controllers.CuentasPorPagarController",
-    "Method": "GetPendientes",
-    "RelativePath": "api/CuentasPorPagar/pendientes",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.Models.CuentaPorPagar, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
   },
   {
     "ContainingType": "Crit.Controllers.CuentasPorPagarController",
@@ -1191,7 +1089,7 @@
     "Parameters": [
       {
         "Name": "fechaInicio",
-        "Type": "System.String",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
       }
     ],
@@ -1242,14 +1140,14 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "cantidad",
+        "Name": "take",
         "Type": "System.Int32",
         "IsRequired": false
       }
     ],
     "ReturnTypes": [
       {
-        "Type": "System.Collections.Generic.List\u00601[[Crit.Shared.DTOs.VentaRecienteDto, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.DTOs.VentaRecienteDto, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -1258,6 +1156,84 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "Crit.Controllers.GastosController",
+    "Method": "GetGastos",
+    "RelativePath": "api/Gastos",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.Models.Gasto, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Crit.Controllers.GastosController",
+    "Method": "CrearGasto",
+    "RelativePath": "api/Gastos",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "Crit.Shared.DTOs.RegistrarGastoDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Crit.Controllers.GastosController",
+    "Method": "GetGasto",
+    "RelativePath": "api/Gastos/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Crit.Shared.Models.Gasto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Crit.Controllers.GastosController",
+    "Method": "CancelarGasto",
+    "RelativePath": "api/Gastos/{id}/cancelar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "Crit.Controllers.InventarioAlmacenController",
@@ -1456,6 +1432,22 @@
     ]
   },
   {
+    "ContainingType": "Crit.Controllers.OnboardingController",
+    "Method": "RegisterEmpresa",
+    "RelativePath": "api/Onboarding/register-empresa",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "Crit.Shared.DTOs.RegisterEmpresaDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Crit.Controllers.ProductosController",
     "Method": "GetProductos",
     "RelativePath": "api/Productos",
@@ -1647,7 +1639,7 @@
   },
   {
     "ContainingType": "Crit.Controllers.ProveedoresController",
-    "Method": "Get",
+    "Method": "GetProveedores",
     "RelativePath": "api/Proveedores",
     "HttpMethod": "GET",
     "IsController": true,
@@ -1667,7 +1659,7 @@
   },
   {
     "ContainingType": "Crit.Controllers.ProveedoresController",
-    "Method": "Create",
+    "Method": "CreateProveedor",
     "RelativePath": "api/Proveedores",
     "HttpMethod": "POST",
     "IsController": true,
@@ -1679,11 +1671,47 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "Crit.Shared.Models.Proveedor",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "Crit.Controllers.ProveedoresController",
-    "Method": "Update",
+    "Method": "GetProveedor",
+    "RelativePath": "api/Proveedores/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Crit.Shared.Models.Proveedor",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Crit.Controllers.ProveedoresController",
+    "Method": "UpdateProveedor",
     "RelativePath": "api/Proveedores/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
@@ -1704,7 +1732,7 @@
   },
   {
     "ContainingType": "Crit.Controllers.ProveedoresController",
-    "Method": "Delete",
+    "Method": "DeleteProveedor",
     "RelativePath": "api/Proveedores/{id}",
     "HttpMethod": "DELETE",
     "IsController": true,
@@ -1720,21 +1748,15 @@
   },
   {
     "ContainingType": "Crit.Controllers.ProveedoresController",
-    "Method": "GetById",
-    "RelativePath": "api/Proveedores/{id}",
+    "Method": "GetProveedoresActivos",
+    "RelativePath": "api/Proveedores/activos",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
+    "Parameters": [],
     "ReturnTypes": [
       {
-        "Type": "Crit.Shared.Models.Proveedor",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.Models.Proveedor, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -2098,48 +2120,6 @@
   },
   {
     "ContainingType": "Crit.Controllers.ReabastecimientoController",
-    "Method": "CrearCompraDesdeOrden",
-    "RelativePath": "api/Reabastecimiento/{id}/crear-compra",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "Crit.Shared.DTOs.CrearCompraDesdeReabastecimientoDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "Crit.Controllers.ReabastecimientoController",
-    "Method": "CrearTraspasoDesdeOrden",
-    "RelativePath": "api/Reabastecimiento/{id}/crear-traspaso",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "Crit.Shared.Models.CrearTraspasoDesdeReabastecimientoDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "Crit.Controllers.ReabastecimientoController",
     "Method": "Solicitar",
     "RelativePath": "api/Reabastecimiento/{id}/solicitar",
     "HttpMethod": "POST",
@@ -2335,6 +2315,121 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "Crit.Controllers.UsuariosController",
+    "Method": "GetUsuarios",
+    "RelativePath": "api/Usuarios",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Crit.Shared.Models.UsuarioEmpresaDto, Crit.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Crit.Controllers.UsuariosController",
+    "Method": "CrearUsuario",
+    "RelativePath": "api/Usuarios",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "Crit.Shared.Models.CrearUsuarioDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Crit.Controllers.UsuariosController",
+    "Method": "GetUsuario",
+    "RelativePath": "api/Usuarios/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Crit.Shared.Models.UsuarioEmpresaDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Crit.Controllers.UsuariosController",
+    "Method": "ActivarUsuario",
+    "RelativePath": "api/Usuarios/{id}/activar",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Crit.Controllers.UsuariosController",
+    "Method": "DesactivarUsuario",
+    "RelativePath": "api/Usuarios/{id}/desactivar",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Crit.Controllers.UsuariosController",
+    "Method": "CambiarRol",
+    "RelativePath": "api/Usuarios/{id}/rol",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "Crit.Shared.Models.CambiarRolUsuarioDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Crit.Controllers.VentasController",
     "Method": "GetVentas",
     "RelativePath": "api/Ventas",
@@ -2368,17 +2463,7 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "Crit.Shared.Models.Venta",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "Crit.Controllers.VentasController",

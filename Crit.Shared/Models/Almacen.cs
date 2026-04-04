@@ -9,6 +9,8 @@ namespace Crit.Shared.Models
     public class Almacen
     {
         public int Id { get; set; }
+        public int EmpresaId { get; set; }
+        public Empresa? Empresa { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public string? Clave { get; set; }
         public string? Direccion { get; set; }

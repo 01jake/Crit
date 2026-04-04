@@ -10,7 +10,7 @@ namespace Crit.Shared.Models
     public class Proveedor
     {
         public int Id { get; set; }
-        public int? EmpresaId { get; set; }
+        public int EmpresaId { get; set; }
         public Empresa? Empresa { get; set; }
 
 
@@ -41,6 +41,11 @@ namespace Crit.Shared.Models
         public string? RegimenFiscal { get; set; }
 
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
+        [StringLength(10, ErrorMessage = "El código postal no puede exceder 10 caracteres.")]
+        [RegularExpression(@"^\d{5}$", ErrorMessage = "El código postal debe tener 5 dígitos.")]
+        public string? CodigoPostal { get; set; }
+
+
 
         public bool Activo { get; set; } = true;
         public ICollection<CuentaPorPagar>? CuentasPorPagar { get; set; }

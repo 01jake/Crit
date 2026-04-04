@@ -12,11 +12,16 @@ namespace Crit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<CajaController> _logger;
+        private readonly IEmpresaProvider _empresaProvider;
 
-        public CajaController(ApplicationDbContext context, ILogger<CajaController> logger)
+        public CajaController(
+            ApplicationDbContext context,
+            ILogger<CajaController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
+            _empresaProvider = empresaProvider;
         }
 
         [HttpGet("actual")]
@@ -24,8 +29,14 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var caja = await _context.CajaSesiones
                     .Include(x => x.Movimientos.Where(m => m.Activo))
+                    .Where(x => x.EmpresaId == empresaId)
                     .OrderByDescending(x => x.FechaApertura)
                     .FirstOrDefaultAsync(x => x.Estado == "Abierta");
 
@@ -46,16 +57,22 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var hoy = DateTime.Today;
 
                 var caja = await _context.CajaSesiones
                     .AsNoTracking()
+                    .Where(x => x.EmpresaId == empresaId)
                     .OrderByDescending(x => x.FechaApertura)
                     .FirstOrDefaultAsync(x => x.Estado == "Abierta");
 
                 var movimientosHoy = await _context.CajaMovimientos
                     .AsNoTracking()
-                    .Where(x => x.Activo && x.Fecha.Date == hoy)
+                    .Where(x => x.EmpresaId == empresaId && x.Activo && x.Fecha.Date == hoy)
                     .ToListAsync();
 
                 var resumen = new CajaResumenDto
@@ -81,8 +98,13 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var movimientos = await _context.CajaMovimientos
-                    .Where(x => x.Activo)
+                    .Where(x => x.EmpresaId == empresaId && x.Activo)
                     .OrderByDescending(x => x.Fecha)
                     .ToListAsync();
 
@@ -100,14 +122,20 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var cajaAbierta = await _context.CajaSesiones
-                    .AnyAsync(x => x.Estado == "Abierta");
+                    .AnyAsync(x => x.EmpresaId == empresaId && x.Estado == "Abierta");
 
                 if (cajaAbierta)
                     return BadRequest("Ya existe una caja abierta");
 
                 var caja = new CajaSesion
                 {
+                    EmpresaId = empresaId,
                     FechaApertura = DateTime.Now,
                     MontoInicial = dto.MontoInicial,
                     MontoFinal = 0m,
@@ -124,6 +152,7 @@ namespace Crit.Controllers
                 {
                     var movimiento = new CajaMovimiento
                     {
+                        EmpresaId = empresaId,
                         CajaSesionId = caja.Id,
                         Fecha = DateTime.Now,
                         Tipo = "Ingreso",
@@ -155,7 +184,13 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var caja = await _context.CajaSesiones
+                    .Where(x => x.EmpresaId == empresaId)
                     .OrderByDescending(x => x.FechaApertura)
                     .FirstOrDefaultAsync(x => x.Estado == "Abierta");
 
@@ -198,7 +233,13 @@ namespace Crit.Controllers
 
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var caja = await _context.CajaSesiones
+                    .Where(x => x.EmpresaId == empresaId)
                     .OrderByDescending(x => x.FechaApertura)
                     .FirstOrDefaultAsync(x => x.Estado == "Abierta");
 
@@ -214,6 +255,7 @@ namespace Crit.Controllers
                     : saldoAnterior + movimiento.Monto;
 
                 movimiento.Id = 0;
+                movimiento.EmpresaId = empresaId;
                 movimiento.CajaSesionId = caja.Id;
                 movimiento.Fecha = DateTime.Now;
                 movimiento.SaldoAnterior = saldoAnterior;
@@ -245,11 +287,16 @@ namespace Crit.Controllers
         {
             try
             {
+                var empresaId = await _empresaProvider.GetEmpresaIdAsync();
+
+                if (empresaId <= 0)
+                    return Unauthorized("No se pudo determinar la empresa del usuario.");
+
                 var fechaInicio = DateTime.Today.AddMonths(-meses);
 
                 var movimientos = await _context.CajaMovimientos
                     .AsNoTracking()
-                    .Where(x => x.Activo && x.Fecha >= fechaInicio)
+                    .Where(x => x.EmpresaId == empresaId && x.Activo && x.Fecha >= fechaInicio)
                     .ToListAsync();
 
                 var data = movimientos

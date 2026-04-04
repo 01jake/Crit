@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Crit.Shared.Models;
 
 public enum EstatusQueja
 {
@@ -18,6 +19,8 @@ public enum PrioridadQueja
 public class Queja
 {
     public int Id { get; set; }
+    public int EmpresaId { get; set; }
+    public Empresa? Empresa { get; set; }
 
     [Required(ErrorMessage = "El nombre del cliente es obligatorio.")]
     [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres.")]

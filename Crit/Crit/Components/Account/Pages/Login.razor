@@ -13,31 +13,37 @@
 
 <PageTitle>Acceso al Sistema - Polynex</PageTitle>
 
-<div class="login-split-container">
-    <div class="brand-panel d-none d-lg-flex">
+<div class="saas-auth-container">
+    <div class="saas-brand-panel d-none d-lg-flex">
         <div class="brand-content text-center">
-            <div class="logo-circle mb-4">
-                <i class="bi bi-layers-half text-white fs-1"></i>
+            <div class="logo-circle mb-4 mx-auto">
+                <i class="bi bi-layers-half text-white" style="font-size: 2.5rem;"></i>
             </div>
-            <h1 class="display-5 fw-bold text-white">Polynex</h1>
-            <p class="lead text-white-50">Sistema de Control Administrativo</p>
-            <div class="mt-5 pt-4 border-top border-secondary w-75 mx-auto">
-                <small class="text-white-300">© 2026 Dr. Concreto - Gestión de Proyectos</small>
+            <h1 class="display-6 fw-bold text-white mb-3">Polynex System</h1>
+            <p class="text-white-50 px-5 mb-5" style="font-size: 1.1rem; line-height: 1.6;">
+                Bienvenido de nuevo. Ingresa a tu panel administrativo para gestionar tus proyectos y operaciones.
+            </p>
+            <div class="mt-auto pt-5 border-top border-secondary border-opacity-25 w-75 mx-auto">
+                <div class="d-flex align-items-center justify-content-center gap-2 text-white-50 small">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Acceso Seguro & Encriptación SSL</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="form-panel">
+    <div class="saas-form-panel">
         <div class="form-wrapper">
-            <div class="mb-5">
-                <a href="/" class="text-decoration-none text-muted small hover-dark">
-                    <i class="bi bi-arrow-left me-2"></i>Volver al Inicio
+
+            <div class="mb-4">
+                <a href="/" class="saas-back-link">
+                    <i class="bi bi-arrow-left"></i> Volver al Inicio
                 </a>
             </div>
 
-            <div class="mb-4">
-                <h2 class="fw-bold" style="color: #3c3c3c;">Iniciar Sesión</h2>
-                <p class="text-muted">Por favor, introduce tus credenciales de acceso.</p>
+            <div class="mb-5">
+                <h2 class="fw-bold text-dark mb-2" style="font-size: 1.75rem;">Iniciar Sesión</h2>
+                <p class="text-muted" style="font-size: 0.95rem;">Introduce tus credenciales para continuar.</p>
             </div>
 
             <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
@@ -45,37 +51,47 @@
 
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    <div class="alert alert-custom border-0 shadow-sm mb-4" role="alert">
+                    <div class="alert saas-alert-error mb-4" role="alert">
                         <i class="bi bi-shield-exclamation me-2"></i> @errorMessage
                     </div>
                 }
 
-                <div class="mb-4">
-                    <label class="form-label fw-bold small text-secondary">CORREO ELECTRÓNICO</label>
-                    <InputText @bind-Value="Input.Email" class="form-control custom-control" placeholder="nombre@ejemplo.com" />
-                    <ValidationMessage For="() => Input.Email" class="text-danger small mt-1" />
-                </div>
-
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <label class="form-label fw-bold small text-secondary">CONTRASEÑA</label>
-                        <a href="Account/ForgotPassword" class="small text-decoration-none text-primary">¿Olvidaste tu clave?</a>
+                <div class="row g-4">
+                    <div class="col-12">
+                        <label class="saas-label">CORREO ELECTRÓNICO</label>
+                        <div class="input-group saas-input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <InputText @bind-Value="Input.Email" class="form-control" placeholder="nombre@ejemplo.com" />
+                        </div>
+                        <ValidationMessage For="() => Input.Email" class="saas-validation-message" />
                     </div>
-                    <div class="position-relative">
-                        <InputText type="@(showPassword ? "text" : "password")" @bind-Value="Input.Password" class="form-control custom-control" placeholder="••••••••" />
-                        <button type="button" @onclick="TogglePasswordVisibility" class="pw-eye-btn">
-                            <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
-                        </button>
+
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="saas-label mb-0">CONTRASEÑA</label>
+                            <a href="Account/ForgotPassword" class="saas-link-subtle">¿Olvidaste tu clave?</a>
+                        </div>
+                        <div class="input-group saas-input-group position-relative">
+                            <span class="input-group-text"><i class="bi bi-key"></i></span>
+                            <InputText type="@(showPassword ? "text" : "password")" @bind-Value="Input.Password" class="form-control pe-5" placeholder="••••••••" />
+                          @*   <button type="button" @onclick="TogglePasswordVisibility" class="saas-eye-btn">
+                                <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                            </button> *@
+                        </div>
+                        <ValidationMessage For="() => Input.Password" class="saas-validation-message" />
                     </div>
-                    <ValidationMessage For="() => Input.Password" class="text-danger small mt-1" />
+
+                    <div class="col-12">
+                        <div class="form-check d-flex align-items-center gap-2 ps-0">
+                            <InputCheckbox @bind-Value="Input.RememberMe" class="form-check-input ms-0 mt-0" id="rememberMe" style="width: 1.1rem; height: 1.1rem; cursor:pointer;" />
+                            <label class="form-check-label text-muted" style="font-size: 0.85rem; cursor:pointer;" for="rememberMe">
+                                Mantener sesión activa
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-check mb-4">
-                    <InputCheckbox @bind-Value="Input.RememberMe" class="form-check-input" id="rememberMe" />
-                    <label class="form-check-label text-muted small" for="rememberMe">Mantener sesión activa</label>
-                </div>
-
-                <button type="submit" class="btn btn-main-login w-100 py-3 shadow" disabled="@isLoading">
+                <button type="submit" class="btn saas-btn-primary w-100 mt-5 shadow-sm d-flex justify-content-center align-items-center" disabled="@isLoading">
                     @if (isLoading)
                     {
                         <span class="spinner-border spinner-border-sm me-2"></span>
@@ -88,16 +104,15 @@
                 </button>
             </EditForm>
 
-            <div class="mt-5 pt-4 text-center">
-                <p class="text-muted small">
-                    ¿No tienes acceso? <a href="Account/Register" class="fw-bold text-primary text-decoration-none border-bottom border-primary">Contactar soporte</a>
+            <div class="mt-5 pt-4 text-center border-top border-light">
+                <p class="text-muted" style="font-size: 0.85rem;">
+                    ¿Aún no tienes una empresa registrada? <br>
+                    <a href="Account/Register" class="saas-link-bold mt-1 d-inline-block">Crea tu cuenta aquí</a>
                 </p>
             </div>
         </div>
     </div>
 </div>
-
-
 @code {
     private string? errorMessage;
     private bool showPassword = false;

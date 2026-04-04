@@ -10,7 +10,7 @@ namespace Crit.Shared.Models
     public class CajaMovimiento
     {
         public int Id { get; set; }
-        public int? EmpresaId { get; set; }
+        public int EmpresaId { get; set; }
         public Empresa? Empresa { get; set; }
 
 
