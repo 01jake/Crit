@@ -2,208 +2,253 @@
 @using Crit.Client.Services
 @using Crit.Shared.Models
 @using Microsoft.AspNetCore.Authorization
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor,Usuario")]
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject ClienteHttpService ClienteHttpService
 @inject VentaHttpService VentaHttpService
 @inject ProductoHttpService ProductoHttpService
 @inject PdfHttpService PdfHttpService
-@inject AlmacenHttpService AlmacenHttpService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Punto de Venta</PageTitle>
 
-<div class="pos-container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="page-title">Punto de Venta</h2>
-        <div class="search-box">
+<div class="pos-container px-5 py-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+        <div>
+            <h2 class="page-title mb-0">Punto de Venta</h2>
+            <p class="text-muted small mb-0">Registra ventas y consulta operaciones recientes</p>
+        </div>
+
+        <div class="search-box-container sales-search-box">
             <i class="bi bi-search"></i>
-            <input type="text" class="form-control" placeholder="Buscar producto (F4)..."
-                   @ref="searchBar" @bind="busquedaProducto" @bind:event="oninput" @onkeyup="BuscarProducto" />
+            <input class="form-control" placeholder="Buscar por codigo o nombre..."
+                   @bind="busquedaProducto" @bind:event="oninput" @onkeyup="BuscarProducto" />
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="products-grid-container">
-                <div class="row row-cols-1 row-cols-md-3 row-cols-xl-4 g-3">
-                    @foreach (var p in productosFiltrados.Take(20))
-                    {
-                        <div class="col">
-                            <div class="card h-100 producto-card" @onclick="() => AgregarAlCarrito(p)">
-                                <div class="card-body">
-                                    <div class="producto-icon bg-soft-primary">
-                                        <i class="bi bi-box-seam"></i>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">Catalogo de Productos</h6>
+                        <small class="text-muted">Selecciona productos para agregarlos al ticket</small>
+                    </div>
+                    <span class="badge bg-light text-dark border">@productosFiltrados.Count producto(s)</span>
+                </div>
+
+                <div class="card-body pt-0">
+                    <div class="row g-3">
+                        @foreach (var p in productosFiltrados.Take(20))
+                        {
+                            <div class="col-12 col-sm-6 col-xl-4">
+                                <button type="button" class="card border-0 shadow-sm w-100 text-start product-card h-100" @onclick="() => AgregarAlCarrito(p)">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="product-icon">
+                                                <i class="bi bi-box-seam"></i>
+                                            </div>
+                                            <span class="stock-pill @(p.Stock > p.StockMinimo ? "stock-ok" : "stock-low")">
+                                                Stock: @p.Stock
+                                            </span>
+                                        </div>
+
+                                        <h6 class="fw-bold text-dark mb-1 text-truncate">@p.Nombre</h6>
+                                        <div class="extra-small text-muted mb-3">@p.Codigo</div>
+
+                                        <div class="d-flex justify-content-between align-items-end">
+                                            <div>
+                                                <div class="extra-small text-muted">Precio</div>
+                                                <div class="fw-bold text-success">@p.PrecioVenta.ToString("C")</div>
+                                            </div>
+                                            <div class="extra-small text-muted">@p.Categoria</div>
+                                        </div>
                                     </div>
-                                    <h6 class="producto-nombre">@p.Nombre</h6>
-                                    <span class="producto-codigo">@p.Codigo</span>
-                                    <div class="d-flex justify-content-between align-items-end mt-3">
-                                        <span class="producto-precio text-dark">$@p.PrecioVenta.ToString("N2")</span>
-                                        <span class="badge-stock @(p.Stock > p.StockMinimo ? "stock-ok" : "stock-low")">
-                                            Stock: @p.Stock
-                                        </span>
-                                    </div>
-                                </div>
+                                </button>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             </div>
 
-            <div class="card mt-4 shadow-sm border-0">
-                <div class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-                    <h5 class="mb-0 fw-bold text-dark">Ventas Recientes</h5>
-                    <div class="input-group input-group-sm w-100" style="max-width: 300px;">
-                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-filter"></i></span>
-                        <input type="text" class="form-control border-start-0 bg-light"
-                               placeholder="Folio o cliente..." @bind="busquedaVenta" @bind:event="oninput" />
+            <div class="d-none d-lg-block card shadow-sm border-0 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark">Ventas Recientes</h6>
+                    <div class="search-box-container search-box-sm">
+                        <i class="bi bi-search"></i>
+                        <input class="form-control" placeholder="Folio o cliente..."
+                               @bind="busquedaVenta" @bind:event="oninput" />
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 small">
-                            <thead class="bg-light">
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background-color: #f8fafc;">
+                            <tr>
+                                <th class="ps-4">Folio</th>
+                                <th>Cliente</th>
+                                <th>Total</th>
+                                <th class="text-center">Detalle</th>
+                                <th class="text-center pe-4">PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var venta in VentasFiltradas)
+                            {
                                 <tr>
-                                    <th class="ps-3">Folio</th>
-                                    <th>Cliente</th>
-                                    <th>Total</th>
-                                    <th class="text-center">Detalle</th>
-                                    <th class="text-center">PDF</th>
+                                    <td class="ps-4 fw-bold">
+                                        <a href="/ventas/@venta.Id" class="text-decoration-none text-dark">#@venta.NumeroVenta</a>
+                                    </td>
+                                    <td>@(venta.Cliente?.Nombre ?? "Publico General")</td>
+                                    <td class="fw-bold text-success">@venta.Total.ToString("C")</td>
+                                    <td class="text-center">
+                                        <a class="btn btn-white btn-sm" href="/ventas/@venta.Id">
+                                            <i class="bi bi-eye text-primary"></i>
+                                        </a>
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <button type="button" class="btn btn-white btn-sm" @onclick="() => DescargarPdfVenta(venta.Id)">
+                                            <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var venta in VentasFiltradas)
-                                {
-                                    <tr>
-                                        <td class="ps-3 fw-bold">
-                                            <a href="/ventas/@venta.Id" class="text-decoration-none text-dark">
-                                                #@venta.NumeroVenta
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <div class="text-truncate" style="max-width: 120px;">
-                                                @(venta.Cliente?.Nombre ?? "Público General")
-                                            </div>
-                                        </td>
-                                        <td class="fw-bold text-primary">$@venta.Total.ToString("N2")</td>
-                                        <td class="text-center">
-                                            <a class="btn btn-sm btn-outline-primary" href="/ventas/@venta.Id" title="Ver detalle">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </td>
-                                        <td class="text-center">
-                                            <button class="btn btn-link text-danger p-0" @onclick="() => DescargarPdfVenta(venta.Id)">
-                                                <i class="bi bi-file-earmark-pdf fs-5"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                            }
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+
+            <div class="d-lg-none">
+                @foreach (var venta in VentasFiltradas.Take(10))
+                {
+                    <div class="card shadow-sm border-0 mb-3 sales-mobile-card">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="fw-bold text-dark">#@venta.NumeroVenta</div>
+                                    <div class="small text-muted">@(venta.Cliente?.Nombre ?? "Publico General")</div>
+                                </div>
+                                <div class="fw-bold text-success">@venta.Total.ToString("C")</div>
+                            </div>
+
+                            <div class="d-flex gap-2 border-top pt-3">
+                                <a class="btn btn-light-primary btn-sm flex-fill text-center" href="/ventas/@venta.Id">
+                                    <i class="bi bi-eye me-1"></i>Detalle
+                                </a>
+                                <button type="button" class="btn btn-light-danger btn-sm flex-fill" @onclick="() => DescargarPdfVenta(venta.Id)">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="card carrito-card shadow-lg border-0">
-                <div class="card-header text-white d-flex justify-content-between align-items-center bg-dark">
-                    <h5 class="mb-0"><i class="bi bi-cart-check me-2"></i>Venta Actual</h5>
-                    <span class="badge bg-primary">@ventaActual.Detalles.Count SKU</span>
+            <div class="card shadow-sm border-0 rounded-4 sticky-top sales-ticket-card">
+                <div class="card-header text-white border-0 py-3 px-4" style="background-color: #1F2A44;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="bi bi-cart-check me-2"></i>Venta Actual
+                        </h6>
+                        <span class="badge bg-primary">@ventaActual.Detalles.Count SKU</span>
+                    </div>
                 </div>
-                <div class="card-body d-flex flex-column" style="min-height: 550px;">
 
-                    <div class="row g-2 mb-3">
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-3">
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-muted">TIPO DE VENTA</label>
-                            <select class="form-select form-select-sm" value="@tipoVenta" @onchange="OnTipoVentaChanged">
+                            <label class="saas-label">TIPO DE VENTA</label>
+                            <select class="form-select saas-input" value="@tipoVenta" @onchange="OnTipoVentaChanged">
                                 <option value="Contado">Contado</option>
-                                <option value="Credito">Crédito</option>
+                                <option value="Credito" disabled="@EsPublicoGeneralSeleccionado()">Credito</option>
                             </select>
                         </div>
 
                         @if (ventaActual.EsCredito)
                         {
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-muted">DÍAS DE CRÉDITO</label>
-                                <input type="number" min="1" class="form-control form-control-sm" @bind="ventaActual.DiasCredito" />
+                                <label class="saas-label">DIAS DE CREDITO</label>
+                                <input type="number" min="1" class="form-control saas-input" @bind="ventaActual.DiasCredito" />
                             </div>
                         }
 
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-muted">ALMACÉN</label>
-                            <select class="form-select border-primary-subtle" @bind="ventaActual.AlmacenId">
-                                <option value="">Seleccionar Almacén...</option>
-                                @foreach (var a in almacenes)
-                                {
-                                    <option value="@a.Id">@a.Nombre</option>
-                                }
-                            </select>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label small fw-bold text-muted">CLIENTE</label>
-                            <select class="form-select border-primary-subtle" @bind="ventaActual.ClienteId">
-                                <option value="0">Público General</option>
+                            <label class="saas-label">CLIENTE</label>
+                            <select class="form-select saas-input" value="@ventaActual.ClienteId" @onchange="OnClienteChanged">
+                                <option value="0">Publico General</option>
                                 @foreach (var c in clientes)
                                 {
                                     <option value="@c.Id">@c.Nombre</option>
                                 }
                             </select>
+                            @if (EsPublicoGeneralSeleccionado())
+                            {
+                                <div class="extra-small text-muted mt-2">
+                                    Publico General solo puede venderse de contado.
+                                </div>
+                            }
                         </div>
                     </div>
 
-                    <div class="carrito-items-list flex-grow-1">
+                    <div class="ticket-items-list mb-4">
                         @if (!ventaActual.Detalles.Any())
                         {
-                            <div class="empty-cart text-center p-4">
+                            <div class="text-center py-4">
                                 <i class="bi bi-basket3 fs-1 text-muted"></i>
-                                <p class="text-muted mt-2">El ticket está vacío</p>
+                                <p class="text-muted small mt-2 mb-0">El ticket esta vacio</p>
                             </div>
                         }
                         else
                         {
                             @foreach (var d in ventaActual.Detalles)
                             {
-                                <div class="item-compra-fila">
+                                <div class="ticket-item">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <span class="item-name fw-bold">@GetProductoNombre(d.ProductoId)</span>
-                                        <button class="btn-delete-item text-danger border-0 bg-transparent" @onclick="() => EliminarDelCarrito(d)"><i class="bi bi-x fs-5"></i></button>
+                                        <div class="fw-semibold text-dark text-truncate me-2">@GetProductoNombre(d.ProductoId)</div>
+                                        <button type="button" class="btn btn-sm p-0 border-0 bg-transparent text-danger" @onclick="() => EliminarDelCarrito(d)">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
                                     </div>
+
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center gap-2">
-                                            <button class="btn btn-sm btn-outline-secondary py-0" @onclick="() => DisminuirCantidad(d)">-</button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm py-0" @onclick="() => DisminuirCantidad(d)">-</button>
                                             <span class="fw-bold">@d.Cantidad</span>
-                                            <button class="btn btn-sm btn-outline-secondary py-0" @onclick="() => AumentarCantidad(d)">+</button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm py-0" @onclick="() => AumentarCantidad(d)">+</button>
                                         </div>
-                                        <span class="fw-bold text-primary">$@d.Subtotal.ToString("N2")</span>
+                                        <div class="fw-bold text-success">@d.Subtotal.ToString("C")</div>
                                     </div>
                                 </div>
                             }
                         }
                     </div>
 
-                    <div class="ticket-summary mt-3 border-top pt-3">
-                        <div class="summary-row d-flex justify-content-between mb-1">
-                            <span class="text-muted">Subtotal</span>
-                            <span class="fw-bold">$@subtotal.ToString("N2")</span>
+                    <div class="ticket-summary">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>@subtotal.ToString("C")</span>
                         </div>
-                        <div class="summary-row d-flex justify-content-between mb-1">
-                            <span class="text-muted">IVA (16%)</span>
-                            <span class="fw-bold">$@iva.ToString("N2")</span>
+                        <div class="summary-row">
+                            <span>IVA (16%)</span>
+                            <span>@iva.ToString("C")</span>
                         </div>
-                        <div class="summary-total mt-2 d-flex justify-content-between fw-bolder fs-5 text-dark">
-                            <span>TOTAL</span>
-                            <span>$@total.ToString("N2")</span>
+                        <div class="summary-total">
+                            <span>Total</span>
+                            <span>@total.ToString("C")</span>
                         </div>
                     </div>
 
                     <div class="d-grid gap-2 mt-4">
-                        <button class="btn btn-primary btn-lg shadow-sm" @onclick="ProcesarVenta"
+                        <button class="btn saas-btn-primary py-3 fw-bold" @onclick="ProcesarVenta"
                                 disabled="@(!ventaActual.Detalles.Any() || procesando)">
-                            <i class="bi bi-check2-circle me-2"></i>CONSOLIDAR VENTA
+                            <i class="bi bi-check2-circle me-2"></i>Consolidar Venta
                         </button>
-                        <button class="btn btn-link btn-sm text-muted text-decoration-none" @onclick="LimpiarCarrito">
+
+                        <button class="btn btn-light border text-muted fw-semibold" @onclick="LimpiarCarrito">
                             Descartar venta
                         </button>
                     </div>
@@ -213,70 +258,241 @@
     </div>
 </div>
 
+<style>
+    :root {
+        --polynex-navy: #1F2A44;
+    }
+
+    .saas-btn-primary {
+        background-color: var(--polynex-navy);
+        color: white;
+        border: none;
+        transition: all 0.2s;
+    }
+
+        .saas-btn-primary:hover {
+            background-color: #2a3a5e;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .search-box-container {
+        position: relative;
+    }
+
+        .search-box-container i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            z-index: 2;
+        }
+
+        .search-box-container .form-control {
+            padding-left: 2.5rem;
+            border-radius: 0.75rem;
+        }
+
+    .sales-search-box {
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .search-box-sm {
+        width: 240px;
+    }
+
+    .product-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        background: #fff;
+        border-radius: 1rem;
+    }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.08) !important;
+        }
+
+    .product-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #eff6ff;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stock-pill {
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .stock-ok {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .stock-low {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .sales-mobile-card {
+        border-left: 4px solid #e2e8f0 !important;
+    }
+
+    .btn-light-primary {
+        background: #eff6ff;
+        color: #2563eb;
+        border: none;
+    }
+
+        .btn-light-primary:hover {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+    .btn-light-danger {
+        background: #fef2f2;
+        color: #dc2626;
+        border: none;
+    }
+
+        .btn-light-danger:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+    .btn-white {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+    }
+
+        .btn-white:hover {
+            background: #f8fafc;
+        }
+
+    .sales-ticket-card {
+        top: 1rem;
+    }
+
+    .ticket-items-list {
+        max-height: 320px;
+        overflow-y: auto;
+    }
+
+    .ticket-item {
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #eef2f7;
+    }
+
+    .ticket-summary {
+        border-top: 1px solid #e5e7eb;
+        padding-top: 1rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        color: #64748b;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed #cbd5e1;
+        font-size: 1.1rem;
+        color: #0f172a;
+    }
+
+    .saas-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 0.35rem;
+        display: block;
+        text-transform: uppercase;
+    }
+
+    .saas-input {
+        border-radius: 0.75rem;
+    }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .pos-container {
+        padding-bottom: 80px;
+    }
+</style>
+
 @code {
     private List<Cliente> clientes = new();
     private List<Producto> productos = new();
     private List<Producto> productosFiltrados = new();
     private List<Venta> ventasRecientes = new();
     private Venta ventaActual = new();
-    private ElementReference searchBar;
     private string tipoVenta = "Contado";
     private string busquedaProducto = "";
-    private string busquedaVenta = ""; 
+    private string busquedaVenta = "";
     private bool procesando = false;
     private decimal tasaIva = 0.16m;
-    private List<Almacen> almacenes = new();
-    // Propiedades calculadas
+
     private decimal subtotal => ventaActual.Detalles.Sum(d => d.Subtotal);
     private decimal iva => (subtotal - ventaActual.Descuento) * tasaIva;
     private decimal total => subtotal - ventaActual.Descuento + iva;
 
-    // Lógica de filtrado de la tabla inferior (Folio o Nombre Cliente)
     private IEnumerable<Venta> VentasFiltradas =>
         string.IsNullOrWhiteSpace(busquedaVenta)
             ? ventasRecientes
             : ventasRecientes.Where(v =>
-                v.NumeroVenta.ToString().Contains(busquedaVenta) ||
-                (v.Cliente?.Nombre?.Contains(busquedaVenta, StringComparison.OrdinalIgnoreCase) ?? false)
-            );
+                (v.NumeroVenta?.Contains(busquedaVenta, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (v.Cliente?.Nombre?.Contains(busquedaVenta, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    protected override async Task LoadDataAsync()
+    {
+        await CargarDatos();
+        InicializarVenta();
+    }
+
+    protected override bool ShouldRetryInitialLoad()
+        => !productos.Any();
+
     private async Task CargarDatos()
     {
         clientes = (await ClienteHttpService.GetClientesActivosAsync()).ToList();
         productos = (await ProductoHttpService.GetProductosActivosAsync()).ToList();
         productosFiltrados = productos;
         ventasRecientes = (await VentaHttpService.GetVentasRecientesAsync(20)).ToList();
-        almacenes = (await AlmacenHttpService.GetActivosAsync()).ToList();
     }
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarDatos();
-        InicializarVenta();
-    }
-
 
     private void InicializarVenta()
     {
-       tipoVenta = "Contado";
+        tipoVenta = "Contado";
 
-    ventaActual = new Venta
-    {
-        Fecha = DateTime.Now,
-        Estado = "Completada",
-        AlmacenId = almacenes.Any() ? almacenes.First().Id : null,
-        Detalles = new List<DetalleVenta>(),
-        Descuento = 0,
-        EsCredito = false,
-        DiasCredito = null,
-        MetodoPago = "PUE - Pago en una sola exhibición",
-        FormaPago = "03 - Transferencia electrónica",
-        UsoCFDI = "G03 - Gastos en general",
-        Notas = string.Empty
-    };
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender) await searchBar.FocusAsync();
+        ventaActual = new Venta
+        {
+            Fecha = DateTime.Now,
+            Estado = "Completada",
+            Detalles = new List<DetalleVenta>(),
+            Descuento = 0,
+            EsCredito = false,
+            DiasCredito = null,
+            ClienteId = 0,
+            MetodoPago = "PUE - Pago en una sola exhibicion",
+            FormaPago = "03 - Transferencia electronica",
+            UsoCFDI = "G03 - Gastos en general",
+            Notas = string.Empty
+        };
     }
 
     private void BuscarProducto()
@@ -289,16 +505,17 @@
         {
             productosFiltrados = productos.Where(p =>
                 p.Nombre.Contains(busquedaProducto, StringComparison.OrdinalIgnoreCase) ||
-                p.Codigo.Contains(busquedaProducto, StringComparison.OrdinalIgnoreCase)
-            ).ToList();
+                p.Codigo.Contains(busquedaProducto, StringComparison.OrdinalIgnoreCase)).ToList();
         }
     }
 
     private void AgregarAlCarrito(Producto producto)
     {
-        if (producto.Stock <= 0) return;
+        if (producto.Stock <= 0)
+            return;
 
         var detalleExistente = ventaActual.Detalles.FirstOrDefault(d => d.ProductoId == producto.Id);
+
         if (detalleExistente != null)
         {
             if (detalleExistente.Cantidad < producto.Stock)
@@ -312,18 +529,33 @@
             ventaActual.Detalles.Add(new DetalleVenta
             {
                 ProductoId = producto.Id,
-                Producto = producto,
                 Cantidad = 1,
                 PrecioUnitario = producto.PrecioVenta,
+                Descuento = 0,
                 Subtotal = producto.PrecioVenta
             });
         }
+
         RecalcularTotales();
     }
-    
-    private void OnTipoVentaChanged(ChangeEventArgs e)
+
+
+    private async Task OnTipoVentaChanged(ChangeEventArgs e)
     {
-        tipoVenta = e.Value?.ToString() ?? "Contado";
+        var nuevoTipo = e.Value?.ToString() ?? "Contado";
+
+        if (nuevoTipo == "Credito" && EsPublicoGeneralSeleccionado())
+        {
+            tipoVenta = "Contado";
+            ventaActual.EsCredito = false;
+            ventaActual.DiasCredito = null;
+
+            await JSRuntime.InvokeVoidAsync("alert",
+                "Las ventas a credito solo estan disponibles para clientes registrados.");
+            return;
+        }
+
+        tipoVenta = nuevoTipo;
         ventaActual.EsCredito = tipoVenta == "Credito";
 
         if (!ventaActual.EsCredito)
@@ -335,6 +567,27 @@
             ventaActual.DiasCredito = 30;
         }
     }
+
+    private async Task OnClienteChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var clienteId))
+            clienteId = 0;
+
+        ventaActual.ClienteId = clienteId;
+
+        if (EsPublicoGeneralSeleccionado() && ventaActual.EsCredito)
+        {
+            tipoVenta = "Contado";
+            ventaActual.EsCredito = false;
+            ventaActual.DiasCredito = null;
+
+            await JSRuntime.InvokeVoidAsync("alert",
+                "Publico General solo puede venderse de contado.");
+        }
+    }
+
+    private bool EsPublicoGeneralSeleccionado() => ventaActual.ClienteId <= 0;
+
     private void AumentarCantidad(DetalleVenta detalle)
     {
         var producto = productos.FirstOrDefault(p => p.Id == detalle.ProductoId);
@@ -357,6 +610,7 @@
         {
             ventaActual.Detalles.Remove(detalle);
         }
+
         RecalcularTotales();
     }
 
@@ -368,8 +622,14 @@
 
     private async Task DescargarPdfVenta(int ventaId)
     {
-        try { await PdfHttpService.DescargarVentaPdfAsync(ventaId); }
-        catch (Exception ex) { await JSRuntime.InvokeVoidAsync("alert", $"Error PDF: {ex.Message}"); }
+        try
+        {
+            await PdfHttpService.DescargarVentaPdfAsync(ventaId);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error al descargar PDF: {ex.Message}");
+        }
     }
 
     private void RecalcularTotales()
@@ -389,20 +649,15 @@
 
             if (ventaActual.EsCredito)
             {
-                if (!ventaActual.AlmacenId.HasValue || ventaActual.AlmacenId <= 0)
-                {
-                    await JSRuntime.InvokeVoidAsync("alert", "Debes seleccionar un almacén para la venta.");
-                    return;
-                }
                 if (ventaActual.ClienteId == 0)
                 {
-                    await JSRuntime.InvokeVoidAsync("alert", "Debes seleccionar un cliente para una venta a crédito.");
+                    await JSRuntime.InvokeVoidAsync("alert", "Debes seleccionar un cliente para una venta a credito.");
                     return;
                 }
 
                 if (!ventaActual.DiasCredito.HasValue || ventaActual.DiasCredito <= 0)
                 {
-                    await JSRuntime.InvokeVoidAsync("alert", "Debes indicar los días de crédito.");
+                    await JSRuntime.InvokeVoidAsync("alert", "Debes indicar los dias de credito.");
                     return;
                 }
             }
@@ -415,13 +670,16 @@
 
             var result = await VentaHttpService.CreateVentaAsync(ventaActual);
 
-            if (result != null)
+            if (result == null)
             {
-                await CargarDatos();
-                InicializarVenta();
-                busquedaProducto = "";
-                await searchBar.FocusAsync();
+                await JSRuntime.InvokeVoidAsync("alert",
+                    "No se pudo procesar la venta. Revisa cliente, caja abierta y configuracion del punto de venta.");
+                return;
             }
+
+            await CargarDatos();
+            InicializarVenta();
+            busquedaProducto = "";
         }
         catch (Exception ex)
         {
@@ -432,7 +690,6 @@
             procesando = false;
         }
     }
-
 
     private void LimpiarCarrito() => InicializarVenta();
 

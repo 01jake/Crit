@@ -2,20 +2,32 @@
 using System.Net.Http.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Net;
+using Crit.Shared.Models;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Crit.Client.Services
 {
     public class QuejaService
     {
         private readonly HttpClient _httpClient;
+        private readonly AuthenticationStateProvider _authenticationStateProvider;
 
-        public QuejaService(HttpClient httpClient)
+        public QuejaService(
+            HttpClient httpClient,
+            AuthenticationStateProvider authenticationStateProvider)
         {
             _httpClient = httpClient;
+            _authenticationStateProvider = authenticationStateProvider;
         }
 
-        // Para que un cliente envíe una queja
+        public async Task<bool> EsAdminAsync()
+        {
+            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            return user.Identity?.IsAuthenticated == true && user.IsInRole("Admin");
+        }
+
         public async Task<bool> CreateQuejaAsync(Queja queja)
         {
             try
@@ -30,12 +42,18 @@ namespace Crit.Client.Services
             }
         }
 
-        // Para que el administrador liste todas las quejas
         public async Task<List<Queja>> GetQuejasAsync()
         {
             try
             {
-                var quejas = await _httpClient.GetFromJsonAsync<List<Queja>>("api/Quejas");
+                var response = await _httpClient.GetAsync("api/Quejas");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    return new List<Queja>();
+
+                response.EnsureSuccessStatusCode();
+
+                var quejas = await response.Content.ReadFromJsonAsync<List<Queja>>();
                 return quejas ?? new List<Queja>();
             }
             catch (HttpRequestException ex)
@@ -45,12 +63,18 @@ namespace Crit.Client.Services
             }
         }
 
-        // Para que el usuario vea sus propias quejas
         public async Task<List<Queja>> GetMisQuejasAsync()
         {
             try
             {
-                var quejas = await _httpClient.GetFromJsonAsync<List<Queja>>("api/Quejas/mis-quejas");
+                var response = await _httpClient.GetAsync("api/Quejas/mis-quejas");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    return new List<Queja>();
+
+                response.EnsureSuccessStatusCode();
+
+                var quejas = await response.Content.ReadFromJsonAsync<List<Queja>>();
                 return quejas ?? new List<Queja>();
             }
             catch (HttpRequestException ex)
@@ -60,12 +84,18 @@ namespace Crit.Client.Services
             }
         }
 
-        // Para que el usuario vea las quejas que tiene asignadas
         public async Task<List<Queja>> GetMisQuejasAsignadasAsync()
         {
             try
             {
-                var quejas = await _httpClient.GetFromJsonAsync<List<Queja>>("api/Quejas/mis-asignadas");
+                var response = await _httpClient.GetAsync("api/Quejas/mis-asignadas");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    return new List<Queja>();
+
+                response.EnsureSuccessStatusCode();
+
+                var quejas = await response.Content.ReadFromJsonAsync<List<Queja>>();
                 return quejas ?? new List<Queja>();
             }
             catch (HttpRequestException ex)
@@ -75,16 +105,19 @@ namespace Crit.Client.Services
             }
         }
 
-        // Para obtener una queja por ID
         public async Task<Queja?> GetQuejaByIdAsync(int id)
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<Queja>($"api/Quejas/{id}");
-            }
-            catch (HttpRequestException ex) when (ex.Message.Contains("404"))
-            {
-                return null;
+                var response = await _httpClient.GetAsync($"api/Quejas/{id}");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound ||
+                    response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    return null;
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<Queja>();
             }
             catch (HttpRequestException ex)
             {
@@ -93,7 +126,6 @@ namespace Crit.Client.Services
             }
         }
 
-        // Para actualizar el estatus de una queja
         public async Task<bool> UpdateQuejaStatusAsync(int id, EstatusQueja nuevoEstatus)
         {
             try
@@ -108,7 +140,6 @@ namespace Crit.Client.Services
             }
         }
 
-        // Para eliminar una queja (Admin)
         public async Task<bool> DeleteQuejaAsync(int id)
         {
             try

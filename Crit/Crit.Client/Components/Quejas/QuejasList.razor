@@ -1,94 +1,155 @@
 ﻿@if (Quejas?.Any() == true)
 {
-    <div class="row g-3">
-        @foreach (var queja in Quejas)
-        {
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-2">@queja.Titulo</h6>
-                                <p class="text-muted mb-3" style="line-height: 1.5;">
-                                    @(queja.DescripcionQueja.Length > 150 ?
-                                                                queja.DescripcionQueja.Substring(0, 150) + "..." :
-                                                                queja.DescripcionQueja)
-                        </p>
-                        <div class="d-flex flex-wrap gap-2 mb-3">
-                            <span class="badge @GetEstatusBadgeClass(queja.Estatus) d-flex align-items-center gap-1">
-                                @GetEstatusIcon(queja.Estatus)
-                                @GetEstatusText(queja.Estatus)
-                            </span>
-                            <span class="badge @GetPrioridadBadgeClass(queja.Prioridad)">
-                                Prioridad @GetPrioridadText(queja.Prioridad)
-                            </span>
-                            <span class="badge bg-light text-dark border">@queja.Categoria</span>
+    <div class="p-3 p-lg-4">
+        <div class="row g-3">
+            @foreach (var queja in Quejas)
+            {
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 complaint-item-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold mb-2 text-dark">@queja.Titulo</h6>
+                                    <p class="text-muted mb-0 complaint-description">
+                                        @(queja.DescripcionQueja.Length > 150
+                                                                        ? queja.DescripcionQueja.Substring(0, 150) + "..."
+                                                                        : queja.DescripcionQueja)
+                            </p>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center text-small text-muted">
-                            <span>
-                                <i class="bi bi-person me-1"></i>
-                                @queja.ClienteUserName
-                            </span>
-                            <span>
-                                <i class="bi bi-calendar me-1"></i>
-                                @queja.Fecha.ToString("dd/MM/yyyy")
-                            </span>
-                        </div>
-                    </div>
-                    <div class="ms-3">
-                        <button class="btn btn-outline-primary btn-sm me-1"
-                                @onclick="() => OnViewDetail.InvokeAsync(queja)"
-                                title="Ver detalle">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        @if (ShowAdminActions)
-                                {
-                                    <div class="btn-group">
-                                        <button class="btn btn-outline-warning btn-sm dropdown-toggle"
-                                                data-bs-toggle="dropdown"
-                                                title="Cambiar estado">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a class="dropdown-item" @onclick="() => OnChangeStatus.InvokeAsync((queja.Id, EstatusQueja.Pendiente))">
-                                                    <i class="bi bi-clock text-warning me-2"></i>Pendiente
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" @onclick="() => OnChangeStatus.InvokeAsync((queja.Id, EstatusQueja.Atendida))">
-                                                    <i class="bi bi-arrow-repeat text-primary me-2"></i>En Proceso
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" @onclick="() => OnChangeStatus.InvokeAsync((queja.Id, EstatusQueja.Cerrada))">
-                                                    <i class="bi bi-check-circle text-success me-2"></i>Resuelto
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <button class="btn btn-outline-danger btn-sm ms-1"
-                                            @onclick="() => OnDelete.InvokeAsync(queja.Id)"
-                                            title="Eliminar">
-                                        <i class="bi bi-trash"></i>
+
+                                <div class="text-end">
+                                    <div class="text-muted extra-small">Fecha</div>
+                                    <div class="small fw-semibold">@queja.Fecha.ToString("dd/MM/yyyy")</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge complaint-badge @GetEstatusBadgeClass(queja.Estatus)">
+                                    @((MarkupString)GetEstatusIconHtml(queja.Estatus)) @GetEstatusText(queja.Estatus)
+                                </span>
+
+                                <span class="badge complaint-badge @GetPrioridadBadgeClass(queja.Prioridad)">
+                                    Prioridad @GetPrioridadText(queja.Prioridad)
+                                </span>
+
+                                <span class="badge complaint-badge bg-light text-dark border">@queja.Categoria</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 pt-3 border-top">
+                                <div class="text-muted small">
+                                    <i class="bi bi-person me-1"></i>@(string.IsNullOrWhiteSpace(queja.ClienteUserName) ? queja.NombreCliente : queja.ClienteUserName)
+                                </div>
+
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-light-primary btn-sm" @onclick="() => OnViewDetail.InvokeAsync(queja)" title="Ver detalle">
+                                        <i class="bi bi-eye me-1"></i>Detalle
                                     </button>
-                                }
+
+                            @if (ShowAdminActions)
+                                    {
+                                        <div class="dropdown">
+                                            <button class="btn btn-light-warning btn-sm dropdown-toggle" data-bs-toggle="dropdown" type="button">
+                                                <i class="bi bi-pencil me-1"></i>Estatus
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
+                                                <li>
+                                                    <button class="dropdown-item" @onclick="() => OnChangeStatus.InvokeAsync((queja.Id, EstatusQueja.Pendiente))">
+                                                        <i class="bi bi-clock text-warning me-2"></i>Pendiente
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item" @onclick="() => OnChangeStatus.InvokeAsync((queja.Id, EstatusQueja.Atendida))">
+                                                        <i class="bi bi-arrow-repeat text-primary me-2"></i>En Proceso
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item" @onclick="() => OnChangeStatus.InvokeAsync((queja.Id, EstatusQueja.Cerrada))">
+                                                        <i class="bi bi-check-circle text-success me-2"></i>Resuelto
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <button class="btn btn-light-danger btn-sm" @onclick="() => OnDelete.InvokeAsync(queja.Id)" title="Eliminar">
+                                            <i class="bi bi-trash me-1"></i>Eliminar
+                                        </button>
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        }
+            }
+        </div>
     </div>
 }
 else
 {
-    <div class="text-center py-5">
-        <i class="bi bi-chat-square-text display-1 text-muted mb-3"></i>
+    <div class="text-center py-5 px-4">
+        <i class="bi bi-chat-square-text display-5 text-muted mb-3 d-block"></i>
         <h5 class="fw-semibold text-dark mb-2">@EmptyTitle</h5>
-        <p class="text-muted">@EmptyMessage</p>
+        <p class="text-muted mb-0">@EmptyMessage</p>
     </div>
 }
+
+<style>
+    .complaint-item-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-left: 4px solid #e2e8f0 !important;
+    }
+
+        .complaint-item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+        }
+
+    .complaint-description {
+        line-height: 1.55;
+    }
+
+    .complaint-badge {
+        font-weight: 600;
+        padding: 0.5rem 0.8rem;
+        border-radius: 999px;
+    }
+
+    .btn-light-primary {
+        background: #eff6ff;
+        color: #2563eb;
+        border: none;
+    }
+
+        .btn-light-primary:hover {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+    .btn-light-warning {
+        background: #fffbeb;
+        color: #d97706;
+        border: none;
+    }
+
+        .btn-light-warning:hover {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+    .btn-light-danger {
+        background: #fef2f2;
+        color: #dc2626;
+        border: none;
+    }
+
+        .btn-light-danger:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
 
 @code {
     [Parameter] public List<Queja> Quejas { get; set; } = new();
@@ -99,7 +160,6 @@ else
     [Parameter] public EventCallback<(int Id, EstatusQueja Status)> OnChangeStatus { get; set; }
     [Parameter] public EventCallback<int> OnDelete { get; set; }
 
-    // Métodos de utilidad (iguales que antes)
     private string GetEstatusBadgeClass(EstatusQueja estatus) => estatus switch
     {
         EstatusQueja.Pendiente => "bg-warning text-dark",
@@ -132,11 +192,11 @@ else
         _ => "Media"
     };
 
-    private MarkupString GetEstatusIcon(EstatusQueja estatus) => new(estatus switch
+    private string GetEstatusIconHtml(EstatusQueja estatus) => estatus switch
     {
-        EstatusQueja.Pendiente => "<i class=\"bi bi-clock\"></i>",
-        EstatusQueja.Atendida => "<i class=\"bi bi-arrow-repeat\"></i>",
-        EstatusQueja.Cerrada => "<i class=\"bi bi-check-circle\"></i>",
-        _ => "<i class=\"bi bi-question-circle\"></i>"
-    });
+        EstatusQueja.Pendiente => "<i class=\"bi bi-clock me-1\"></i>",
+        EstatusQueja.Atendida => "<i class=\"bi bi-arrow-repeat me-1\"></i>",
+        EstatusQueja.Cerrada => "<i class=\"bi bi-check-circle me-1\"></i>",
+        _ => "<i class=\"bi bi-question-circle me-1\"></i>"
+    };
 }

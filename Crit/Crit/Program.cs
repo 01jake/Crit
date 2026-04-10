@@ -21,11 +21,19 @@ builder.Services.AddRazorComponents()
     .AddAuthenticationStateSerialization();
 
 //por mientras
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents()
+    .AddInteractiveWebAssemblyComponents()
+    .AddAuthenticationStateSerialization();
+
+builder.Services.AddHttpClient();
+
 builder.Services.AddScoped(sp =>
 {
     var nav = sp.GetRequiredService<NavigationManager>();
     return new HttpClient { BaseAddress = new Uri(nav.BaseUri) };
 });
+
 
 builder.Services.AddSignalR(options =>
 {
@@ -33,6 +41,7 @@ builder.Services.AddSignalR(options =>
 });
 
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<QuejaService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<CompraHttpService>();

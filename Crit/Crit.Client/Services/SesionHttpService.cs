@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using Crit.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 
@@ -21,8 +22,23 @@ namespace Crit.Client.Services
             {
                 var response = await _http.GetAsync("api/sesion/empresa-actual");
 
-                if (!response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener empresa actual");
                     return null;
+                }
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("403 al obtener empresa actual");
+                    return null;
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Error HTTP {StatusCode} al obtener empresa actual", response.StatusCode);
+                    return null;
+                }
 
                 return await response.Content.ReadFromJsonAsync<EmpresaSesionDto>();
             }
@@ -32,6 +48,5 @@ namespace Crit.Client.Services
                 return null;
             }
         }
-
     }
 }

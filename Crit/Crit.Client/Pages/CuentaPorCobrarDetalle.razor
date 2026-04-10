@@ -2,6 +2,9 @@
 @using Crit.Client.Services
 @using Crit.Shared.Models
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor")]
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject CuentaPorCobrarHttpService CuentaPorCobrarService
@@ -9,7 +12,7 @@
 
 <PageTitle>Detalle Cuenta · @(cuenta?.Folio ?? "Cargando...")</PageTitle>
 
-<div class="pos-container">
+<div class="pos-container px-5 py-4">
     @if (cargando)
     {
         <div class="vh-100 d-flex flex-column justify-content-center align-items-center">
@@ -26,7 +29,6 @@
     }
     else if (cuenta is not null)
     {
-        @* --- ENCABEZADO --- *@
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
                 <nav aria-label="breadcrumb">
@@ -39,22 +41,21 @@
                     <i class="bi bi-file-earmark-medical me-2 text-primary"></i>
                     @(string.IsNullOrWhiteSpace(cuenta.Folio) ? "Sin Folio" : cuenta.Folio)
                 </h2>
-                <span class="text-muted">@cuenta.Cliente?.Nombre</span>
+                <span class="text-muted">Cliente: @cuenta.Cliente?.Nombre</span>
             </div>
-            <button class="btn btn-light border shadow-sm" @onclick="Volver">
+
+            <button class="btn saas-btn-primary shadow-sm px-4 py-2" @onclick="Volver">
                 <i class="bi bi-arrow-left me-2"></i>Volver al Listado
             </button>
         </div>
 
         <div class="row g-4">
-            @* --- COLUMNA IZQUIERDA: INFORMACIÓN Y PAGOS --- *@
             <div class="col-12 col-xl-8">
-                @* CARD: RESUMEN DE LA CUENTA *@
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3 border-bottom">
+                <div class="card border-0 shadow-sm mb-4 rounded-4">
+                    <div class="card-header bg-white py-3 border-bottom-0 px-4">
                         <h5 class="card-title mb-0 fw-bold">Resumen de Cuenta</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body px-4 pb-4">
                         <div class="row g-4">
                             <div class="col-6 col-md-3">
                                 <label class="extra-small text-uppercase fw-bold text-muted d-block">Emisión</label>
@@ -81,22 +82,24 @@
                                 <hr class="text-secondary opacity-25" />
                             </div>
 
-                            <div class="col-4">
-                                <div class="p-3 bg-light rounded-3 text-center">
+                            <div class="col-12 col-md-4">
+                                <div class="summary-stat summary-stat-neutral">
                                     <label class="extra-small text-uppercase fw-bold text-muted d-block">Total Factura</label>
-                                    <span class="fs-5 fw-bold text-dark">@cuenta.Total.ToString("C")</span>
+                                    <span class="summary-stat-value text-dark">@cuenta.Total.ToString("C")</span>
                                 </div>
                             </div>
-                            <div class="col-4">
-                                <div class="p-3 bg-success-subtle rounded-3 text-center border border-success-subtle">
+
+                            <div class="col-12 col-md-4">
+                                <div class="summary-stat summary-stat-success">
                                     <label class="extra-small text-uppercase fw-bold text-success d-block">Abonado</label>
-                                    <span class="fs-5 fw-bold text-success">@cuenta.TotalPagado.ToString("C")</span>
+                                    <span class="summary-stat-value text-success">@cuenta.TotalPagado.ToString("C")</span>
                                 </div>
                             </div>
-                            <div class="col-4">
-                                <div class="p-3 bg-primary-subtle rounded-3 text-center border border-primary-subtle">
+
+                            <div class="col-12 col-md-4">
+                                <div class="summary-stat summary-stat-primary">
                                     <label class="extra-small text-uppercase fw-bold text-primary d-block">Saldo Pendiente</label>
-                                    <span class="fs-5 fw-bold text-primary">@cuenta.Saldo.ToString("C")</span>
+                                    <span class="summary-stat-value text-primary">@cuenta.Saldo.ToString("C")</span>
                                 </div>
                             </div>
                         </div>
@@ -113,46 +116,38 @@
                     </div>
                 </div>
 
-                @* CARD: HISTORIAL DE PAGOS *@
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="card-title mb-0 fw-bold">Historial de Abonos</h5>
-                    </div>
-                    <div class="card-body p-0">
+                <div class="d-none d-lg-block card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Historial de abonos</h5>
+
                         @if (cuenta.Pagos is null || !cuenta.Pagos.Any(p => p.Activo))
                         {
-                            <div class="text-center py-5">
-                                <i class="bi bi-wallet2 fs-1 text-muted opacity-25"></i>
-                                <p class="text-muted mt-2">No se han registrado pagos para esta cuenta.</p>
-                            </div>
+                            <div class="text-muted">No hay abonos registrados.</div>
                         }
                         else
                         {
                             <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light">
-                                        <tr class="extra-small text-uppercase text-muted">
-                                            <th class="ps-4">Fecha y Hora</th>
+                                <table class="table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
                                             <th>Método</th>
                                             <th>Referencia</th>
                                             <th class="text-end">Monto</th>
-                                            <th class="text-end pe-4">Saldo Restante</th>
+                                            <th class="text-end">Saldo anterior</th>
+                                            <th class="text-end">Saldo posterior</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach (var pago in cuenta.Pagos.Where(x => x.Activo).OrderByDescending(x => x.FechaPago))
                                         {
                                             <tr>
-                                                <td class="ps-4">
-                                                    <div class="fw-bold">@pago.FechaPago.ToString("dd/MM/yyyy")</div>
-                                                    <div class="extra-small text-muted">@pago.FechaPago.ToString("HH:mm") hrs</div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-light text-dark border fw-normal">@pago.MetodoPago</span>
-                                                </td>
-                                                <td class="small text-muted">@(pago.Referencia ?? "-")</td>
-                                                <td class="text-end fw-bold text-success">@pago.Monto.ToString("C")</td>
-                                                <td class="text-end pe-4 text-muted small">@pago.SaldoPosterior.ToString("C")</td>
+                                                <td>@pago.FechaPago.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@(string.IsNullOrWhiteSpace(pago.MetodoPago) ? "-" : pago.MetodoPago)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(pago.Referencia) ? "-" : pago.Referencia)</td>
+                                                <td class="text-end fw-semibold text-success">@pago.Monto.ToString("C")</td>
+                                                <td class="text-end">@pago.SaldoAnterior.ToString("C")</td>
+                                                <td class="text-end">@pago.SaldoPosterior.ToString("C")</td>
                                             </tr>
                                         }
                                     </tbody>
@@ -161,15 +156,57 @@
                         }
                     </div>
                 </div>
+
+                <div class="d-lg-none">
+                    @if (cuenta.Pagos is null || !cuenta.Pagos.Any(p => p.Activo))
+                    {
+                        <div class="card shadow-sm border-0 text-center py-5 rounded-4">
+                            <p class="text-muted mb-0">No hay abonos registrados.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var pago in cuenta.Pagos.Where(x => x.Activo).OrderByDescending(x => x.FechaPago))
+                        {
+                            <div class="card shadow-sm border-0 mb-3 receivable-mobile-card">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="fw-bold mb-0 text-dark">@pago.MetodoPago</h6>
+                                            <span class="extra-small text-muted">@pago.FechaPago.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                        <div class="fw-bold text-success">@pago.Monto.ToString("C")</div>
+                                    </div>
+
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="text-muted extra-small">Referencia</div>
+                                            <div class="small text-dark">@(string.IsNullOrWhiteSpace(pago.Referencia) ? "-" : pago.Referencia)</div>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <div class="text-muted extra-small">Saldo Posterior</div>
+                                            <div class="small text-dark">@pago.SaldoPosterior.ToString("C")</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
             </div>
 
-            @* --- COLUMNA DERECHA: REGISTRO DE PAGO --- *@
             <div class="col-12 col-xl-4">
-                <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
-                    <div class="card-header bg-primary py-3">
-                        <h5 class="card-title mb-0 fw-bold text-white">Registrar Nuevo Abono</h5>
+                <div class="card shadow-sm border-0 rounded-4 sticky-top payment-ticket-card">
+                    <div class="card-header text-white border-0 py-3 px-4 payment-ticket-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">
+                                <i class="bi bi-cash-coin me-2"></i>Registrar Nuevo Abono
+                            </h6>
+                            <span class="badge payment-badge">@cuenta.Saldo.ToString("C")</span>
+                        </div>
                     </div>
-                    <div class="card-body">
+
+                    <div class="card-body p-4">
                         @if (!string.IsNullOrWhiteSpace(mensaje))
                         {
                             <div class="alert alert-success border-0 shadow-sm mb-3">
@@ -193,57 +230,62 @@
                         }
                         else
                         {
-                            <EditForm Model="nuevoPago" OnValidSubmit="RegistrarPagoAsync">
+                            <EditForm Model="nuevoPago" OnSubmit="RegistrarPagoManualAsync">
                                 <DataAnnotationsValidator />
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small">Fecha del Pago</label>
-                                    <InputDate class="form-control bg-light" @bind-Value="nuevoPago.FechaPago" />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small">Monto a Abonar</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-white border-end-0 text-success fw-bold">$</span>
-                                        <InputNumber class="form-control border-start-0 ps-0 fs-5 fw-bold" @bind-Value="nuevoPago.Monto" placeholder="0.00" />
+                                <div class="payment-form">
+                                    <div class="mb-3">
+                                        <label class="payment-label">Fecha del Pago</label>
+                                        <InputDate class="form-control payment-input" @bind-Value="nuevoPago.FechaPago" />
                                     </div>
-                                    <div class="form-text extra-small text-end">Saldo pendiente: <strong>@cuenta.Saldo.ToString("C")</strong></div>
-                                </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small">Método de Pago</label>
-                                    <InputSelect class="form-select bg-light" @bind-Value="nuevoPago.MetodoPago">
-                                        <option value="">Seleccione...</option>
-                                        <option value="Efectivo">Efectivo</option>
-                                        <option value="Transferencia">Transferencia</option>
-                                        <option value="Tarjeta">Tarjeta de Crédito/Débito</option>
-                                        <option value="Cheque">Cheque</option>
-                                    </InputSelect>
-                                </div>
+                                    <div class="mb-3">
+                                        <label class="payment-label">Monto a Abonar</label>
+                                        <div class="input-group payment-money-group">
+                                            <span class="input-group-text bg-white border-end-0 text-success fw-bold">$</span>
+                                            <InputNumber class="form-control border-start-0 payment-money-input fw-bold"
+                                                         @bind-Value="nuevoPago.Monto"
+                                                         placeholder="0.00" />
+                                        </div>
+                                        <div class="form-text extra-small text-end mt-1">
+                                            Saldo pendiente: <strong>@cuenta.Saldo.ToString("C")</strong>
+                                        </div>
+                                    </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small">Referencia / Folio Pago</label>
-                                    <InputText class="form-control bg-light" @bind-Value="nuevoPago.Referencia" placeholder="Opcional..." />
-                                </div>
+                                    <div class="mb-3">
+                                        <label class="payment-label">Método de Pago</label>
+                                        <InputSelect class="form-select payment-input" @bind-Value="nuevoPago.MetodoPago">
+                                            <option value="">Seleccione...</option>
+                                            <option value="Efectivo">Efectivo</option>
+                                            <option value="Transferencia">Transferencia</option>
+                                            <option value="Tarjeta">Tarjeta de Crédito/Débito</option>
+                                            <option value="Cheque">Cheque</option>
+                                        </InputSelect>
+                                    </div>
 
-                                <div class="mb-4">
-                                    <label class="form-label fw-bold small">Observaciones</label>
-                                    <InputTextArea class="form-control bg-light" @bind-Value="nuevoPago.Observaciones" rows="2" />
-                                </div>
+                                    <div class="mb-3">
+                                        <label class="payment-label">Referencia / Folio Pago</label>
+                                        <InputText class="form-control payment-input" @bind-Value="nuevoPago.Referencia" placeholder="Opcional..." />
+                                    </div>
 
-                                <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm fw-bold" disabled="@guardandoPago">
-                                    @if (guardandoPago)
-                                    {
-                                        <span class="spinner-border spinner-border-sm me-2"></span>
-                                        <span>Procesando...</span>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-check2-circle me-2"></i>
-                            
-                                        <span>Confirmar Abono</span>
-                                    }
-                                </button>
+                                    <div class="mb-4">
+                                        <label class="payment-label">Observaciones</label>
+                                        <InputTextArea class="form-control payment-input" @bind-Value="nuevoPago.Observaciones" rows="2" />
+                                    </div>
+
+                                    <button type="submit" class="btn saas-btn-primary w-100 payment-submit shadow-sm fw-bold" disabled="@guardandoPago">
+                                        @if (guardandoPago)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span>Procesando...</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-check2-circle me-2"></i>
+                                            <span>Confirmar Abono</span>
+                                        }
+                                    </button>
+                                </div>
                             </EditForm>
                         }
                     </div>
@@ -253,36 +295,6 @@
     }
 </div>
 
-<style>
-    .extra-small {
-        font-size: 0.72rem;
-    }
-
-    .breadcrumb-item + .breadcrumb-item::before {
-        content: "›";
-        font-size: 1.2rem;
-        line-height: 1;
-        vertical-align: middle;
-    }
-
-    .card {
-        border-radius: 12px;
-    }
-
-    .card-header:first-child {
-        border-radius: 12px 12px 0 0;
-    }
-
-    .table thead th {
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-
-    .form-control:focus, .form-select:focus {
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
-        border-color: #0d6efd;
-    }
-</style>
 
 @code {
     [Parameter] public int Id { get; set; }
@@ -296,9 +308,19 @@
 
     private PagoCliente nuevoPago = new() { FechaPago = DateTime.Today };
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task LoadDataAsync()
     {
         await CargarCuentaAsync();
+    }
+
+    protected override bool ShouldRetryInitialLoad() => cuenta is null && string.IsNullOrWhiteSpace(error);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsLoading)
+        {
+            await CargarCuentaAsync();
+        }
     }
 
     private async Task CargarCuentaAsync()
@@ -317,33 +339,64 @@
         {
             error = $"Error al cargar: {ex.Message}";
         }
-        finally { cargando = false; }
+        finally
+        {
+            cargando = false;
+        }
     }
 
-    private async Task RegistrarPagoAsync()
+    private async Task RegistrarPagoManualAsync(EditContext _)
     {
         if (cuenta is null) return;
 
         errorPago = null;
         mensaje = null;
 
-        if (nuevoPago.Monto <= 0) { errorPago = "El monto debe ser mayor a cero."; return; }
-        if (nuevoPago.Monto > cuenta.Saldo) { errorPago = "El abono excede el saldo pendiente."; return; }
-        if (string.IsNullOrWhiteSpace(nuevoPago.MetodoPago)) { errorPago = "Seleccione un método de pago."; return; }
+        if (nuevoPago.Monto <= 0)
+        {
+            errorPago = "El monto debe ser mayor a cero.";
+            return;
+        }
+
+        if (nuevoPago.Monto > cuenta.Saldo)
+        {
+            errorPago = "El abono excede el saldo pendiente.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(nuevoPago.MetodoPago))
+        {
+            errorPago = "Seleccione un método de pago.";
+            return;
+        }
 
         try
         {
             guardandoPago = true;
             var ok = await CuentaPorCobrarService.RegistrarPagoAsync(cuenta.Id, nuevoPago);
 
-            if (!ok) { errorPago = "No se pudo procesar el pago."; return; }
+            if (!ok)
+            {
+                errorPago = "No se pudo procesar el pago.";
+                return;
+            }
 
             mensaje = "¡Abono registrado con éxito!";
-            nuevoPago = new PagoCliente { FechaPago = DateTime.Today };
+            nuevoPago = new PagoCliente
+            {
+                FechaPago = DateTime.Today
+            };
+
             await CargarCuentaAsync();
         }
-        catch (Exception ex) { errorPago = $"Error: {ex.Message}"; }
-        finally { guardandoPago = false; }
+        catch (Exception ex)
+        {
+            errorPago = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            guardandoPago = false;
+        }
     }
 
     private void Volver() => Navigation.NavigateTo("/cuentas-por-cobrar");

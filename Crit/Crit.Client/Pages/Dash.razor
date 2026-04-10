@@ -2,41 +2,50 @@
 @using ApexCharts
 @using Crit.Client.Services
 @using Crit.Shared.DTOs
+@using Crit.Shared.Models
 @using Microsoft.AspNetCore.Authorization
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor")]
 @attribute [StreamRendering(false)]
-@rendermode InteractiveWebAssembly
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject Dashboardhttpservice DashboardService
 @inject CajaHttpService CajaHttpService
 
-@attribute [Authorize]
-
 <PageTitle>Panel de Control | Crit</PageTitle>
 
-<div class="dashboard-container px-4 py-4">
+<div class="dashboard-shell px-3 py-4">
+    <div class="dashboard-hero card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4">
+                <div>
+                    <div class="eyebrow mb-2">Panel Ejecutivo</div>
+                    <h2 class="page-title mb-1">Dashboard Financiero</h2>
+                    <p class="text-muted mb-0">Resumen general del rendimiento y flujo operativo del negocio</p>
+                </div>
 
-    @* --- CABECERA Y FILTROS --- *@
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <h2 class="page-title mb-0 fw-bold">Dashboard Financiero</h2>
-            <p class="text-muted small">Resumen general del rendimiento de tu negocio</p>
-        </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div class="dropdown">
+                        <button class="btn btn-white shadow-sm dropdown-toggle fw-bold border rounded-3 px-3 py-2"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                disabled="@loading">
+                            <i class="bi bi-calendar3 text-primary me-2"></i>@RangoSeleccionadoTexto
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-4">
+                            <li><h6 class="dropdown-header">Rango de datos</h6></li>
+                            <li><button class="dropdown-item @(rangoSeleccionado == "hoy" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("hoy"))">Hoy</button></li>
+                            <li><button class="dropdown-item @(rangoSeleccionado == "7dias" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("7dias"))">Últimos 7 días</button></li>
+                            <li><button class="dropdown-item @(rangoSeleccionado == "mes" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("mes"))">Este Mes</button></li>
+                            <li><button class="dropdown-item @(rangoSeleccionado == "anio" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("anio"))">Este Año</button></li>
+                        </ul>
+                    </div>
 
-        <div class="d-flex align-items-center gap-2">
-            <div class="dropdown">
-                <button class="btn btn-white bg-white shadow-sm dropdown-toggle fw-bold border-0 rounded-3 px-3 py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" disabled="@loading">
-                    <i class="bi bi-calendar3 text-primary me-2"></i> @RangoSeleccionadoTexto
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-4">
-                    <li><h6 class="dropdown-header">Rango de datos</h6></li>
-                    <li><button class="dropdown-item @(rangoSeleccionado == "hoy" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("hoy"))">Hoy</button></li>
-                    <li><button class="dropdown-item @(rangoSeleccionado == "7dias" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("7dias"))">Últimos 7 días</button></li>
-                    <li><button class="dropdown-item @(rangoSeleccionado == "mes" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("mes"))">Este Mes</button></li>
-                    <li><button class="dropdown-item @(rangoSeleccionado == "anio" ? "active bg-primary-subtle text-primary fw-bold" : "")" @onclick="@(() => CambiarRango("anio"))">Este Año</button></li>
-                </ul>
+                    <button class="btn saas-btn-primary shadow-sm rounded-3 px-3 py-2 d-none d-sm-block fw-bold">
+                        <i class="bi bi-download me-2"></i>Reporte
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-primary shadow-sm rounded-3 px-3 py-2 d-none d-sm-block fw-bold">
-                <i class="bi bi-download me-2"></i> Reporte
-            </button>
         </div>
     </div>
 
@@ -49,50 +58,60 @@
     }
     else
     {
-        @* --- 1. CABECERA PRINCIPAL: 4 KPIs CRÍTICOS --- *@
-        <div class="row g-3 mb-3">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-primary text-white h-100 kpi-main">
-                    <div class="card-body p-4 d-flex flex-column justify-content-center">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 text-white h-100 kpi-feature kpi-feature-primary">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
                             <span class="small fw-bold text-uppercase opacity-75">Utilidad Bruta</span>
-                            <i class="bi bi-piggy-bank fs-5"></i>
+                            <div class="kpi-badge-dark">
+                                <i class="bi bi-piggy-bank"></i>
+                            </div>
                         </div>
                         <h2 class="fw-black mb-1">$@stats.UtilidadBrutaMes.ToString("N0")</h2>
-                        <span class="small opacity-75 fw-semibold"><i class="bi bi-graph-up-arrow me-1"></i> Margen: @stats.MargenBrutoMes.ToString("N1")%</span>
+                        <span class="small opacity-75 fw-semibold">
+                            <i class="bi bi-graph-up-arrow me-1"></i>Margen: @stats.MargenBrutoMes.ToString("N1")%
+                        </span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-white text-dark h-100 kpi-main">
-                    <div class="card-body p-4 d-flex flex-column justify-content-center">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-clean">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
                             <span class="text-muted small fw-bold text-uppercase">Ingresos (@RangoSeleccionadoTexto)</span>
-                            <div class="icon-box bg-success-subtle text-success p-2 rounded-3"><i class="bi bi-wallet2"></i></div>
+                            <div class="icon-box bg-success-subtle text-success">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
                         </div>
                         <h2 class="fw-black mb-1 text-dark">$@stats.IngresosMes.ToString("N0")</h2>
                         <span class="text-success small fw-bold"><i class="bi bi-arrow-up-right"></i> Flujo Positivo</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-white text-dark h-100 kpi-main">
-                    <div class="card-body p-4 d-flex flex-column justify-content-center">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-clean">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
                             <span class="text-muted small fw-bold text-uppercase">Cuentas por Cobrar</span>
-                            <div class="icon-box bg-warning-subtle text-warning p-2 rounded-3"><i class="bi bi-cash-coin"></i></div>
+                            <div class="icon-box bg-warning-subtle text-warning">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
                         </div>
                         <h2 class="fw-black mb-1 text-primary">$@finanzas.TotalPorCobrar.ToString("N0")</h2>
                         <span class="text-muted small">@finanzas.CuentasPorCobrarPendientes cuenta(s) activa(s)</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-white text-dark h-100 kpi-main">
-                    <div class="card-body p-4 d-flex flex-column justify-content-center">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
+
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 kpi-card-clean">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
                             <span class="text-muted small fw-bold text-uppercase">Saldo en Caja</span>
-                            <div class="icon-box @(cajaResumen.CajaAbierta ? "bg-info-subtle text-info" : "bg-danger-subtle text-danger") p-2 rounded-3">
+                            <div class="icon-box @(cajaResumen.CajaAbierta ? "bg-info-subtle text-info" : "bg-danger-subtle text-danger")">
                                 <i class="bi bi-safe2"></i>
                             </div>
                         </div>
@@ -105,31 +124,30 @@
             </div>
         </div>
 
-        @* --- SUB-MÉTRICAS OPERATIVAS (Compactas) --- *@
         <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
             <div class="card-body p-3">
-                <div class="row text-center g-2 divide-md">
-                    <div class="col-md-2 col-4">
+                <div class="row text-center g-3 operational-strip">
+                    <div class="col-6 col-md-2">
                         <span class="d-block text-muted smaller text-uppercase fw-bold">Costo Ventas</span>
                         <span class="fw-bold text-danger">$@stats.CostoVentasMes.ToString("N0")</span>
                     </div>
-                    <div class="col-md-2 col-4">
+                    <div class="col-6 col-md-2">
                         <span class="d-block text-muted smaller text-uppercase fw-bold">Val. Inventario</span>
                         <span class="fw-bold text-dark">$@stats.ValorInventario.ToString("N0")</span>
                     </div>
-                    <div class="col-md-2 col-4">
+                    <div class="col-6 col-md-2">
                         <span class="d-block text-muted smaller text-uppercase fw-bold">Por Pagar</span>
                         <span class="fw-bold text-danger">$@finanzas.TotalPorPagar.ToString("N0")</span>
                     </div>
-                    <div class="col-md-2 col-4">
+                    <div class="col-6 col-md-2">
                         <span class="d-block text-muted smaller text-uppercase fw-bold">Cobrado Mes</span>
                         <span class="fw-bold text-success">$@finanzas.TotalCobradoMes.ToString("N0")</span>
                     </div>
-                    <div class="col-md-2 col-4">
+                    <div class="col-6 col-md-2">
                         <span class="d-block text-muted smaller text-uppercase fw-bold">Ingresos Hoy</span>
                         <span class="fw-bold text-success">$@cajaResumen.IngresosHoy.ToString("N0")</span>
                     </div>
-                    <div class="col-md-2 col-4">
+                    <div class="col-6 col-md-2">
                         <span class="d-block text-muted smaller text-uppercase fw-bold">Egresos Hoy</span>
                         <span class="fw-bold text-danger">$@cajaResumen.EgresosHoy.ToString("N0")</span>
                     </div>
@@ -137,46 +155,42 @@
             </div>
         </div>
 
-        @* --- 2. SECCIÓN CENTRAL: GRÁFICOS Y ALERTAS --- *@
         <div class="row g-4 mb-4">
-            @* Izquierda: Tendencias (Cash Flow) *@
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-bar-chart-line text-primary me-2"></i>Cash Flow Histórico</h6>
                         <span class="badge bg-light text-muted fw-normal px-3 py-2 border">Últimos meses</span>
                     </div>
-                    <div>
-                        @if (cashFlow.Any())
-                        {
-                            <ApexChart TItem="CashFlowDto" Options="cashFlowOptions" @key="cashFlow.Count">
-                                <ApexPointSeries TItem="CashFlowDto" Items="cashFlow" Name="Ingresos" SeriesType="SeriesType.Bar" XValue="@(e => e.Mes)" YValue="@(e => e.Ingresos)" />
-                                <ApexPointSeries TItem="CashFlowDto" Items="cashFlow" Name="Costos" SeriesType="SeriesType.Bar" XValue="@(e => e.Mes)" YValue="@(e => e.CostoMercancia)" />
-                                <ApexPointSeries TItem="CashFlowDto" Items="cashFlow" Name="Utilidad" SeriesType="SeriesType.Line" XValue="@(e => e.Mes)" YValue="@(e => e.UtilidadBruta)" />
-                            </ApexChart>
-                        }
-                        else
-                        {
-                            <div class="d-flex align-items-center justify-content-center bg-light rounded-4" style="height: 300px; border: 2px dashed #e9ecef;">
-                                <span class="text-muted">No hay datos suficientes</span>
-                            </div>
-                        }
-                    </div>
+
+                    @if (cashFlow.Any())
+                    {
+                        <ApexChart TItem="CashFlowDto" Options="cashFlowOptions" @key="cashFlow.Count">
+                            <ApexPointSeries TItem="CashFlowDto" Items="cashFlow" Name="Ingresos" SeriesType="SeriesType.Bar" XValue="@(e => e.Mes)" YValue="@(e => e.Ingresos)" />
+                            <ApexPointSeries TItem="CashFlowDto" Items="cashFlow" Name="Costos" SeriesType="SeriesType.Bar" XValue="@(e => e.Mes)" YValue="@(e => e.CostoMercancia)" />
+                            <ApexPointSeries TItem="CashFlowDto" Items="cashFlow" Name="Utilidad" SeriesType="SeriesType.Line" XValue="@(e => e.Mes)" YValue="@(e => e.UtilidadBruta)" />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-center bg-light rounded-4 empty-chart">
+                            <span class="text-muted">No hay datos suficientes</span>
+                        </div>
+                    }
                 </div>
             </div>
 
-            @* Derecha: Alertas de Stock (Crítico) *@
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white border-top border-4 border-danger">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white stock-alert-card">
                     <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="fw-bold mb-0 text-danger"><i class="bi bi-exclamation-octagon-fill me-2"></i>Alertas de Stock</h6>
-                            <p class="text-muted smaller mb-0 mt-1">Reponer productos</p>
+                            <p class="text-muted smaller mb-0 mt-1">Productos para reponer</p>
                         </div>
                         <a href="/productos" class="btn btn-sm btn-light text-primary fw-bold">Ver todo</a>
                     </div>
                     <div class="card-body px-3 pt-2">
-                        <div class="alert-list" style="max-height: 300px; overflow-y: auto;">
+                        <div class="alert-list">
                             @if (productosBajoStock.Any())
                             {
                                 @foreach (var p in productosBajoStock)
@@ -206,9 +220,7 @@
             </div>
         </div>
 
-        @* --- 3. PIE DE DASHBOARD: CASH FLOW REAL, TOP VENDIDOS Y ÚLTIMAS VENTAS --- *@
         <div class="row g-4">
-            @* Izquierda: Cash Flow Real y Últimas Ventas *@
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
                     <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-cash-coin text-success me-2"></i>Cash Flow Real</h6>
@@ -226,41 +238,61 @@
                     }
                 </div>
 
-                <div class="card border-0 shadow-sm rounded-4 bg-white">
+                <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
                     <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
                         <h6 class="fw-bold mb-0 text-dark">Últimas Ventas</h6>
                         <a href="/ventas" class="text-primary text-decoration-none small fw-bold">Ver todas</a>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-borderless table-hover align-middle mb-0">
-                            <thead class="bg-light text-muted smaller text-uppercase">
-                                <tr>
-                                    <th class="ps-4 rounded-start">Folio</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th class="text-end pe-4 rounded-end">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody class="small">
-                                @foreach (var v in ventasRecientes)
-                                {
-                                    <tr>
-                                        <td class="ps-4 py-3"><span class="badge bg-light text-dark border">@v.NumeroVenta</span></td>
-                                        <td class="fw-semibold">@v.Cliente</td>
-                                        <td class="text-muted">@v.Fecha.ToString("dd MMM, yyyy")</td>
-                                        <td class="text-end pe-4 fw-bold text-success">$@v.Total.ToString("N2")</td>
+
+                    <div class="d-none d-lg-block">
+                        <div class="table-responsive">
+                            <table class="table table-borderless table-hover align-middle mb-0">
+                                <thead style="background-color: #f8fafc;">
+                                    <tr class="text-muted smaller text-uppercase">
+                                        <th class="ps-4">Folio</th>
+                                        <th>Cliente</th>
+                                        <th>Fecha</th>
+                                        <th class="text-end pe-4">Total</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="small">
+                                    @foreach (var v in ventasRecientes)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 py-3"><span class="badge bg-light text-dark border">@v.NumeroVenta</span></td>
+                                            <td class="fw-semibold">@v.Cliente</td>
+                                            <td class="text-muted">@v.Fecha.ToString("dd MMM, yyyy")</td>
+                                            <td class="text-end pe-4 fw-bold text-success">$@v.Total.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-lg-none p-3">
+                        @foreach (var v in ventasRecientes)
+                        {
+                            <div class="card border-0 shadow-sm mb-3 sales-mobile-card">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <div class="fw-bold text-dark">#@v.NumeroVenta</div>
+                                            <div class="small text-muted">@v.Cliente</div>
+                                        </div>
+                                        <div class="fw-bold text-success">$@v.Total.ToString("N2")</div>
+                                    </div>
+                                    <div class="small text-muted">@v.Fecha.ToString("dd MMM, yyyy")</div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
 
-            @* Derecha: Top Productos *@
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                    <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-pie-chart text-primary me-2"></i> Top Vendidos</h6>
+                    <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-pie-chart text-primary me-2"></i>Top Vendidos</h6>
                     <div class="d-flex align-items-center justify-content-center h-100 pb-4">
                         @if (topProductos.Any())
                         {
@@ -283,7 +315,6 @@
 
 
 @code {
-    // --- TU CÓDIGO C# INTACTO A CONTINUACIÓN ---
     private bool loading = true;
     private string rangoSeleccionado = "mes";
     private DashboardStatsDto stats = new();
@@ -323,11 +354,14 @@
         Legend = new Legend { Position = LegendPosition.Top, HorizontalAlign = Align.Right }
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task LoadDataAsync()
     {
         await CargarDatos();
         loading = false;
     }
+
+    protected override bool ShouldRetryInitialLoad()
+        => !cashFlow.Any() && !ventasRecientes.Any() && !topProductos.Any();
 
     private async Task CargarDatos()
     {

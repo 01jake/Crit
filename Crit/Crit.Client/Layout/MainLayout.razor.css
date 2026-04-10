@@ -1,12 +1,12 @@
 .page {
     display: flex;
-    flex-direction: row; /* Alineación horizontal para escritorio */
+    flex-direction: row;
     min-height: 100vh;
 }
 
 main {
     flex: 1;
-    background-color: #F1F5F9;
+    background-color: #F5F7FA;
 }
 
 .main-container {
@@ -30,7 +30,6 @@ main {
     transition: margin-left 0.3s ease-in-out;
 }
 
-/* Estados del sidebar */
 .sidebar-collapsed .main-content {
     margin-left: 0;
 }
@@ -68,7 +67,6 @@ main {
     background-color: #f8f9fa;
 }
 
-/* Error UI */
 #blazor-error-ui {
     background: #ffebcd;
     bottom: 0;
@@ -89,7 +87,6 @@ main {
         top: 0.5rem;
     }
 
-/* Responsive */
 @media (max-width: 768px) {
     .main-container {
         flex-direction: column;
@@ -109,6 +106,7 @@ main {
         padding: 1rem;
     }
 }
+
 @media (max-width: 991.98px) {
     .page {
         flex-direction: column;
@@ -116,30 +114,23 @@ main {
 
     main {
         margin-left: 0;
-        /* Ajusta este valor según la altura de tu mobile-top-bar */
     }
 }
+
 @media (min-width: 992px) {
     .page {
-        display: flex; /* Asegura que sidebar y main estén a la par */
+        display: flex;
     }
 
-    .sidebar-container {
-        width: 260px;
-        position: fixed; /* Fija la barra a la izquierda */
-        height: 100vh;
-    }
-
-    main {
-        margin-left: 220px; /* Desplaza el contenido exactamente el ancho de la barra */
-        width: calc(100% - 260px); /* Evita que el contenido se desborde */
-        padding: 2rem;
+    .main-content {
+        margin-left: 252px;
+        width: calc(100% - 252px);
         min-height: 100vh;
     }
 }
-/* Asegura que la barra móvil no flote sobre el contenido sin espacio */
+
 .mobile-top-bar {
-    height: 80px; /* Define una altura fija */
+    height: 80px;
     display: flex;
     align-items: center;
 }

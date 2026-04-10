@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Crit.Client")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+da3baae1fa0c60c2eeadd67af1452c22f099f549")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f2e6fb2cb13b784989c408edbe4ca1823d1a84f9")]
 [assembly: System.Reflection.AssemblyProductAttribute("Crit.Client")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Crit.Client")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

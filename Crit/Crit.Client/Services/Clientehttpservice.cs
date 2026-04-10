@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using Crit.Shared.Models;
 
 namespace Crit.Client.Services
@@ -20,13 +21,15 @@ namespace Crit.Client.Services
             {
                 var response = await _httpClient.GetAsync("api/clientes");
 
-                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener clientes");
                     return new List<Cliente>();
+                }
 
                 response.EnsureSuccessStatusCode();
 
-                var clientes = await response.Content.ReadFromJsonAsync<List<Cliente>>();
-                return clientes ?? new List<Cliente>();
+                return await response.Content.ReadFromJsonAsync<List<Cliente>>() ?? new List<Cliente>();
             }
             catch (Exception ex)
             {
@@ -35,12 +38,24 @@ namespace Crit.Client.Services
             }
         }
 
-
         public async Task<Cliente?> GetClienteAsync(int id)
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<Cliente>($"api/clientes/{id}");
+                var response = await _httpClient.GetAsync($"api/clientes/{id}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener cliente {Id}", id);
+                    return null;
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                    return null;
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<Cliente>();
             }
             catch (Exception ex)
             {
@@ -53,8 +68,17 @@ namespace Crit.Client.Services
         {
             try
             {
-                var clientes = await _httpClient.GetFromJsonAsync<List<Cliente>>("api/clientes/activos");
-                return clientes ?? new List<Cliente>();
+                var response = await _httpClient.GetAsync("api/clientes/activos");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener clientes activos");
+                    return new List<Cliente>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<Cliente>>() ?? new List<Cliente>();
             }
             catch (Exception ex)
             {
@@ -69,8 +93,9 @@ namespace Crit.Client.Services
             {
                 var response = await _httpClient.PostAsJsonAsync("api/clientes", cliente);
                 response.EnsureSuccessStatusCode();
-                var clienteCreado = await response.Content.ReadFromJsonAsync<Cliente>();
-                return clienteCreado ?? throw new Exception("Error al crear cliente");
+
+                return await response.Content.ReadFromJsonAsync<Cliente>()
+                    ?? throw new Exception("Error al crear cliente");
             }
             catch (Exception ex)
             {
@@ -107,13 +132,21 @@ namespace Crit.Client.Services
             }
         }
 
-
         public async Task<int> GetClientesCountAsync()
         {
             try
             {
-                var count = await _httpClient.GetFromJsonAsync<int>("api/clientes/count");
-                return count;
+                var response = await _httpClient.GetAsync("api/clientes/count");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener conteo de clientes");
+                    return 0;
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<int>();
             }
             catch (Exception ex)
             {

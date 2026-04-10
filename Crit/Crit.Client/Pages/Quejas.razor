@@ -1,13 +1,14 @@
 ﻿@page "/quejas"
+@using Crit.Shared.Models
 @using Crit.Client.Services
 @using Crit.Client.Components.Quejas
 @using Microsoft.AspNetCore.Authorization
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor")]
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject QuejaService QuejaService
 @inject IJSRuntime JSRuntime
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@attribute [Authorize]
 
 <PageTitle>Sistema de Quejas</PageTitle>
 
@@ -107,26 +108,32 @@
         "Facturación", "Soporte Técnico", "Otros" 
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task LoadDataAsync()
     {
-        await DeterminarRolUsuario();
+        esAdmin = await QuejaService.EsAdminAsync();
         await CargarQuejas();
         FiltrarQuejas();
     }
-
-    private async Task DeterminarRolUsuario()
-    {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        esAdmin = authState.User.IsInRole("Administrador");
-    }
+    protected override bool ShouldRetryInitialLoad() => false;
 
     private async Task CargarQuejas()
     {
         isLoading = true;
-        quejas = esAdmin ? await QuejaService.GetQuejasAsync() : await QuejaService.GetMisQuejasAsync();
-        isLoading = false;
-        FiltrarQuejas();
+
+        try
+        {
+            quejas = esAdmin
+                ? await QuejaService.GetQuejasAsync()
+                : await QuejaService.GetMisQuejasAsync();
+
+            FiltrarQuejas();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
+
 
     private void FiltrarQuejas()
     {

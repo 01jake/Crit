@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using Crit.Shared.Models;
 
 namespace Crit.Client.Services
@@ -18,7 +19,17 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<CuentaPorPagar>>("api/CuentasPorPagar")
+                var response = await _httpClient.GetAsync("api/CuentasPorPagar");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener cuentas por pagar");
+                    return new List<CuentaPorPagar>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<CuentaPorPagar>>()
                     ?? new List<CuentaPorPagar>();
             }
             catch (Exception ex)
@@ -32,7 +43,20 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<CuentaPorPagar>($"api/CuentasPorPagar/{id}");
+                var response = await _httpClient.GetAsync($"api/CuentasPorPagar/{id}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener cuenta por pagar {Id}", id);
+                    return null;
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                    return null;
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<CuentaPorPagar>();
             }
             catch (Exception ex)
             {
@@ -45,7 +69,17 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<CuentaPorPagar>>($"api/CuentasPorPagar/proveedor/{proveedorId}")
+                var response = await _httpClient.GetAsync($"api/CuentasPorPagar/proveedor/{proveedorId}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener cuentas por pagar del proveedor {ProveedorId}", proveedorId);
+                    return new List<CuentaPorPagar>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<CuentaPorPagar>>()
                     ?? new List<CuentaPorPagar>();
             }
             catch (Exception ex)
@@ -59,7 +93,17 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<CuentaPorPagar>>("api/CuentasPorPagar/pendientes")
+                var response = await _httpClient.GetAsync("api/CuentasPorPagar/pendientes");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener cuentas por pagar pendientes");
+                    return new List<CuentaPorPagar>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<CuentaPorPagar>>()
                     ?? new List<CuentaPorPagar>();
             }
             catch (Exception ex)
@@ -74,7 +118,19 @@ namespace Crit.Client.Services
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("api/CuentasPorPagar", cuenta);
-                response.EnsureSuccessStatusCode();
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al crear cuenta por pagar");
+                    return null;
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Error HTTP {StatusCode} al crear cuenta por pagar", response.StatusCode);
+                    return null;
+                }
+
                 return await response.Content.ReadFromJsonAsync<CuentaPorPagar>();
             }
             catch (Exception ex)
@@ -89,6 +145,13 @@ namespace Crit.Client.Services
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"api/CuentasPorPagar/{cuentaId}/registrar-pago", pago);
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al registrar pago en cuenta por pagar {CuentaId}", cuentaId);
+                    return false;
+                }
+
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -103,6 +166,13 @@ namespace Crit.Client.Services
             try
             {
                 var response = await _httpClient.PostAsync($"api/CuentasPorPagar/{cuentaId}/cancelar", null);
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al cancelar cuenta por pagar {CuentaId}", cuentaId);
+                    return false;
+                }
+
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)

@@ -1,87 +1,28 @@
-﻿using System.Net.Http;
-using System.Net.Http.Json;
-using Crit.Shared.Models;
+﻿using Crit.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Crit.Client.Services
 {
-    public class ProveedorHttpService
+    public class ProveedorHttpService : HttpServiceBase
     {
-        private readonly HttpClient _http;
-        private readonly ILogger<ProveedorHttpService> _logger;
-
         public ProveedorHttpService(HttpClient http, ILogger<ProveedorHttpService> logger)
+            : base(http, logger)
         {
-            _http = http;
-            _logger = logger;
         }
 
-        public async Task<List<Proveedor>> GetAsync()
-        {
-            try
-            {
-                return await _http.GetFromJsonAsync<List<Proveedor>>("api/proveedores")
-                       ?? new();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener proveedores");
-                return new();
-            }
-        }
+        public Task<List<Proveedor>> GetAsync()
+            => base.GetListAsync<Proveedor>("api/proveedores");
 
-        public async Task<bool> CreateAsync(Proveedor proveedor)
-        {
-            try
-            {
-                var res = await _http.PostAsJsonAsync("api/proveedores", proveedor);
-                return res.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al crear proveedor");
-                return false;
-            }
-        }
+        public Task<Proveedor?> GetByIdAsync(int id)
+            => base.GetAsync<Proveedor>($"api/proveedores/{id}");
 
-        public async Task<bool> UpdateAsync(Proveedor proveedor)
-        {
-            try
-            {
-                var res = await _http.PutAsJsonAsync($"api/proveedores/{proveedor.Id}", proveedor);
-                return res.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al actualizar proveedor");
-                return false;
-            }
-        }
+        public Task<bool> CreateAsync(Proveedor proveedor)
+            => base.PostAsync("api/proveedores", proveedor);
 
-        public async Task<bool> DeleteAsync(int id)
-        {
-            try
-            {
-                var res = await _http.DeleteAsync($"api/proveedores/{id}");
-                return res.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al eliminar proveedor");
-                return false;
-            }
-        }
-        public async Task<Proveedor?> GetByIdAsync(int id)
-        {
-            try
-            {
-                return await _http.GetFromJsonAsync<Proveedor>($"api/proveedores/{id}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener proveedor {Id}", id);
-                return null;
-            }
-        }
+        public Task<bool> UpdateAsync(Proveedor proveedor)
+            => base.PutAsync($"api/proveedores/{proveedor.Id}", proveedor);
+
+        public Task<bool> DeleteAsync(int id)
+            => base.DeleteAsync($"api/proveedores/{id}");
     }
 }

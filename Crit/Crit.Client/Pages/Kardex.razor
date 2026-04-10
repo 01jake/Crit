@@ -3,46 +3,43 @@
 @using Crit.Shared.DTOs
 @using Crit.Shared.Models
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Authorization
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor,Usuario")]
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject KardexHttpService KardexHttpService
 @inject ProductoHttpService ProductoHttpService
 @inject AlmacenHttpService AlmacenHttpService
-@attribute [StreamRendering(true)]
-@rendermode @(new InteractiveWebAssemblyRenderMode(false))
 
 <PageTitle>Kardex de Inventario | Crit</PageTitle>
 
-<div class="pos-container px-4 py-4">
-    @* --- ENCABEZADO --- *@
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-        <div class="d-flex align-items-center gap-3">
-            <div class="bg-dark text-white rounded-3 p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 52px; height: 52px;">
-                <i class="bi bi-journal-text fs-2"></i>
-            </div>
-            <div>
-                <h2 class="page-title mb-0 fw-bold text-dark">Kardex de Inventario</h2>
-                <p class="text-muted small mb-0">Seguimiento detallado de entradas, salidas y traspasos</p>
-            </div>
+<div class="pos-container px-5 py-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+        <div>
+            <h2 class="page-title mb-0" style="color: #1F2A44;">Kardex de Inventario</h2>
+            <p class="text-muted small mb-0">Consulta entradas, salidas y traspasos con trazabilidad detallada</p>
         </div>
 
-        <button class="btn btn-white border fw-bold shadow-sm px-3" @onclick="CargarDatos">
-            <i class="bi bi-arrow-clockwise me-2 text-primary"></i>Actualizar Vista
+        <button class="btn saas-btn-primary shadow-sm px-4 py-2" @onclick="CargarDatos">
+            <i class="bi bi-arrow-clockwise me-2"></i><span>Actualizar Vista</span>
         </button>
     </div>
 
-    @* --- PANEL DE FILTROS --- *@
-    <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden border-light">
-        <div class="card-header bg-white border-bottom py-3 px-4">
-            <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-filter-right fs-5 text-primary"></i>
-                <h6 class="mb-0 fw-bold text-dark">Filtros de Búsqueda</h6>
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom-0 py-3 px-4">
+            <div>
+                <h6 class="fw-bold mb-0 text-dark">Filtros de Búsqueda</h6>
+                <small class="text-muted">Filtra por producto, almacén y rango de fechas</small>
             </div>
         </div>
-        <div class="card-body p-4 bg-white">
+
+        <div class="card-body p-4">
             <div class="row g-3">
-                <div class="col-md-4 col-lg-3">
-                    <label class="form-label-custom">Producto</label>
-                    <select class="form-select border-light-subtle shadow-none" @bind="productoId">
-                        <option value="">-- Todos los productos --</option>
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label class="saas-label">PRODUCTO</label>
+                    <select class="form-select saas-input" @bind="productoId">
+                        <option value="">Todos los productos</option>
                         @foreach (var p in productos)
                         {
                             <option value="@p.Id">@p.Nombre</option>
@@ -50,10 +47,10 @@
                     </select>
                 </div>
 
-                <div class="col-md-4 col-lg-3">
-                    <label class="form-label-custom">Almacén</label>
-                    <select class="form-select border-light-subtle shadow-none" @bind="almacenId">
-                        <option value="">-- Todos los almacenes --</option>
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label class="saas-label">ALMACÉN</label>
+                    <select class="form-select saas-input" @bind="almacenId">
+                        <option value="">Todos los almacenes</option>
                         @foreach (var a in almacenes)
                         {
                             <option value="@a.Id">@a.Nombre</option>
@@ -61,18 +58,18 @@
                     </select>
                 </div>
 
-                <div class="col-md-2 col-lg-2">
-                    <label class="form-label-custom">Desde</label>
-                    <input type="date" class="form-control border-light-subtle shadow-none" @bind="fechaInicio" />
+                <div class="col-12 col-md-2 col-lg-2">
+                    <label class="saas-label">DESDE</label>
+                    <input type="date" class="form-control saas-input" @bind="fechaInicio" />
                 </div>
 
-                <div class="col-md-2 col-lg-2">
-                    <label class="form-label-custom">Hasta</label>
-                    <input type="date" class="form-control border-light-subtle shadow-none" @bind="fechaFin" />
+                <div class="col-12 col-md-2 col-lg-2">
+                    <label class="saas-label">HASTA</label>
+                    <input type="date" class="form-control saas-input" @bind="fechaFin" />
                 </div>
 
-                <div class="col-md-12 col-lg-2 d-flex align-items-end">
-                    <button class="btn btn-primary w-100 fw-bold shadow-sm py-2" @onclick="AplicarFiltros">
+                <div class="col-12 col-md-12 col-lg-2 d-grid align-self-end">
+                    <button class="btn saas-btn-primary py-2 fw-bold" @onclick="AplicarFiltros">
                         <i class="bi bi-funnel-fill me-2"></i>Filtrar
                     </button>
                 </div>
@@ -80,18 +77,20 @@
         </div>
     </div>
 
-    @* --- TABLA DE MOVIMIENTOS --- *@
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
-        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold text-dark">Registros de Movimiento</h6>
+    <div class="d-none d-lg-block card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold mb-0 text-dark">Registros de Movimiento</h6>
+                <small class="text-muted">Historial cronológico de inventario</small>
+            </div>
             <span class="badge bg-light text-dark border fw-semibold px-3 py-2">
-                @movimientos.Count registro(s) encontrados
+                @movimientos.Count registro(s)
             </span>
         </div>
 
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 custom-table">
-                <thead class="bg-light text-muted small text-uppercase">
+                <thead style="background-color: #f8fafc;">
                     <tr>
                         <th class="ps-4 py-3">Fecha y Hora</th>
                         <th>Producto / SKU</th>
@@ -148,7 +147,7 @@
                                     <div class="small fw-semibold text-dark">@item.Referencia</div>
                                     @if (!string.IsNullOrEmpty(item.Observaciones))
                                     {
-                                        <div class="text-muted small text-truncate" style="max-width: 200px;" title="@item.Observaciones">
+                                        <div class="text-muted small text-truncate" style="max-width: 220px;" title="@item.Observaciones">
                                             @item.Observaciones
                                         </div>
                                     }
@@ -160,20 +159,96 @@
             </table>
         </div>
     </div>
+
+    <div class="d-lg-none">
+        @if (!movimientos.Any())
+        {
+            <div class="card shadow-sm border-0 text-center py-5 rounded-4">
+                <i class="bi bi-search fs-1 text-muted mb-3"></i>
+                <h5 class="fw-bold text-dark">Sin resultados</h5>
+                <p class="text-muted mb-0">No se encontraron movimientos con los filtros aplicados.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in movimientos)
+            {
+                <div class="card shadow-sm border-0 mb-3 kardex-mobile-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div style="max-width: 70%;">
+                                <h6 class="fw-bold mb-0 text-dark text-truncate">@item.Producto</h6>
+                                <span class="extra-small text-muted text-uppercase">@item.CodigoProducto</span>
+                            </div>
+                            <span class="@ObtenerBadge(item.TipoMovimiento)">
+                                @item.TipoMovimiento
+                            </span>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="text-muted extra-small">Fecha</div>
+                                <div class="small text-dark">@item.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                            <div class="col-6 text-end">
+                                <div class="text-muted extra-small">Almacén</div>
+                                <div class="small text-dark">@item.Almacen</div>
+                            </div>
+
+                            <div class="col-4">
+                                <div class="text-muted extra-small">Cantidad</div>
+                                <div class="fw-bold @(item.Cantidad < 0 ? "text-danger" : "text-success")">
+                                    @(item.Cantidad > 0 ? "+" : "")@item.Cantidad.ToString("N2")
+                                </div>
+                            </div>
+
+                            <div class="col-4 text-center">
+                                <div class="text-muted extra-small">Anterior</div>
+                                <div class="small text-dark">@item.StockAnterior.ToString("N2")</div>
+                            </div>
+
+                            <div class="col-4 text-end">
+                                <div class="text-muted extra-small">Nuevo</div>
+                                <div class="small fw-bold text-dark">@item.StockNuevo.ToString("N2")</div>
+                            </div>
+                        </div>
+
+                        <div class="border-top pt-3">
+                            <div class="extra-small text-muted">Referencia</div>
+                            <div class="small fw-semibold text-dark">@item.Referencia</div>
+
+                            @if (!string.IsNullOrEmpty(item.Observaciones))
+                            {
+                                <div class="extra-small text-muted mt-2">Observaciones</div>
+                                <div class="small text-muted">@item.Observaciones</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
 </div>
 
 <style>
-    .pos-container {
-        min-height: 100vh;
-        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    :root {
+        --polynex-navy: #1F2A44;
     }
 
- 
-    .btn-white {
-        background-color: #fff;
+    .saas-btn-primary {
+        background-color: var(--polynex-navy);
+        color: white;
+        border: none;
+        transition: all 0.2s;
     }
 
-    .form-label-custom {
+        .saas-btn-primary:hover {
+            background-color: #2a3a5e;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .saas-label {
         font-size: 11px;
         text-transform: uppercase;
         font-weight: 700;
@@ -182,13 +257,12 @@
         display: block;
     }
 
-    .form-select, .form-control {
+    .saas-input {
         padding: 0.6rem 0.75rem;
         font-size: 0.9rem;
         border-radius: 8px;
     }
 
-    /* Tabla Customizada */
     .custom-table thead th {
         border: none;
         font-size: 11px;
@@ -204,36 +278,60 @@
         font-size: 13.5px;
     }
 
-    /* Badges de Tipo de Movimiento */
     .badge {
         font-size: 0.75rem;
         padding: 0.5em 0.8em;
         font-weight: 600;
         border-radius: 6px;
     }
+
+    .btn-white {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+    }
+
+    .kardex-mobile-card {
+        border-left: 4px solid #e2e8f0 !important;
+        transition: transform 0.2s;
+    }
+
+        .kardex-mobile-card:active {
+            transform: scale(0.98);
+        }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .pos-container {
+        min-height: 100vh;
+    }
 </style>
 
 @code {
-    // Tu lógica se mantiene idéntica
     private List<KardexMovimientoDto> movimientos = new();
     private List<Producto> productos = new();
     private List<Almacen> almacenes = new();
+
     [SupplyParameterFromQuery] public int? productoId { get; set; }
     [SupplyParameterFromQuery] public int? almacenId { get; set; }
 
     private DateTime? fechaInicio;
     private DateTime? fechaFin;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task LoadDataAsync()
     {
         productos = await ProductoHttpService.GetProductosAsync();
         almacenes = await AlmacenHttpService.GetActivosAsync();
         await AplicarFiltros();
     }
 
+    protected override bool ShouldRetryInitialLoad()
+        => !productos.Any() || !almacenes.Any();
+
     private async Task CargarDatos()
     {
-        movimientos = await KardexHttpService.GetAsync();
+        await AplicarFiltros();
     }
 
     private async Task AplicarFiltros()

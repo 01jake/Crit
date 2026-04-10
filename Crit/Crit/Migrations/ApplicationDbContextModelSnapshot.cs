@@ -1286,6 +1286,9 @@ namespace Crit.Migrations
                     b.Property<decimal>("PrecioVenta")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("ProveedorId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Stock")
                         .HasColumnType("int");
 
@@ -1299,6 +1302,8 @@ namespace Crit.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EmpresaId");
+
+                    b.HasIndex("ProveedorId");
 
                     b.HasIndex("Codigo", "EmpresaId")
                         .IsUnique();
@@ -2258,7 +2263,14 @@ namespace Crit.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Crit.Shared.Models.Proveedor", "Proveedor")
+                        .WithMany()
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Empresa");
+
+                    b.Navigation("Proveedor");
                 });
 
             modelBuilder.Entity("Crit.Shared.Models.Proveedor", b =>

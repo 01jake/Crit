@@ -5,12 +5,10 @@ using System.Threading.Tasks;
 using Crit.Server.Data;
 using Crit.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Fluent;
-
 
 namespace Crit.Controllers
 {
@@ -21,14 +19,17 @@ namespace Crit.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<ComprasController> _logger;
         private readonly IEmpresaProvider _empresaProvider;
-        public ComprasController(ApplicationDbContext context, ILogger<ComprasController> logger, IEmpresaProvider empresaProvider)
+
+        public ComprasController(
+            ApplicationDbContext context,
+            ILogger<ComprasController> logger,
+            IEmpresaProvider empresaProvider)
         {
             _context = context;
             _logger = logger;
             _empresaProvider = empresaProvider;
         }
 
-        // GET: api/compras
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Compra>>> GetCompras()
         {
@@ -56,7 +57,6 @@ namespace Crit.Controllers
             }
         }
 
-        // POST: api/compras
         [HttpPost]
         public async Task<IActionResult> CrearCompra(Compra compra)
         {
@@ -69,10 +69,22 @@ namespace Crit.Controllers
                 if (empresaId <= 0)
                     return Unauthorized("No se pudo determinar la empresa del usuario.");
 
+                if (!compra.AlmacenId.HasValue || compra.AlmacenId.Value <= 0)
+                    return BadRequest("Debes seleccionar un almacén.");
+
+                if (compra.Detalles == null || !compra.Detalles.Any())
+                    return BadRequest("La compra debe tener al menos un producto.");
+
+                var almacenExiste = await _context.Almacenes
+                    .AnyAsync(a => a.Id == compra.AlmacenId.Value && a.EmpresaId == empresaId);
+
+                if (!almacenExiste)
+                    return BadRequest("El almacén seleccionado no existe.");
+
                 compra.EmpresaId = empresaId;
                 compra.Fecha = DateTime.Now;
 
-                decimal total = 0;
+                decimal total = 0m;
 
                 foreach (var d in compra.Detalles)
                 {
@@ -80,10 +92,37 @@ namespace Crit.Controllers
                         .FirstOrDefaultAsync(p => p.Id == d.ProductoId && p.EmpresaId == empresaId);
 
                     if (producto == null)
-                        return BadRequest("Producto no existe");
+                        return BadRequest($"Producto con ID {d.ProductoId} no existe.");
 
                     d.Subtotal = d.Cantidad * d.PrecioUnitario;
                     total += d.Subtotal;
+
+                    var inventario = await _context.InventarioPorAlmacen
+                        .FirstOrDefaultAsync(x =>
+                            x.EmpresaId == empresaId &&
+                            x.ProductoId == d.ProductoId &&
+                            x.AlmacenId == compra.AlmacenId.Value);
+
+                    if (inventario == null)
+                    {
+                        inventario = new InventarioPorAlmacen
+                        {
+                            EmpresaId = empresaId,
+                            ProductoId = d.ProductoId,
+                            AlmacenId = compra.AlmacenId.Value,
+                            Stock = d.Cantidad,
+                            StockMinimo = producto.StockMinimo,
+                            StockMaximo = 0
+                        };
+
+                        _context.InventarioPorAlmacen.Add(inventario);
+                    }
+                    else
+                    {
+                        inventario.Stock += d.Cantidad;
+                    }
+
+                    producto.Stock += d.Cantidad;
                 }
 
                 compra.Subtotal = total;
@@ -129,6 +168,7 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
         [HttpGet("historial")]
         public async Task<IActionResult> Historial()
         {
@@ -145,7 +185,7 @@ namespace Crit.Controllers
 
             return Ok(data);
         }
-        // DELETE: api/compras/5 (rollback stock)
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> CancelarCompra(int id)
         {
@@ -173,6 +213,24 @@ namespace Crit.Controllers
                     if (producto != null)
                     {
                         producto.Stock -= d.Cantidad;
+                        if (producto.Stock < 0)
+                            producto.Stock = 0;
+                    }
+
+                    if (compra.AlmacenId.HasValue)
+                    {
+                        var inventario = await _context.InventarioPorAlmacen
+                            .FirstOrDefaultAsync(x =>
+                                x.EmpresaId == empresaId &&
+                                x.ProductoId == d.ProductoId &&
+                                x.AlmacenId == compra.AlmacenId.Value);
+
+                        if (inventario != null)
+                        {
+                            inventario.Stock -= d.Cantidad;
+                            if (inventario.Stock < 0)
+                                inventario.Stock = 0;
+                        }
                     }
                 }
 
@@ -190,7 +248,6 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error al cancelar compra");
             }
         }
-
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCompra(int id)
@@ -211,6 +268,7 @@ namespace Crit.Controllers
 
             return Ok(compra);
         }
+
         [HttpGet("proveedor/{proveedorId}")]
         public async Task<ActionResult<IEnumerable<Compra>>> GetComprasPorProveedor(int proveedorId)
         {
@@ -269,7 +327,6 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error al generar el PDF");
             }
         }
-
 
         private byte[] GenerarPdfCompra(Compra compra)
         {
@@ -342,10 +399,10 @@ namespace Crit.Controllers
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(4);   // Producto
-                                columns.RelativeColumn(1.2f); // Cantidad
-                                columns.RelativeColumn(1.7f); // Costo unitario
-                                columns.RelativeColumn(1.7f); // Importe
+                                columns.RelativeColumn(4);
+                                columns.RelativeColumn(1.2f);
+                                columns.RelativeColumn(1.7f);
+                                columns.RelativeColumn(1.7f);
                             });
 
                             table.Header(header =>
@@ -418,6 +475,5 @@ namespace Crit.Controllers
 
             return document.GeneratePdf();
         }
-
     }
 }

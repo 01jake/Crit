@@ -1,11 +1,11 @@
-﻿@using Crit.Client.Services
+﻿@page "/QuejasPublicas"
+@using Crit.Client.Services
 @using Crit.Client.Components.Quejas
 @using Microsoft.AspNetCore.Authorization
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject QuejaService QuejaService
 @inject IJSRuntime JSRuntime
-@page "/QuejasPublicas"
 
 <QuejaPublicaForm/>
 @code {

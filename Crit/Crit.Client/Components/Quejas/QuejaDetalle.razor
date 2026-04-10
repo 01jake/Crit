@@ -1,79 +1,138 @@
 ﻿@if (IsVisible && Queja != null)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">@Queja.Titulo</h5>
-                    <button type="button" class="btn-close" @onclick="OnClose"></button>
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block complaint-modal-shell" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-1">@Queja.Titulo</h5>
+                        <p class="text-muted small mb-0">Detalle completo de la incidencia registrada</p>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" @onclick="OnClose"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="row mb-3">
+
+                <div class="modal-body px-4 py-4">
+                    <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <div class="mb-2">
-                                <strong class="text-muted">Cliente:</strong>
-                                <div>@Queja.NombreCliente</div>
-                            </div>
-                            <div class="mb-2">
-                                <strong class="text-muted">Correo:</strong>
-                                <div>@Queja.Correo</div>
-                            </div>
-                            <div class="mb-2">
-                                <strong class="text-muted">Afiliación:</strong>
-                                <div>@Queja.NumeroAfiliacion</div>
+                            <div class="detail-box">
+                                <span class="detail-label">Cliente</span>
+                                <div class="detail-value">@Queja.NombreCliente</div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-2">
-                                <strong class="text-muted">Fecha:</strong>
-                                <div>@Queja.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                            <div class="detail-box">
+                                <span class="detail-label">Correo</span>
+                                <div class="detail-value">@Queja.Correo</div>
                             </div>
-                            <div class="mb-2">
-                                <strong class="text-muted">Categoría:</strong>
-                                <div>@Queja.Categoria</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="detail-box">
+                                <span class="detail-label">Afiliación</span>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(Queja.NumeroAfiliacion) ? "N/A" : Queja.NumeroAfiliacion)</div>
                             </div>
-                            <div class="mb-2">
-                                <strong class="text-muted">Prioridad:</strong>
-                                <div>
-                                    <span class="badge @GetPrioridadBadgeClass(Queja.Prioridad)">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-box">
+                                <span class="detail-label">Fecha</span>
+                                <div class="detail-value">@Queja.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="detail-box">
+                                <span class="detail-label">Categoría</span>
+                                <div class="detail-value">@Queja.Categoria</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-box">
+                                <span class="detail-label">Prioridad</span>
+                                <div class="detail-value">
+                                    <span class="badge complaint-badge @GetPrioridadBadgeClass(Queja.Prioridad)">
                                         @GetPrioridadText(Queja.Prioridad)
                                     </span>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <strong class="text-muted">Estado:</strong>
-                        <div class="mt-1">
-                            <span class="badge @GetEstatusBadgeClass(Queja.Estatus)">
-                                @GetEstatusText(Queja.Estatus)
-                            </span>
+                        <div class="col-12">
+                            <div class="detail-box">
+                                <span class="detail-label">Estado</span>
+                                <div class="detail-value">
+                                    <span class="badge complaint-badge @GetEstatusBadgeClass(Queja.Estatus)">
+                                        @GetEstatusText(Queja.Estatus)
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <strong class="text-muted">Descripción:</strong>
-                        <div class="border p-3 rounded bg-light mt-2" style="white-space: pre-wrap;">@Queja.DescripcionQueja</div>
+                        <div class="col-12">
+                            <div class="description-box">
+                                <span class="detail-label">Descripción</span>
+                                <div class="description-content">@Queja.DescripcionQueja</div>
+                            </div>
+                        </div>
                     </div>
 
                     @if (!string.IsNullOrEmpty(Queja.ClienteUserName))
                     {
-                        <div class="mt-3 pt-3 border-top">
-                            <small class="text-muted">
-                                <i class="bi bi-person me-1"></i>
-                                Registrada por: @Queja.ClienteUserName
-                            </small>
+                        <div class="small text-muted border-top pt-3">
+                            <i class="bi bi-person me-1"></i>Registrada por: @Queja.ClienteUserName
                         </div>
                     }
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="OnClose">Cerrar</button>
+
+                <div class="modal-footer border-top-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light border px-4" @onclick="OnClose">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 }
+
+<style>
+    .complaint-modal-shell {
+        background-color: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(2px);
+    }
+
+    .detail-box,
+    .description-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1rem;
+        height: 100%;
+    }
+
+    .detail-label {
+        display: block;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #94a3b8;
+        margin-bottom: 0.35rem;
+    }
+
+    .detail-value {
+        color: #0f172a;
+        font-weight: 600;
+    }
+
+    .description-content {
+        white-space: pre-wrap;
+        color: #334155;
+        line-height: 1.6;
+    }
+
+    .complaint-badge {
+        font-weight: 600;
+        padding: 0.5rem 0.8rem;
+        border-radius: 999px;
+    }
+</style>
 
 @code {
     [Parameter] public bool IsVisible { get; set; }

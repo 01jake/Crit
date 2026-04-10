@@ -1,6 +1,10 @@
 ﻿@page "/proveedores/{Id:int}"
 @using Crit.Client.Services
 @using Crit.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor")]
 @inject ProveedorHttpService ProveedorHttpService
 @inject CompraHttpService CompraHttpService
 @inject CuentaPorPagarHttpService CuentaPorPagarHttpService
@@ -8,7 +12,7 @@
 
 <PageTitle>Detalle Proveedor</PageTitle>
 
-<div class="pos-container">
+<div class="pos-container px-5 py-4">
     @if (cargando)
     {
         <div class="d-flex flex-column align-items-center justify-content-center py-5">
@@ -26,29 +30,55 @@
     }
     else
     {
-        @* --- ENCABEZADO --- *@
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px; font-size: 1.5rem;">
-                    <i class="bi bi-buildings"></i>
-                </div>
-                <div>
-                    <h2 class="page-title mb-0">@proveedor.Nombre</h2>
-                    <p class="text-muted small mb-0">
-                        <i class="bi bi-envelope me-1"></i>@(string.IsNullOrWhiteSpace(proveedor.Email) ? "Sin correo registrado" : proveedor.Email)
-                    </p>
+        <div class="hero-card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-body p-4 p-lg-5">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="supplier-avatar shadow-sm">
+                            <i class="bi bi-buildings"></i>
+                        </div>
+
+                        <div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                <h2 class="page-title mb-0">@proveedor.Nombre</h2>
+                                <span class="status-pill @(proveedor.Activo ? "status-pill-active" : "status-pill-inactive")">
+                                    @(proveedor.Activo ? "Activo" : "Inactivo")
+                                </span>
+                            </div>
+
+                            <p class="text-muted mb-2">
+                                @(string.IsNullOrWhiteSpace(proveedor.RazonSocial) ? "Proveedor registrado en el directorio" : proveedor.RazonSocial)
+                            </p>
+
+                            <div class="d-flex flex-wrap gap-3 supplier-meta">
+                                <span>
+                                    <i class="bi bi-envelope me-2"></i>@(string.IsNullOrWhiteSpace(proveedor.Email) ? "Sin correo registrado" : proveedor.Email)
+                                </span>
+                                <span>
+                                    <i class="bi bi-telephone me-2"></i>@(string.IsNullOrWhiteSpace(proveedor.Telefono) ? "Sin teléfono" : proveedor.Telefono)
+                                </span>
+                                <span>
+                                    <i class="bi bi-upc-scan me-2"></i>@(string.IsNullOrWhiteSpace(proveedor.RFC) ? "RFC no capturado" : proveedor.RFC)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-soft-warning shadow-sm" href="/cuentas-por-pagar?proveedorId=@proveedor.Id">
+                            <i class="bi bi-wallet2 me-2"></i>Cuentas por pagar
+                        </a>
+                        <button class="btn btn-light border shadow-sm" @onclick="Volver">
+                            <i class="bi bi-arrow-left me-2"></i>Volver
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <button class="btn btn-light border shadow-sm" @onclick="Volver">
-                <i class="bi bi-arrow-left me-2"></i>Volver
-            </button>
         </div>
 
-        @* --- INDICADORES (KPIs) --- *@
         <div class="row g-3 mb-4">
             <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="stat-icon bg-danger-subtle text-danger me-3">
@@ -57,12 +87,13 @@
                             <span class="text-muted fw-bold small text-uppercase">Saldo por pagar</span>
                         </div>
                         <h3 class="fw-bold mb-0 text-danger">@saldoTotal.ToString("C")</h3>
+                        <div class="extra-small text-muted mt-2">Compromiso actual con este proveedor</div>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="stat-icon bg-info-subtle text-info me-3">
@@ -71,26 +102,28 @@
                             <span class="text-muted fw-bold small text-uppercase">Cuentas activas</span>
                         </div>
                         <h3 class="fw-bold mb-0 text-info">@cuentasActivas</h3>
+                        <div class="extra-small text-muted mt-2">Facturas con saldo pendiente</div>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="stat-icon bg-danger-subtle text-danger me-3">
+                            <div class="stat-icon bg-warning-subtle text-warning me-3">
                                 <i class="bi bi-exclamation-octagon"></i>
                             </div>
                             <span class="text-muted fw-bold small text-uppercase">Vencidas</span>
                         </div>
-                        <h3 class="fw-bold mb-0 text-danger">@cuentasVencidas</h3>
+                        <h3 class="fw-bold mb-0 text-warning">@cuentasVencidas</h3>
+                        <div class="extra-small text-muted mt-2">Cuentas que ya rebasaron vencimiento</div>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="stat-icon bg-success-subtle text-success me-3">
@@ -99,72 +132,78 @@
                             <span class="text-muted fw-bold small text-uppercase">Total Compras</span>
                         </div>
                         <h3 class="fw-bold mb-0 text-success">@compras.Count</h3>
+                        <div class="extra-small text-muted mt-2">Operaciones registradas con este proveedor</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        @* --- PESTAÑAS (TABS) --- *@
-        <ul class="nav nav-pills mb-4 gap-2">
+        <ul class="nav nav-pills custom-pills mb-4 gap-2">
             <li class="nav-item">
-                <button class="nav-link @(tab == "datos" ? "active shadow-sm" : "bg-white text-dark border")" @onclick='() => tab = "datos"'>
+                <button class="nav-link @(tab == "datos" ? "active shadow-sm" : "")" @onclick='() => tab = "datos"'>
                     <i class="bi bi-card-text me-2"></i>Datos Generales
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-link @(tab == "compras" ? "active shadow-sm" : "bg-white text-dark border")" @onclick='() => tab = "compras"'>
+                <button class="nav-link @(tab == "compras" ? "active shadow-sm" : "")" @onclick='() => tab = "compras"'>
                     <i class="bi bi-cart4 me-2"></i>Compras
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-link @(tab == "cxp" ? "active shadow-sm" : "bg-white text-dark border")" @onclick='() => tab = "cxp"'>
+                <button class="nav-link @(tab == "cxp" ? "active shadow-sm" : "")" @onclick='() => tab = "cxp"'>
                     <i class="bi bi-wallet2 me-2"></i>Cuentas por pagar
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-link @(tab == "pagos" ? "active shadow-sm" : "bg-white text-dark border")" @onclick='() => tab = "pagos"'>
+                <button class="nav-link @(tab == "pagos" ? "active shadow-sm" : "")" @onclick='() => tab = "pagos"'>
                     <i class="bi bi-check2-circle me-2"></i>Pagos Realizados
                 </button>
             </li>
         </ul>
 
-        @* --- CONTENIDO DE LAS PESTAÑAS --- *@
         @if (tab == "datos")
         {
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="mb-0 fw-bold text-muted"><i class="bi bi-info-circle me-2"></i>Información Fiscal y de Contacto</h6>
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-bottom-0 px-4">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-info-circle me-2"></i>Información Fiscal y de Contacto</h6>
                 </div>
-                <div class="card-body row g-4">
-                    <div class="col-12 col-md-6 col-lg-3">
-                        <div class="p-3 bg-light rounded-3 h-100 border">
-                            <div class="small text-muted mb-1 text-uppercase">RFC</div>
-                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(proveedor.RFC) ? "N/A" : proveedor.RFC)</div>
+
+                <div class="card-body px-4 pb-4">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="detail-box">
+                                <span class="detail-label">RFC</span>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(proveedor.RFC) ? "N/A" : proveedor.RFC)</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-12 col-md-6 col-lg-3">
-                        <div class="p-3 bg-light rounded-3 h-100 border">
-                            <div class="small text-muted mb-1 text-uppercase">Teléfono</div>
-                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(proveedor.Telefono) ? "N/A" : proveedor.Telefono)</div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="detail-box">
+                                <span class="detail-label">Teléfono</span>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(proveedor.Telefono) ? "N/A" : proveedor.Telefono)</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-12 col-md-6 col-lg-3">
-                        <div class="p-3 bg-light rounded-3 h-100 border">
-                            <div class="small text-muted mb-1 text-uppercase">Contacto Principal</div>
-                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(proveedor.Contacto) ? "N/A" : proveedor.Contacto)</div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="detail-box">
+                                <span class="detail-label">Contacto Principal</span>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(proveedor.Contacto) ? "N/A" : proveedor.Contacto)</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-12 col-md-6 col-lg-3">
-                        <div class="p-3 bg-light rounded-3 h-100 border">
-                            <div class="small text-muted mb-1 text-uppercase">Régimen Fiscal</div>
-                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(proveedor.RegimenFiscal) ? "N/A" : proveedor.RegimenFiscal)</div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="detail-box">
+                                <span class="detail-label">Régimen Fiscal</span>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(proveedor.RegimenFiscal) ? "N/A" : proveedor.RegimenFiscal)</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <div class="small text-muted mb-1 text-uppercase">Dirección Completa</div>
-                            <div class="fw-semibold">
-                                <i class="bi bi-geo-alt text-primary me-2"></i>@(string.IsNullOrWhiteSpace(proveedor.Direccion) ? "Sin dirección registrada" : proveedor.Direccion)
+
+                        <div class="col-12">
+                            <div class="detail-box">
+                                <span class="detail-label">Dirección Completa</span>
+                                <div class="detail-value">
+                                    <i class="bi bi-geo-alt text-primary me-2"></i>@(string.IsNullOrWhiteSpace(proveedor.Direccion) ? "Sin dirección registrada" : proveedor.Direccion)
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -174,7 +213,7 @@
 
         @if (tab == "compras")
         {
-            <div class="card shadow-sm border-0">
+            <div class="d-none d-lg-block card shadow-sm border-0 rounded-4 overflow-hidden">
                 @if (!compras.Any())
                 {
                     <div class="text-center py-5">
@@ -185,8 +224,8 @@
                 {
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr class="small text-uppercase text-muted">
+                            <thead style="background-color: #f8fafc;">
+                                <tr>
                                     <th class="ps-4">Factura</th>
                                     <th>Fecha</th>
                                     <th>Total</th>
@@ -194,7 +233,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var compra in compras)
+                                @foreach (var compra in compras.OrderByDescending(x => x.Fecha))
                                 {
                                     <tr>
                                         <td class="ps-4">
@@ -214,11 +253,39 @@
                     </div>
                 }
             </div>
+
+            <div class="d-lg-none">
+                @if (!compras.Any())
+                {
+                    <div class="card shadow-sm border-0 text-center py-5 rounded-4">
+                        <p class="text-muted mb-0">No hay compras registradas para este proveedor.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var compra in compras.OrderByDescending(x => x.Fecha))
+                    {
+                        <div class="card shadow-sm border-0 mb-3 detail-mobile-card">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div style="max-width: 70%;">
+                                        <h6 class="fw-bold mb-0 text-dark">@compra.SerieFactura-@compra.FolioFactura</h6>
+                                        <span class="extra-small text-muted">@compra.Fecha.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <span class="badge rounded-pill text-bg-light border">@compra.Estado</span>
+                                </div>
+
+                                <div class="fw-bold text-success">@compra.Total.ToString("C")</div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
         }
 
         @if (tab == "cxp")
         {
-            <div class="card shadow-sm border-0">
+            <div class="d-none d-lg-block card shadow-sm border-0 rounded-4 overflow-hidden">
                 @if (!cuentas.Any())
                 {
                     <div class="text-center py-5">
@@ -229,8 +296,8 @@
                 {
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr class="small text-uppercase text-muted">
+                            <thead style="background-color: #f8fafc;">
+                                <tr>
                                     <th class="ps-4">Folio Factura</th>
                                     <th>Emisión</th>
                                     <th>Vencimiento</th>
@@ -241,7 +308,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var cuenta in cuentas)
+                                @foreach (var cuenta in cuentas.OrderByDescending(x => x.FechaEmision))
                                 {
                                     <tr>
                                         <td class="ps-4">
@@ -270,11 +337,59 @@
                     </div>
                 }
             </div>
+
+            <div class="d-lg-none">
+                @if (!cuentas.Any())
+                {
+                    <div class="card shadow-sm border-0 text-center py-5 rounded-4">
+                        <p class="text-muted mb-0">No hay cuentas por pagar registradas.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var cuenta in cuentas.OrderByDescending(x => x.FechaEmision))
+                    {
+                        <div class="card shadow-sm border-0 mb-3 detail-mobile-card">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div style="max-width: 70%;">
+                                        <h6 class="fw-bold mb-0 text-dark">@cuenta.FolioFactura</h6>
+                                        <span class="extra-small text-muted">@cuenta.FechaEmision.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <span class="badge rounded-pill text-bg-light border">@cuenta.Estado</span>
+                                </div>
+
+                                <div class="row g-2 mb-2">
+                                    <div class="col-4">
+                                        <div class="text-muted extra-small">Total</div>
+                                        <div class="small fw-semibold">@cuenta.Total.ToString("C")</div>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <div class="text-muted extra-small">Pagado</div>
+                                        <div class="small text-success">@cuenta.TotalPagado.ToString("C")</div>
+                                    </div>
+                                    <div class="col-4 text-end">
+                                        <div class="text-muted extra-small">Saldo</div>
+                                        <div class="small fw-bold text-danger">@cuenta.Saldo.ToString("C")</div>
+                                    </div>
+                                </div>
+
+                                @if (cuenta.EstaVencida)
+                                {
+                                    <div class="extra-small text-danger fw-bold">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Cuenta vencida
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
         }
 
         @if (tab == "pagos")
         {
-            <div class="card shadow-sm border-0">
+            <div class="d-none d-lg-block card shadow-sm border-0 rounded-4 overflow-hidden">
                 @if (!pagosProveedor.Any())
                 {
                     <div class="text-center py-5">
@@ -285,8 +400,8 @@
                 {
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr class="small text-uppercase text-muted">
+                            <thead style="background-color: #f8fafc;">
+                                <tr>
                                     <th class="ps-4">Fecha y Hora</th>
                                     <th>Método</th>
                                     <th>Referencia</th>
@@ -320,22 +435,114 @@
                     </div>
                 }
             </div>
+
+            <div class="d-lg-none">
+                @if (!pagosProveedor.Any())
+                {
+                    <div class="card shadow-sm border-0 text-center py-5 rounded-4">
+                        <p class="text-muted mb-0">No se han registrado pagos para este proveedor.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var pago in pagosProveedor)
+                    {
+                        <div class="card shadow-sm border-0 mb-3 detail-mobile-card">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div style="max-width: 70%;">
+                                        <h6 class="fw-bold mb-0 text-dark">@pago.MetodoPago</h6>
+                                        <span class="extra-small text-muted">@pago.FechaPago.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+                                    <div class="fw-bold text-success">@pago.Monto.ToString("C")</div>
+                                </div>
+
+                                <div class="small text-muted mb-2">
+                                    @(string.IsNullOrWhiteSpace(pago.Referencia) ? "Sin referencia" : pago.Referencia)
+                                </div>
+
+                                <a href="/cuentas-por-pagar/@pago.CuentaPorPagarId" class="text-decoration-none small">
+                                    <i class="bi bi-link-45deg"></i> Ver CXP
+                                </a>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
         }
     }
 </div>
 
 <style>
     .pos-container {
-        padding: 1.5rem;
+        min-height: 100vh;
+        padding-bottom: 80px;
     }
 
-    .stat-icon {
-        width: 44px;
-        height: 44px;
+    .hero-card {
+        background: radial-gradient(circle at top right, rgba(59,130,246,0.10), transparent 28%), linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    }
+
+    .supplier-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+        color: #2563eb;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
+        font-size: 1.65rem;
+        flex-shrink: 0;
+    }
+
+    .supplier-meta {
+        color: #64748b;
+        font-size: 0.92rem;
+    }
+
+        .supplier-meta span {
+            display: inline-flex;
+            align-items: center;
+        }
+
+    .status-pill {
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .status-pill-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-pill-inactive {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .btn-soft-warning {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+
+        .btn-soft-warning:hover {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+    .stat-icon {
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
         font-size: 1.4rem;
     }
 
@@ -348,15 +555,46 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.06) !important;
         }
 
-    .nav-pills .nav-link {
-        border-radius: 8px;
-        font-weight: 500;
-        transition: all 0.2s;
+    .custom-pills .nav-link {
+        border-radius: 999px;
+        font-weight: 600;
+        color: #334155;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
     }
 
-        .nav-pills .nav-link:hover:not(.active) {
-            background-color: #f8f9fa !important;
+        .custom-pills .nav-link:hover:not(.active) {
+            background: #f8fafc;
         }
+
+        .custom-pills .nav-link.active {
+            background: #1F2A44;
+            color: #fff;
+            border-color: #1F2A44;
+        }
+
+    .detail-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1rem;
+        height: 100%;
+    }
+
+    .detail-label {
+        display: block;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #94a3b8;
+        margin-bottom: 0.35rem;
+    }
+
+    .detail-value {
+        color: #0f172a;
+        font-weight: 600;
+    }
 
     .table thead th {
         font-weight: 600;
@@ -365,7 +603,16 @@
         padding-top: 1rem;
         padding-bottom: 1rem;
     }
+
+    .detail-mobile-card {
+        border-left: 4px solid #e2e8f0 !important;
+    }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
 </style>
+
 @code {
     [Parameter] public int Id { get; set; }
 
@@ -380,21 +627,41 @@
     private int cuentasActivas => cuentas.Count(x => x.Activa && x.Saldo > 0);
     private int cuentasVencidas => cuentas.Count(x => x.Activa && x.EstaVencida && x.Saldo > 0);
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task LoadDataAsync()
+    {
+        await CargarProveedorAsync();
+    }
+
+    protected override bool ShouldRetryInitialLoad() => proveedor is null;
+
+    private async Task CargarProveedorAsync()
     {
         cargando = true;
 
-        proveedor = await ProveedorHttpService.GetByIdAsync(Id);
-        compras = await CompraHttpService.GetByProveedorAsync(Id);
-        cuentas = await CuentaPorPagarHttpService.GetByProveedorAsync(Id);
+        try
+        {
+            proveedor = await ProveedorHttpService.GetByIdAsync(Id);
+            compras = await CompraHttpService.GetByProveedorAsync(Id);
+            cuentas = await CuentaPorPagarHttpService.GetByProveedorAsync(Id);
 
-        pagosProveedor = cuentas
-            .SelectMany(x => x.Pagos ?? new List<PagoProveedor>())
-            .Where(x => x.Activo)
-            .OrderByDescending(x => x.FechaPago)
-            .ToList();
+            pagosProveedor = cuentas
+                .SelectMany(x => x.Pagos ?? new List<PagoProveedor>())
+                .Where(x => x.Activo)
+                .OrderByDescending(x => x.FechaPago)
+                .ToList();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
 
-        cargando = false;
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsLoading)
+        {
+            await CargarProveedorAsync();
+        }
     }
 
     private void Volver()

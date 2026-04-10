@@ -1,6 +1,8 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using Crit.Shared.DTOs;
 using Crit.Shared.Models;
+
 namespace Crit.Client.Services
 {
     public class Dashboardhttpservice
@@ -18,12 +20,21 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<DashboardStatsDto>("api/dashboard/stats")
-                       ?? new DashboardStatsDto();
+                var response = await _httpClient.GetAsync("api/dashboard/stats");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener estadísticas del dashboard");
+                    return new DashboardStatsDto();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<DashboardStatsDto>() ?? new DashboardStatsDto();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener stats");
+                _logger.LogError(ex, "Error al obtener estadísticas del dashboard");
                 return new DashboardStatsDto();
             }
         }
@@ -32,8 +43,17 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<CashFlowDto>>($"api/dashboard/cash-flow?meses={meses}")
-                       ?? new List<CashFlowDto>();
+                var response = await _httpClient.GetAsync($"api/dashboard/cash-flow?meses={meses}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener cash flow");
+                    return new List<CashFlowDto>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<CashFlowDto>>() ?? new List<CashFlowDto>();
             }
             catch (Exception ex)
             {
@@ -46,8 +66,17 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<VentasPorDiaDto>>($"api/dashboard/ventas-por-dia?dias={dias}")
-                       ?? new List<VentasPorDiaDto>();
+                var response = await _httpClient.GetAsync($"api/dashboard/ventas-por-dia?dias={dias}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener ventas por día");
+                    return new List<VentasPorDiaDto>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<VentasPorDiaDto>>() ?? new List<VentasPorDiaDto>();
             }
             catch (Exception ex)
             {
@@ -56,16 +85,48 @@ namespace Crit.Client.Services
             }
         }
 
+        public async Task<List<VentasPorMesDto>> GetVentasPorMesAsync(int meses = 6)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/dashboard/ventas-por-mes?meses={meses}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener ventas por mes");
+                    return new List<VentasPorMesDto>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<VentasPorMesDto>>() ?? new List<VentasPorMesDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener ventas por mes");
+                return new List<VentasPorMesDto>();
+            }
+        }
+
         public async Task<List<ProductoMasVendidoDto>> GetProductosMasVendidosAsync(int cantidad = 5)
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<ProductoMasVendidoDto>>($"api/dashboard/productos-mas-vendidos?cantidad={cantidad}")
-                       ?? new List<ProductoMasVendidoDto>();
+                var response = await _httpClient.GetAsync($"api/dashboard/productos-mas-vendidos?cantidad={cantidad}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener productos más vendidos");
+                    return new List<ProductoMasVendidoDto>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<ProductoMasVendidoDto>>() ?? new List<ProductoMasVendidoDto>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener top productos");
+                _logger.LogError(ex, "Error al obtener productos más vendidos");
                 return new List<ProductoMasVendidoDto>();
             }
         }
@@ -74,8 +135,17 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<DashboardAlertaDto>("api/dashboard/alertas")
-                       ?? new DashboardAlertaDto();
+                var response = await _httpClient.GetAsync("api/dashboard/alertas");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener alertas");
+                    return new DashboardAlertaDto();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<DashboardAlertaDto>() ?? new DashboardAlertaDto();
             }
             catch (Exception ex)
             {
@@ -88,8 +158,17 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<VentaRecienteDto>>($"api/dashboard/ventas-recientes?cantidad={cantidad}")
-                       ?? new List<VentaRecienteDto>();
+                var response = await _httpClient.GetAsync($"api/dashboard/ventas-recientes?cantidad={cantidad}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener ventas recientes");
+                    return new List<VentaRecienteDto>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<VentaRecienteDto>>() ?? new List<VentaRecienteDto>();
             }
             catch (Exception ex)
             {
@@ -102,21 +181,25 @@ namespace Crit.Client.Services
         {
             try
             {
-                // Forzamos el formato yyyy-MM-dd para evitar confusiones entre día y mes
                 var url = fechaInicio.HasValue
                     ? $"api/dashboard/stats?fechaInicio={fechaInicio.Value:yyyy-MM-dd}"
                     : "api/dashboard/stats";
 
                 var response = await _httpClient.GetAsync(url);
 
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener estadísticas filtradas del dashboard");
+                    return new DashboardStatsDto();
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadFromJsonAsync<DashboardStatsDto>() ?? new DashboardStatsDto();
                 }
 
-                // Si hay error, leemos qué dice el servidor para depurar
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"Error del servidor: {errorContent}");
+                _logger.LogError("Error del servidor en dashboard stats: {ErrorContent}", errorContent);
                 return new DashboardStatsDto();
             }
             catch (Exception ex)
@@ -125,12 +208,22 @@ namespace Crit.Client.Services
                 return new DashboardStatsDto();
             }
         }
+
         public async Task<FinanzasResumenDto> GetFinanzasResumenAsync()
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<FinanzasResumenDto>("api/dashboard/finanzas-resumen")
-                       ?? new FinanzasResumenDto();
+                var response = await _httpClient.GetAsync("api/dashboard/finanzas-resumen");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener resumen financiero");
+                    return new FinanzasResumenDto();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<FinanzasResumenDto>() ?? new FinanzasResumenDto();
             }
             catch (Exception ex)
             {
@@ -138,14 +231,10 @@ namespace Crit.Client.Services
                 return new FinanzasResumenDto();
             }
         }
-
-
     }
-    // DTO para alertas
+
     public class DashboardAlertasDto
     {
         public List<Producto> ProductosBajoStock { get; set; } = new();
     }
-
 }
-

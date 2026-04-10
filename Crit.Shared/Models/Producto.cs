@@ -45,6 +45,11 @@ namespace Crit.Shared.Models
         [StringLength(50)]
         public string? Unidad { get; set; } = "Pieza";
 
+        public int? ProveedorId { get; set; }
+        public Proveedor? Proveedor { get; set; }
+
+
+
         public bool Activo { get; set; } = true;
 
         public DateTime FechaCreacion { get; set; } = DateTime.Now;

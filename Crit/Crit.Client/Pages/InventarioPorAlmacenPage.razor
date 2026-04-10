@@ -1,120 +1,228 @@
 ﻿@page "/inventario-por-almacen"
-@using System.Net.Http.Json
 @using Crit.Client.Services
 @using Crit.Shared.Models
-@inject InventarioAlmacenHttpService InventarioAlmacenHttpService
-@inject AlmacenHttpService AlmacenHttpService
+@using Microsoft.AspNetCore.Authorization
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor")]
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@inject InventarioAlmacenHttpService InventarioAlmacenHttpService
+@inject AlmacenHttpService AlmacenHttpService
 
 <PageTitle>Inventario por Almacén | Crit</PageTitle>
 
-<div class="pos-container px-3 py-4">
-    @* --- HEADER --- *@
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-        <div class="d-flex align-items-center gap-3">
-            <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
-                <i class="bi bi-building-check fs-3"></i>
-            </div>
-            <div>
-                <h2 class="page-title mb-0 fw-bold">Inventario por Almacén</h2>
-                <p class="text-muted small mb-0">Monitoreo de existencias y niveles críticos por sucursal</p>
-            </div>
+<div class="pos-container px-5 py-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+        <div>
+            <h2 class="page-title mb-0" style="color: #1F2A44;">Inventario por Almacén</h2>
+            <p class="text-muted small mb-0">Monitorea existencias y niveles críticos por sucursal</p>
         </div>
 
-        <button class="btn btn-white border shadow-sm fw-bold px-3" @onclick="CargarDatos">
-            <i class="bi bi-arrow-clockwise me-2 text-primary"></i>Sincronizar Datos
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-secondary shadow-sm px-4 py-2" @onclick="ToggleNuevoAlmacen">
+                <i class="bi bi-plus-square me-2"></i>
+                <span>@(mostrarNuevoAlmacen ? "Ocultar Formulario" : "Nuevo Almacén")</span>
+            </button>
+
+            <button class="btn saas-btn-primary shadow-sm px-4 py-2" @onclick="CargarDatos">
+                <i class="bi bi-arrow-clockwise me-2"></i>
+                <span>Sincronizar Datos</span>
+            </button>
+        </div>
     </div>
 
-    @* --- DASHBOARD DE ESTADO --- *@
+    @if (mostrarNuevoAlmacen)
+    {
+        <div class="card shadow-sm border-0 mb-4 rounded-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1" style="color: #1F2A44;">Registrar Nuevo Almacén</h5>
+                        <p class="text-muted small mb-0">Agrega una nueva sucursal o ubicación de resguardo.</p>
+                    </div>
+
+                    <span class="badge rounded-pill text-bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                        <i class="bi bi-building-add me-1"></i> Alta rápida
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(mensajeAlmacen))
+                {
+                    <div class="alert @(esErrorAlmacen ? "alert-danger" : "alert-success") border-0 rounded-4 py-3 mb-3">
+                        <i class="bi @(esErrorAlmacen ? "bi-exclamation-triangle" : "bi-check-circle") me-2"></i>
+                        @mensajeAlmacen
+                    </div>
+                }
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <label class="saas-label">NOMBRE DEL ALMACÉN</label>
+                        <input class="form-control"
+                               placeholder="Ej. Matriz Norte"
+                               @bind="nuevoAlmacen.Nombre" />
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="saas-label">CLAVE</label>
+                        <input class="form-control"
+                               placeholder="Ej. ALM-NTE"
+                               @bind="nuevoAlmacen.Clave" />
+                    </div>
+
+                    <div class="col-12 col-md-5">
+                        <label class="saas-label">DIRECCIÓN</label>
+                        <input class="form-control"
+                               placeholder="Dirección o referencia"
+                               @bind="nuevoAlmacen.Direccion" />
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="saas-label">ESTATUS</label>
+                        <div class="form-check form-switch pt-2">
+                            <input class="form-check-input" type="checkbox" @bind="nuevoAlmacen.Activo" />
+                            <label class="form-check-label small fw-semibold">
+                                @(nuevoAlmacen.Activo ? "Activo" : "Inactivo")
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-9 d-flex align-items-end justify-content-md-end gap-2 flex-wrap">
+                        <button type="button" class="btn btn-outline-secondary px-4" @onclick="LimpiarNuevoAlmacen">
+                            <i class="bi bi-eraser me-2"></i>Limpiar
+                        </button>
+
+                        <button type="button"
+                                class="btn saas-btn-primary px-4"
+                                @onclick="GuardarNuevoAlmacen"
+                                disabled="@guardandoAlmacen">
+                            <i class="bi @(guardandoAlmacen ? "bi-hourglass-split" : "bi-plus-circle") me-2"></i>
+                            @(guardandoAlmacen ? "Guardando..." : "Guardar Almacén")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row g-3 mb-4">
-        <div class="col-md-6 col-xl-3">
-            <div class="card shadow-sm border-0 border-bottom border-4 border-secondary h-100 rounded-3">
-                <div class="card-body p-3">
-                    <div class="text-muted small text-uppercase fw-bold mb-1">Items en Vista</div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-secondary-subtle text-secondary me-3">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Items en Vista</span>
+                    </div>
                     <h3 class="fw-bold mb-0">@inventarioFiltrado.Count</h3>
+                    <div class="text-muted extra-small mt-1">Registros visibles</div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6 col-xl-3">
-            <div class="card shadow-sm border-0 border-bottom border-4 border-primary h-100 rounded-3">
-                <div class="card-body p-3">
-                    <div class="text-muted small text-uppercase fw-bold mb-1">Stock Físico Total</div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-primary-subtle text-primary me-3">
+                            <i class="bi bi-stack"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Stock Físico Total</span>
+                    </div>
                     <h3 class="fw-bold text-primary mb-0">@inventarioFiltrado.Sum(x => x.Stock).ToString("N0")</h3>
+                    <div class="text-muted extra-small mt-1">Unidades acumuladas</div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6 col-xl-3">
-            <div class="card shadow-sm border-0 border-bottom border-4 border-warning h-100 rounded-3">
-                <div class="card-body p-3">
-                    <div class="text-muted small text-uppercase fw-bold mb-1">Bajo Mínimo</div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-warning-subtle text-warning me-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Bajo Mínimo</span>
+                    </div>
                     <h3 class="fw-bold text-warning mb-0">@inventarioFiltrado.Count(x => x.Stock <= x.StockMinimo && x.Stock > 0)</h3>
+                    <div class="text-muted extra-small mt-1">Productos en alerta</div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6 col-xl-3">
-            <div class="card shadow-sm border-0 border-bottom border-4 border-danger h-100 rounded-3">
-                <div class="card-body p-3">
-                    <div class="text-muted small text-uppercase fw-bold mb-1">Agotados</div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon bg-danger-subtle text-danger me-3">
+                            <i class="bi bi-x-octagon"></i>
+                        </div>
+                        <span class="text-muted fw-bold small text-uppercase">Agotados</span>
+                    </div>
                     <h3 class="fw-bold text-danger mb-0">@inventarioFiltrado.Count(x => x.Stock <= 0)</h3>
+                    <div class="text-muted extra-small mt-1">Sin existencia</div>
                 </div>
             </div>
         </div>
     </div>
 
-    @* --- PANEL DE CONTROL (FILTROS) --- *@
-    <div class="card shadow-sm border-0 rounded-4 mb-4">
-        <div class="card-body p-3 bg-white">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label x-small fw-bold text-muted">FILTRAR POR ALMACÉN</label>
-                    <select class="form-select border-0 bg-light" @bind="almacenSeleccionadoId" @bind:after="AplicarFiltros">
-                        <option value="0">🌐 Todos los almacenes</option>
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-12 col-md-3">
+                    <label class="saas-label">ALMACÉN</label>
+                    <select class="form-select border-light-subtle" @bind="almacenSeleccionadoId" @bind:after="AplicarFiltros">
+                        <option value="0">Todos los almacenes</option>
                         @foreach (var almacen in almacenes)
                         {
-                            <option value="@almacen.Id">📦 @almacen.Nombre</option>
+                            <option value="@almacen.Id">@almacen.Nombre</option>
                         }
                     </select>
                 </div>
 
-                <div class="col-md-5">
-                    <label class="form-label x-small fw-bold text-muted">BUSCAR PRODUCTO</label>
-                    <div class="input-group">
-                        <span class="input-group-text border-0 bg-light"><i class="bi bi-search text-muted"></i></span>
-                        <input class="form-control border-0 bg-light" placeholder="Nombre o código de barras..." @bind="busqueda" @bind:event="oninput" @bind:after="AplicarFiltros" />
+                <div class="col-12 col-md-5">
+                    <label class="saas-label">BUSCAR PRODUCTO</label>
+                    <div class="search-box-container">
+                        <i class="bi bi-search"></i>
+                        <input class="form-control"
+                               placeholder="Nombre o código..."
+                               @bind="busqueda"
+                               @bind:event="oninput"
+                               @bind:after="AplicarFiltros" />
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <label class="form-label x-small fw-bold text-muted">ESTADO DE EXISTENCIA</label>
-                    <div class="btn-group w-100" role="group">
-                        <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio1" autocomplete="off" checked @onclick='() => SetAlertFilter("todos")'>
-                        <label class="btn btn-outline-secondary border-light-subtle small py-2" for="vbtn-radio1">Todos</label>
+                <div class="col-12 col-md-4">
+                    <label class="saas-label">ESTADO</label>
+                    <div class="d-flex gap-2">
+                        <button type="button"
+                                class="btn btn-sm flex-fill @(soloAlertasTexto == "todos" ? "btn-secondary" : "btn-outline-secondary")"
+                                @onclick='() => SetAlertFilter("todos")'>
+                            Todos
+                        </button>
 
-                        <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio2" autocomplete="off" @onclick='() => SetAlertFilter("alertas")'>
-                        <label class="btn btn-outline-warning border-light-subtle small py-2" for="vbtn-radio2">Solo Alertas</label>
+                        <button type="button"
+                                class="btn btn-sm flex-fill @(soloAlertasTexto == "alertas" ? "btn-warning text-dark" : "btn-outline-warning")"
+                                @onclick='() => SetAlertFilter("alertas")'>
+                            Solo Alertas
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    @* --- TABLA DE RESULTADOS --- *@
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="d-none d-lg-block card shadow-sm border-0 rounded-4 overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="bg-dark text-white x-small text-uppercase">
+                <thead style="background-color: #1F2A44; color: white;">
                     <tr>
                         <th class="ps-4 py-3" style="width: 35%">Información del Producto</th>
                         <th style="width: 15%">Ubicación</th>
                         <th class="text-end" style="width: 10%">Stock</th>
                         <th class="text-end" style="width: 10%">Mínimo</th>
                         <th class="text-end" style="width: 10%">Máximo</th>
-                        <th class="text-center pe-4" style="width: 20%">Estado de Salud</th>
+                        <th class="text-center pe-4" style="width: 20%">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,7 +232,7 @@
                             <td colspan="6" class="text-center py-5">
                                 <div class="py-4">
                                     <i class="bi bi-search fs-1 text-muted opacity-25"></i>
-                                    <p class="text-muted mt-2">No se encontraron productos con los filtros aplicados.</p>
+                                    <p class="text-muted mt-2 mb-0">No se encontraron productos con los filtros aplicados.</p>
                                 </div>
                             </td>
                         </tr>
@@ -133,15 +241,15 @@
                     {
                         @foreach (var item in inventarioFiltrado)
                         {
-                            <tr class="border-bottom">
+                            <tr>
                                 <td class="ps-4 py-3">
                                     <div class="d-flex align-items-center">
-                                        <div class="bg-light rounded-2 p-2 me-3 d-none d-sm-block">
+                                        <div class="bg-light rounded-3 p-2 me-3 d-none d-sm-block">
                                             <i class="bi bi-box text-primary"></i>
                                         </div>
                                         <div>
                                             <div class="fw-bold text-dark">@item.Producto?.Nombre</div>
-                                            <div class="text-muted small">ID: @item.Producto?.Codigo</div>
+                                            <div class="text-muted small">Código: @item.Producto?.Codigo</div>
                                         </div>
                                     </div>
                                 </td>
@@ -165,12 +273,10 @@
                                         }
                                         else if (item.Stock <= item.StockMinimo)
                                         {
-
                                             <i class="bi bi-exclamation-triangle me-1"></i>
                                         }
                                         else
                                         {
-
                                             <i class="bi bi-check2-circle me-1"></i>
                                         }
                                         @ObtenerTextoEstado(item)
@@ -182,31 +288,144 @@
                 </tbody>
             </table>
         </div>
+
         <div class="card-footer bg-white border-0 py-3 text-center">
-            <small class="text-muted">Mostrando <b>@inventarioFiltrado.Count</b> de un total de <b>@inventario.Count</b> registros.</small>
+            <small class="text-muted">Mostrando <b>@inventarioFiltrado.Count</b> de <b>@inventario.Count</b> registros.</small>
         </div>
+    </div>
+
+    <div class="d-lg-none">
+        @if (!inventarioFiltrado.Any())
+        {
+            <div class="card shadow-sm border-0 text-center py-5 rounded-4">
+                <i class="bi bi-search fs-1 text-muted mb-3"></i>
+                <h5 class="fw-bold text-dark">Sin resultados</h5>
+                <p class="text-muted mb-0">No se encontraron productos con los filtros aplicados.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in inventarioFiltrado)
+            {
+                <div class="card shadow-sm border-0 mb-3 inventory-mobile-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div style="max-width: 70%;">
+                                <h6 class="fw-bold mb-0 text-dark text-truncate">@item.Producto?.Nombre</h6>
+                                <span class="extra-small text-muted text-uppercase">Código: @item.Producto?.Codigo</span>
+                            </div>
+                            <span class="@ObtenerBadgeStock(item) px-3 py-2">
+                                @ObtenerTextoEstado(item)
+                            </span>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-12">
+                                <div class="text-muted extra-small">Almacén</div>
+                                <div class="small text-dark">@item.Almacen?.Nombre</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-muted extra-small">Stock</div>
+                                <div class="fw-bold @(item.Stock <= 0 ? "text-danger" : (item.Stock <= item.StockMinimo ? "text-warning" : "text-primary"))">
+                                    @item.Stock.ToString("N0")
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="text-muted extra-small">Mínimo</div>
+                                <div class="small text-dark">@item.StockMinimo.ToString("N0")</div>
+                            </div>
+                            <div class="col-4 text-end">
+                                <div class="text-muted extra-small">Máximo</div>
+                                <div class="small text-dark">@item.StockMaximo.ToString("N0")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
 
 <style>
-    .pos-container {
-       
-        min-height: 100vh;
+    :root {
+        --polynex-navy: #1F2A44;
     }
 
-    .x-small {
-        font-size: 0.7rem;
-        letter-spacing: 0.5px;
+    .saas-btn-primary {
+        background-color: var(--polynex-navy);
+        color: white;
+        border: none;
+        transition: all 0.2s;
     }
 
-    .btn-white {
-        background-color: #fff;
-        color: #333;
-        border: 1px solid #dee2e6;
+        .saas-btn-primary:hover {
+            background-color: #2a3a5e;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .search-box-container {
+        position: relative;
     }
+
+        .search-box-container i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            z-index: 2;
+        }
+
+        .search-box-container .form-control {
+            padding-left: 2.5rem;
+            border-radius: 0.75rem;
+        }
+
+    .saas-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 0.35rem;
+        display: block;
+        text-transform: uppercase;
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.25rem;
+    }
+
+    .extra-small {
+        font-size: 0.72rem;
+    }
+
+    .stat-card {
+        transition: all 0.2s ease-in-out;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+        }
+
+    .inventory-mobile-card {
+        border-left: 4px solid #e2e8f0 !important;
+        transition: transform 0.2s;
+    }
+
+        .inventory-mobile-card:active {
+            transform: scale(0.98);
+        }
 
     .table thead th {
         border: none;
+        font-weight: 600;
     }
 
     .table tbody tr {
@@ -217,7 +436,8 @@
             background-color: #fcfcfc;
         }
 
-    .form-select, .form-control {
+    .form-select,
+    .form-control {
         border-radius: 10px;
         font-size: 0.9rem;
     }
@@ -226,6 +446,11 @@
         padding: 0.6em 1em;
         font-size: 0.75rem;
         text-transform: uppercase;
+    }
+
+    .pos-container {
+        min-height: 100vh;
+        padding-bottom: 80px;
     }
 </style>
 
@@ -238,16 +463,77 @@
     private string busqueda = string.Empty;
     private string soloAlertasTexto = "todos";
 
-    protected override async Task OnInitializedAsync()
+    private bool mostrarNuevoAlmacen;
+    private bool guardandoAlmacen;
+    private bool esErrorAlmacen;
+    private string? mensajeAlmacen;
+    private Almacen nuevoAlmacen = CrearModeloAlmacen();
+
+    protected override async Task LoadDataAsync()
     {
         await CargarDatos();
     }
+
+    protected override bool ShouldRetryInitialLoad()
+        => !inventario.Any() && !almacenes.Any();
 
     private async Task CargarDatos()
     {
         inventario = await InventarioAlmacenHttpService.GetAsync() ?? new();
         almacenes = await AlmacenHttpService.GetActivosAsync() ?? new();
         AplicarFiltros();
+    }
+
+    private void ToggleNuevoAlmacen()
+    {
+        mostrarNuevoAlmacen = !mostrarNuevoAlmacen;
+        mensajeAlmacen = null;
+        esErrorAlmacen = false;
+    }
+
+    private void LimpiarNuevoAlmacen()
+    {
+        nuevoAlmacen = CrearModeloAlmacen();
+        mensajeAlmacen = null;
+        esErrorAlmacen = false;
+    }
+
+    private async Task GuardarNuevoAlmacen()
+    {
+        mensajeAlmacen = null;
+        esErrorAlmacen = false;
+
+        if (string.IsNullOrWhiteSpace(nuevoAlmacen.Nombre))
+        {
+            esErrorAlmacen = true;
+            mensajeAlmacen = "El nombre del almacén es obligatorio.";
+            return;
+        }
+
+        guardandoAlmacen = true;
+
+        try
+        {
+            var almacenCreado = await AlmacenHttpService.CreateAsync(nuevoAlmacen);
+
+            if (almacenCreado is null)
+            {
+                esErrorAlmacen = true;
+                mensajeAlmacen = "No se pudo guardar el almacén. Verifica que el nombre no esté repetido.";
+                return;
+            }
+
+            mensajeAlmacen = "Almacén creado correctamente.";
+            almacenSeleccionadoId = almacenCreado.Id;
+            nuevoAlmacen = CrearModeloAlmacen();
+            mostrarNuevoAlmacen = false;
+
+            await CargarDatos();
+        }
+        finally
+        {
+            guardandoAlmacen = false;
+        }
     }
 
     private void SetAlertFilter(string value)
@@ -282,6 +568,11 @@
             .ThenBy(x => x.Producto?.Nombre)
             .ToList();
     }
+
+    private static Almacen CrearModeloAlmacen() => new()
+    {
+        Activo = true
+    };
 
     private static string ObtenerTextoEstado(InventarioPorAlmacen item)
     {

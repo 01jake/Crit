@@ -2,128 +2,109 @@
 @using Crit.Client.Services
 @using Crit.Shared.Models
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Authorization
+@inject InventarioAlmacenHttpService InventarioAlmacenHttpService
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor")]
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject TraspasoHttpService TraspasoHttpService
 @inject AlmacenHttpService AlmacenHttpService
 @inject ProductoHttpService ProductoHttpService
 @inject ReabastecimientoHttpService ReabastecimientoHttpService
-@attribute [StreamRendering(true)]
-@rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Traspasos entre Almacenes</PageTitle>
 
-<div class="pos-container px-3 py-4">
-    @* --- ENCABEZADO --- *@
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-        <div class="d-flex align-items-center gap-3">
-            <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
-                <i class="bi bi-arrow-left-right fs-3"></i>
-            </div>
-            <div>
-                <h2 class="page-title mb-0 fw-bold">Traspasos de Inventario</h2>
-                <p class="text-muted small mb-0">Control de movimientos internos entre sucursales o bodegas</p>
-            </div>
+<div class="pos-container px-5 py-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+        <div>
+            <h2 class="page-title mb-0" style="color: #1F2A44;">Traspasos de Inventario</h2>
+            <p class="text-muted small mb-0">Controla movimientos internos entre sucursales y bodegas</p>
         </div>
 
-        <button class="btn btn-light border shadow-sm fw-bold" @onclick="CargarDatos">
-            <i class="bi bi-arrow-clockwise me-2 text-primary"></i>Actualizar Stock
+        <button class="btn saas-btn-primary shadow-sm px-4 py-2" @onclick="CargarDatos">
+            <i class="bi bi-arrow-clockwise me-2"></i><span>Actualizar Stock</span>
         </button>
     </div>
 
-    @* --- FORMULARIO DE NUEVO TRASPASO --- *@
-    <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
-        <div class="card-header bg-white border-bottom py-3 px-4">
-            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-plus-circle me-2 text-primary"></i>Configurar Nuevo Movimiento</h5>
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom-0 py-3 px-4">
+            <div>
+                <h6 class="fw-bold mb-0 text-dark">Nuevo Traspaso</h6>
+                <small class="text-muted">Configura el producto, ruta y cantidad a mover</small>
+            </div>
         </div>
-        <div class="card-body p-4 bg-light-subtle">
-            <div class="row g-4 align-items-center">
 
-                @* Lógica Visual: Origen -> Destino *@
-                <div class="col-lg-5">
-                    <div class="p-3 bg-white rounded-3 border border-primary-subtle shadow-sm">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Almacén Origen</label>
-                                <select class="form-select border-primary-subtle" value="@nuevoTraspaso.AlmacenOrigenId" @onchange="OnOrigenChanged">
-                                    <option value="0">Seleccionar...</option>
-                                    @foreach (var almacen in almacenes)
-                                    {
-                                        <option value="@almacen.Id">📦 @almacen.Nombre</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Almacén Destino</label>
-                                <select class="form-select border-primary-subtle" @bind="nuevoTraspaso.AlmacenDestinoId">
-                                    <option value="0">Seleccionar...</option>
-                                    @foreach (var almacen in almacenes.Where(a => a.Id != nuevoTraspaso.AlmacenOrigenId))
-                                    {
-                                        <option value="@almacen.Id">🚚 @almacen.Nombre</option>
-                                    }
-                                </select>
-                            </div>
-                        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-12 col-lg-4">
+                    <label class="saas-label">ALMACÉN ORIGEN</label>
+                    <select class="form-select saas-input" value="@nuevoTraspaso.AlmacenOrigenId" @onchange="OnOrigenChanged">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var almacen in almacenes)
+                        {
+                            <option value="@almacen.Id">@almacen.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <label class="saas-label">ALMACÉN DESTINO</label>
+                    <select class="form-select saas-input" @bind="nuevoTraspaso.AlmacenDestinoId">
+                        <option value="0">Seleccionar...</option>
+                        @foreach (var almacen in almacenes.Where(a => a.Id != nuevoTraspaso.AlmacenOrigenId))
+                        {
+                            <option value="@almacen.Id">@almacen.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <label class="saas-label">PRODUCTO</label>
+                    <select class="form-select saas-input" @bind="nuevoTraspaso.ProductoId" disabled="@(nuevoTraspaso.AlmacenOrigenId <= 0)">
+                        <option value="0">Seleccionar producto...</option>
+                        @foreach (var producto in productosOrigen)
+                        {
+                            <option value="@producto.Id">@producto.Nombre</option>
+                        }
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label class="saas-label">CANTIDAD</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" min="0.01" class="form-control saas-input fw-bold text-primary" @bind="nuevoTraspaso.Cantidad" />
+                        <span class="input-group-text bg-white">Cant.</span>
                     </div>
                 </div>
 
-                <div class="col-lg-1 text-center d-none d-lg-block">
-                    <i class="bi bi-arrow-right fs-1 text-primary-emphasis opacity-25"></i>
+                <div class="col-12 col-md-8">
+                    <label class="saas-label">OBSERVACIONES</label>
+                    <input class="form-control saas-input" placeholder="Ej. Reabastecimiento de sucursal..." @bind="nuevoTraspaso.Observaciones" />
                 </div>
 
-                <div class="col-lg-6">
-                    <div class="p-3 bg-white rounded-3 border shadow-sm">
-                        <div class="row g-3">
-                            <div class="col-md-8">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Producto a Mover</label>
-                                <select class="form-select" @bind="nuevoTraspaso.ProductoId">
-                                    <option value="0">Seleccionar producto...</option>
-                                    @foreach (var producto in productos)
-                                    {
-                                        <option value="@producto.Id">@producto.Nombre</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Cantidad</label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" min="0.01" class="form-control fw-bold text-primary" @bind="nuevoTraspaso.Cantidad" />
-                                    <span class="input-group-text bg-light text-muted small">Cant.</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 mt-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Observaciones / Motivo del traspaso</label>
-                    <div class="input-group shadow-sm rounded-3 overflow-hidden">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-chat-dots"></i></span>
-                        <input class="form-control border-start-0 py-2" placeholder="Ej. Reabastecimiento de sucursal por venta especial..." @bind="nuevoTraspaso.Observaciones" />
-                    </div>
-                </div>
-
-                <div class="col-12 text-end">
-                    <button class="btn btn-primary btn-lg px-5 shadow fw-bold rounded-3" @onclick="GuardarTraspaso">
-                        <i class="bi bi-arrow-left-right me-2"></i>EJECUTAR TRASPASO
+                <div class="col-12 d-grid d-md-flex justify-content-md-end mt-2">
+                    <button class="btn saas-btn-primary px-4 py-3 fw-bold shadow-sm" @onclick="GuardarTraspaso">
+                        <i class="bi bi-arrow-left-right me-2"></i>Ejecutar Traspaso
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    @* --- HISTORIAL DE TRASPASOS --- *@
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-dark">Historial de Movimientos</h5>
-            <div class="input-group input-group-sm" style="width: 250px;">
-                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control bg-light border-start-0" placeholder="Buscar en historial...">
+    <div class="d-none d-lg-block card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom-0 py-3 px-4">
+            <div>
+                <h6 class="fw-bold mb-0 text-dark">Historial de Movimientos</h6>
+                <small class="text-muted">Consulta traspasos realizados entre almacenes</small>
             </div>
         </div>
 
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light text-muted small text-uppercase">
+                <thead style="background-color: #f8fafc;">
                     <tr>
                         <th class="ps-4 py-3">Fecha y Hora</th>
                         <th>Producto</th>
@@ -136,7 +117,7 @@
                 <tbody>
                     @foreach (var item in traspasos)
                     {
-                        <tr class="border-bottom">
+                        <tr>
                             <td class="ps-4">
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold text-dark">@item.Fecha.ToString("dd/MM/yyyy")</span>
@@ -145,18 +126,16 @@
                             </td>
                             <td>
                                 <div class="fw-bold text-primary">@item.Producto?.Nombre</div>
-                                <div class="text-muted x-small">ID: #@item.ProductoId</div>
+                                <div class="text-muted extra-small">ID: #@item.ProductoId</div>
                             </td>
                             <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-light text-dark border fw-normal px-2">@item.AlmacenOrigen?.Nombre</span>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge bg-light text-dark border fw-normal">@item.AlmacenOrigen?.Nombre</span>
                                     <i class="bi bi-chevron-right text-primary opacity-50 small"></i>
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold px-2">@item.AlmacenDestino?.Nombre</span>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">@item.AlmacenDestino?.Nombre</span>
                                 </div>
                             </td>
-                            <td class="text-end fw-bold font-monospace fs-6">
-                                @item.Cantidad.ToString("N2")
-                            </td>
+                            <td class="text-end fw-bold">@item.Cantidad.ToString("N2")</td>
                             <td class="text-center">
                                 <span class="@ObtenerBadgeEstado(item.Estado)">
                                     <i class="bi @(item.Estado == "Completado" ? "bi-check-circle-fill" : "bi-info-circle") me-1"></i>
@@ -166,8 +145,8 @@
                             <td class="text-center pe-4">
                                 @if (item.Estado == "Completado")
                                 {
-                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" @onclick="() => CancelarTraspaso(item.Id)">
-                                        <i class="bi bi-x-circle me-1"></i>Anular
+                                    <button class="btn btn-white btn-sm" @onclick="() => CancelarTraspaso(item.Id)">
+                                        <i class="bi bi-x-circle text-danger"></i>
                                     </button>
                                 }
                             </td>
@@ -177,15 +156,111 @@
             </table>
         </div>
     </div>
+
+    <div class="d-lg-none">
+        @foreach (var item in traspasos)
+        {
+            <div class="card shadow-sm border-0 mb-3 transfer-mobile-card">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div style="max-width: 70%;">
+                            <h6 class="fw-bold mb-0 text-dark text-truncate">@item.Producto?.Nombre</h6>
+                            <span class="extra-small text-muted">@item.Fecha.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <span class="@ObtenerBadgeEstado(item.Estado)">
+                            @item.Estado
+                        </span>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <div class="text-muted extra-small">Ruta</div>
+                            <div class="small text-dark">
+                                @(item.AlmacenOrigen?.Nombre) -> @(item.AlmacenDestino?.Nombre)
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="text-muted extra-small">Cantidad</div>
+                            <div class="fw-bold text-primary">@item.Cantidad.ToString("N2")</div>
+                        </div>
+                    </div>
+
+                    @if (item.Estado == "Completado")
+                    {
+                        <div class="d-flex gap-2 border-top pt-3">
+                            <button class="btn btn-light-danger btn-sm flex-fill" @onclick="() => CancelarTraspaso(item.Id)">
+                                <i class="bi bi-x-circle me-1"></i>Anular
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
 <style>
-    .pos-container {
-        min-height: 100vh;
+    :root {
+        --polynex-navy: #1F2A44;
     }
 
-    .x-small {
-        font-size: 0.7rem;
+    .saas-btn-primary {
+        background-color: var(--polynex-navy);
+        color: white;
+        border: none;
+        transition: all 0.2s;
+    }
+
+        .saas-btn-primary:hover {
+            background-color: #2a3a5e;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .saas-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 0.35rem;
+        display: block;
+        text-transform: uppercase;
+    }
+
+    .saas-input {
+        border-radius: 0.75rem;
+    }
+
+    .transfer-mobile-card {
+        border-left: 4px solid #e2e8f0 !important;
+        transition: transform 0.2s;
+    }
+
+        .transfer-mobile-card:active {
+            transform: scale(0.98);
+        }
+
+    .btn-light-danger {
+        background: #fef2f2;
+        color: #dc2626;
+        border: none;
+    }
+
+        .btn-light-danger:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+    .btn-white {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+    }
+
+        .btn-white:hover {
+            background: #f8fafc;
+        }
+
+    .extra-small {
+        font-size: 0.72rem;
     }
 
     .card {
@@ -196,17 +271,18 @@
             box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.08) !important;
         }
 
-    .form-select, .form-control {
+    .form-select,
+    .form-control {
         border-radius: 8px;
         padding: 0.6rem 1rem;
     }
 
-        .form-select:focus, .form-control:focus {
+        .form-select:focus,
+        .form-control:focus {
             border-color: #0d6efd;
             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
         }
 
-    /* Badges Customizados de Blazor logic */
     .badge {
         font-size: 0.85rem;
         padding: 0.5em 1em;
@@ -217,12 +293,20 @@
         color: #555;
         border-top: none;
     }
+
+    .pos-container {
+        min-height: 100vh;
+        padding-bottom: 80px;
+    }
 </style>
 
 @code {
     private List<TraspasoAlmacen> traspasos = new();
     private List<Almacen> almacenes = new();
     private List<Producto> productos = new();
+    private List<Producto> productosOrigen = new();
+
+
     [SupplyParameterFromQuery] public int? productoId { get; set; }
     [SupplyParameterFromQuery] public int? almacenDestinoId { get; set; }
     [SupplyParameterFromQuery] public decimal? cantidad { get; set; }
@@ -234,19 +318,23 @@
         Estado = "Completado"
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task LoadDataAsync()
     {
         await CargarDatos();
         AplicarParametrosReabastecimiento();
-
     }
+
+    protected override bool ShouldRetryInitialLoad()
+        => !almacenes.Any() || !productos.Any();
 
     private async Task CargarDatos()
     {
         traspasos = await TraspasoHttpService.GetAsync();
         almacenes = await AlmacenHttpService.GetActivosAsync();
         productos = await ProductoHttpService.GetProductosAsync();
+        productosOrigen = new List<Producto>();
     }
+
 
     private async Task GuardarTraspaso()
     {
@@ -299,7 +387,6 @@
             }
         }
 
-
         nuevoTraspaso = new TraspasoAlmacen
         {
             Fecha = DateTime.Now,
@@ -327,7 +414,7 @@
         }
     }
 
-    private void OnOrigenChanged(ChangeEventArgs e)
+    private async Task OnOrigenChanged(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var origenId))
         {
@@ -336,6 +423,22 @@
             if (nuevoTraspaso.AlmacenDestinoId == origenId)
             {
                 nuevoTraspaso.AlmacenDestinoId = 0;
+            }
+
+            nuevoTraspaso.ProductoId = 0;
+            productosOrigen.Clear();
+
+            if (origenId > 0)
+            {
+                var inventarioOrigen = await InventarioAlmacenHttpService.GetPorAlmacenAsync(origenId);
+
+                productosOrigen = inventarioOrigen
+                    .Where(x => x.Stock > 0 && x.Producto is not null)
+                    .OrderBy(x => x.Producto!.Nombre)
+                    .Select(x => x.Producto!)
+                    .GroupBy(x => x.Id)
+                    .Select(g => g.First())
+                    .ToList();
             }
         }
     }
@@ -357,8 +460,7 @@
     private static string ObtenerBadgeEstado(string? estado) => estado switch
     {
         "Completado" => "badge rounded-pill text-bg-success-subtle text-success border border-success",
-        "Pendiente" => "badge rounded-pill text-bg-warning-subtle text-warning-emphasis border border-warning",
         "Cancelado" => "badge rounded-pill text-bg-danger-subtle text-danger border border-danger",
-        _ => "badge rounded-pill text-bg-primary-subtle text-primary border border-primary"
+        _ => "badge rounded-pill text-bg-secondary-subtle text-secondary border border-secondary"
     };
 }

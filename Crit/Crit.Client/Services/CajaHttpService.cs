@@ -32,7 +32,21 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<CajaResumenDto>("api/caja/resumen")
+                var response = await _httpClient.GetAsync("api/caja/resumen");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener resumen de caja");
+                    return new CajaResumenDto();
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Error HTTP {StatusCode} al obtener resumen de caja", response.StatusCode);
+                    return new CajaResumenDto();
+                }
+
+                return await response.Content.ReadFromJsonAsync<CajaResumenDto>()
                        ?? new CajaResumenDto();
             }
             catch (Exception ex)
@@ -41,6 +55,7 @@ namespace Crit.Client.Services
                 return new CajaResumenDto();
             }
         }
+
 
         public async Task<List<CajaMovimiento>> GetMovimientosAsync()
         {

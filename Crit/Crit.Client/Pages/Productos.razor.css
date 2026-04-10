@@ -1,5 +1,8 @@
 ﻿
 /* Estilos específicos para inventario */
+.pos-container {
+    min-height: 100vh;
+}
 .row-warning {
     background-color: rgba(255, 193, 7, 0.05) !important;
 }

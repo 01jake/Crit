@@ -155,6 +155,10 @@ namespace Crit.Controllers
                 inventarioOrigen.Stock -= traspaso.Cantidad;
                 inventarioDestino.Stock += traspaso.Cantidad;
 
+                producto.Stock = (int)await _context.InventarioPorAlmacen
+                    .Where(x => x.EmpresaId == empresaId && x.ProductoId == traspaso.ProductoId)
+                    .SumAsync(x => x.Stock);
+
                 traspaso.EmpresaId = empresaId;
                 traspaso.Fecha = DateTime.Now;
                 traspaso.Estado = "Completado";
@@ -214,6 +218,7 @@ namespace Crit.Controllers
             }
         }
 
+
         [HttpPost("{id}/cancelar")]
         public async Task<IActionResult> CancelarTraspaso(int id)
         {
@@ -256,6 +261,16 @@ namespace Crit.Controllers
 
                 inventarioDestino.Stock -= traspaso.Cantidad;
                 inventarioOrigen.Stock += traspaso.Cantidad;
+
+                var producto = await _context.Productos
+                    .FirstOrDefaultAsync(p => p.Id == traspaso.ProductoId && p.EmpresaId == empresaId);
+
+                if (producto != null)
+                {
+                    producto.Stock = (int)await _context.InventarioPorAlmacen
+                        .Where(x => x.EmpresaId == empresaId && x.ProductoId == traspaso.ProductoId)
+                        .SumAsync(x => x.Stock);
+                }
 
                 traspaso.Estado = "Cancelado";
 
@@ -304,5 +319,6 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
     }
 }

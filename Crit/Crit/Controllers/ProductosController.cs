@@ -34,9 +34,12 @@ namespace Crit.Controllers
                     return Unauthorized("No se pudo determinar la empresa del usuario.");
 
                 var productos = await _context.Productos
+                    .Include(p => p.Proveedor)
                     .Where(p => p.EmpresaId == empresaId)
                     .OrderBy(p => p.Nombre)
                     .ToListAsync();
+
+                await SincronizarStockDesdeInventarioAsync(productos, empresaId);
 
                 return Ok(productos);
             }
@@ -58,10 +61,13 @@ namespace Crit.Controllers
                     return Unauthorized("No se pudo determinar la empresa del usuario.");
 
                 var producto = await _context.Productos
+                    .Include(p => p.Proveedor)
                     .FirstOrDefaultAsync(p => p.Id == id && p.EmpresaId == empresaId);
 
                 if (producto == null)
                     return NotFound($"Producto con ID {id} no encontrado");
+
+                await SincronizarStockDesdeInventarioAsync(producto, empresaId);
 
                 return Ok(producto);
             }
@@ -83,9 +89,12 @@ namespace Crit.Controllers
                     return Unauthorized("No se pudo determinar la empresa del usuario.");
 
                 var productos = await _context.Productos
+                    .Include(p => p.Proveedor)
                     .Where(p => p.EmpresaId == empresaId && p.Activo)
                     .OrderBy(p => p.Nombre)
                     .ToListAsync();
+
+                await SincronizarStockDesdeInventarioAsync(productos, empresaId);
 
                 return Ok(productos);
             }
@@ -109,6 +118,15 @@ namespace Crit.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
+                if (producto.ProveedorId.HasValue)
+                {
+                    var proveedorExiste = await _context.Proveedores
+                        .AnyAsync(p => p.Id == producto.ProveedorId.Value && p.EmpresaId == empresaId);
+
+                    if (!proveedorExiste)
+                        return BadRequest("El proveedor seleccionado no existe");
+                }
+
                 var codigoExiste = await _context.Productos
                     .AnyAsync(p => p.Codigo == producto.Codigo && p.EmpresaId == empresaId);
 
@@ -119,6 +137,16 @@ namespace Crit.Controllers
 
                 _context.Productos.Add(producto);
                 await _context.SaveChangesAsync();
+
+                var errorInventario = await SincronizarInventarioDesdeStockManualAsync(producto, empresaId);
+                if (!string.IsNullOrWhiteSpace(errorInventario))
+                    return BadRequest(errorInventario);
+
+                await _context.SaveChangesAsync();
+                await SincronizarStockDesdeInventarioAsync(producto, empresaId);
+                await _context.SaveChangesAsync();
+
+                await _context.Entry(producto).Reference(p => p.Proveedor).LoadAsync();
 
                 return CreatedAtAction(nameof(GetProducto), new { id = producto.Id }, producto);
             }
@@ -157,14 +185,35 @@ namespace Crit.Controllers
                 if (codigoExiste)
                     return BadRequest("Ya existe otro producto con ese código en esta empresa");
 
+                if (producto.ProveedorId.HasValue)
+                {
+                    var proveedorExiste = await _context.Proveedores
+                        .AnyAsync(p => p.Id == producto.ProveedorId.Value && p.EmpresaId == empresaId);
+
+                    if (!proveedorExiste)
+                        return BadRequest("El proveedor seleccionado no existe");
+                }
+
+                productoExiste.ProveedorId = producto.ProveedorId;
                 productoExiste.Nombre = producto.Nombre;
                 productoExiste.Codigo = producto.Codigo;
+                productoExiste.Descripcion = producto.Descripcion;
+                productoExiste.Categoria = producto.Categoria;
+                productoExiste.Unidad = producto.Unidad;
                 productoExiste.PrecioCompra = producto.PrecioCompra;
                 productoExiste.PrecioVenta = producto.PrecioVenta;
-                productoExiste.Stock = producto.Stock;
                 productoExiste.StockMinimo = producto.StockMinimo;
                 productoExiste.Activo = producto.Activo;
+                productoExiste.Stock = producto.Stock;
 
+                await _context.SaveChangesAsync();
+
+                var errorInventario = await SincronizarInventarioDesdeStockManualAsync(productoExiste, empresaId);
+                if (!string.IsNullOrWhiteSpace(errorInventario))
+                    return BadRequest(errorInventario);
+
+                await _context.SaveChangesAsync();
+                await SincronizarStockDesdeInventarioAsync(productoExiste, empresaId);
                 await _context.SaveChangesAsync();
 
                 return NoContent();
@@ -203,6 +252,7 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
         [HttpGet("bajo-stock")]
         public async Task<ActionResult<IEnumerable<Producto>>> GetProductosBajoStock()
         {
@@ -214,10 +264,18 @@ namespace Crit.Controllers
                     return Unauthorized("No se pudo determinar la empresa del usuario.");
 
                 var productos = await _context.Productos
-                    .Where(p => p.EmpresaId == empresaId && p.Activo && p.Stock <= p.StockMinimo)
+                    .Include(p => p.Proveedor)
+                    .Where(p => p.EmpresaId == empresaId && p.Activo)
+                    .OrderBy(p => p.Nombre)
+                    .ToListAsync();
+
+                await SincronizarStockDesdeInventarioAsync(productos, empresaId);
+
+                productos = productos
+                    .Where(p => p.Stock <= p.StockMinimo)
                     .OrderBy(p => p.Stock)
                     .ThenBy(p => p.Nombre)
-                    .ToListAsync();
+                    .ToList();
 
                 return Ok(productos);
             }
@@ -227,6 +285,7 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
         [HttpGet("count")]
         public async Task<ActionResult<int>> GetProductosCount()
         {
@@ -248,6 +307,7 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
         [HttpPut("{id}/stock")]
         public async Task<IActionResult> ActualizarStock(int id, [FromBody] int cantidad)
         {
@@ -268,6 +328,14 @@ namespace Crit.Controllers
 
                 await _context.SaveChangesAsync();
 
+                var errorInventario = await SincronizarInventarioDesdeStockManualAsync(producto, empresaId);
+                if (!string.IsNullOrWhiteSpace(errorInventario))
+                    return BadRequest(errorInventario);
+
+                await _context.SaveChangesAsync();
+                await SincronizarStockDesdeInventarioAsync(producto, empresaId);
+                await _context.SaveChangesAsync();
+
                 return NoContent();
             }
             catch (Exception ex)
@@ -277,7 +345,94 @@ namespace Crit.Controllers
             }
         }
 
+        private async Task SincronizarStockDesdeInventarioAsync(List<Producto> productos, int empresaId)
+        {
+            var stockPorProducto = await _context.InventarioPorAlmacen
+                .Where(x => x.EmpresaId == empresaId)
+                .GroupBy(x => x.ProductoId)
+                .Select(g => new
+                {
+                    ProductoId = g.Key,
+                    StockTotal = g.Sum(x => x.Stock)
+                })
+                .ToDictionaryAsync(x => x.ProductoId, x => x.StockTotal);
 
+            foreach (var producto in productos)
+            {
+                producto.Stock = stockPorProducto.TryGetValue(producto.Id, out var stockTotal)
+                    ? (int)stockTotal
+                    : 0;
+            }
+        }
 
+        private async Task SincronizarStockDesdeInventarioAsync(Producto producto, int empresaId)
+        {
+            var stockTotal = await _context.InventarioPorAlmacen
+                .Where(x => x.EmpresaId == empresaId && x.ProductoId == producto.Id)
+                .SumAsync(x => (decimal?)x.Stock) ?? 0m;
+
+            producto.Stock = (int)stockTotal;
+        }
+
+        private async Task<Almacen?> ObtenerAlmacenPredeterminadoAsync(int empresaId)
+        {
+            var almacenPrincipal = await _context.Almacenes
+                .Where(a => a.EmpresaId == empresaId && a.Activo && a.Nombre == "PRINCIPAL")
+                .FirstOrDefaultAsync();
+
+            if (almacenPrincipal is not null)
+                return almacenPrincipal;
+
+            return await _context.Almacenes
+                .Where(a => a.EmpresaId == empresaId && a.Activo)
+                .OrderBy(a => a.Nombre)
+                .FirstOrDefaultAsync();
+        }
+
+        private async Task<string?> SincronizarInventarioDesdeStockManualAsync(Producto producto, int empresaId)
+        {
+            var almacen = await ObtenerAlmacenPredeterminadoAsync(empresaId);
+
+            if (almacen is null)
+                return "No existe un almacén activo para registrar el stock del producto.";
+
+            var inventarios = await _context.InventarioPorAlmacen
+                .Where(x => x.EmpresaId == empresaId && x.ProductoId == producto.Id)
+                .OrderBy(x => x.AlmacenId == almacen.Id ? 0 : 1)
+                .ThenBy(x => x.Id)
+                .ToListAsync();
+
+            var stockDeseado = producto.Stock < 0 ? 0 : producto.Stock;
+            var stockActualTotal = inventarios.Sum(x => x.Stock);
+
+            if (!inventarios.Any())
+            {
+                _context.InventarioPorAlmacen.Add(new InventarioPorAlmacen
+                {
+                    EmpresaId = empresaId,
+                    ProductoId = producto.Id,
+                    AlmacenId = almacen.Id,
+                    Stock = stockDeseado,
+                    StockMinimo = producto.StockMinimo,
+                    StockMaximo = Math.Max(stockDeseado, producto.StockMinimo)
+                });
+
+                return null;
+            }
+
+            var diferencia = stockDeseado - stockActualTotal;
+            var inventarioBase = inventarios.First();
+
+            inventarioBase.Stock += diferencia;
+            inventarioBase.StockMinimo = producto.StockMinimo;
+
+            if (inventarioBase.Stock < 0)
+                inventarioBase.Stock = 0;
+
+            if (inventarioBase.StockMaximo < inventarioBase.Stock)
+                inventarioBase.StockMaximo = inventarioBase.Stock;
+
+            return null;
+        }
     }
 }

@@ -5,8 +5,7 @@
 }
 
 .pos-container {
-    padding: 1rem;
-    background-color: var(--bg-light);
+    min-height: 100vh;
 }
 .carrito-wrapper {
     padding: 15px; /* Separa el card de los bordes de la pantalla */
@@ -246,9 +245,7 @@
 
 
 .pos-container {
-    max-width: 1600px;
-    margin: 0 auto;
-    padding-bottom: 50px;
+    min-height: 100vh;
 }
 
 .item-fila {

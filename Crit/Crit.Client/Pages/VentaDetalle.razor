@@ -1,6 +1,12 @@
 ﻿@page "/ventas/{Id:int}"
 @using Crit.Client.Services
 @using Crit.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor,Usuario")]
+@attribute [StreamRendering(true)]
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inject VentaHttpService VentaHttpService
 @inject PdfHttpService PdfHttpService
 @inject NavigationManager Navigation
@@ -8,7 +14,7 @@
 
 <PageTitle>Detalle de Venta</PageTitle>
 
-<div class="pos-container">
+<div class="pos-container px-5 py-4">
     @if (cargando)
     {
         <div class="d-flex flex-column align-items-center justify-content-center py-5">
@@ -26,10 +32,9 @@
     }
     else
     {
-        @* --- ENCABEZADO --- *@
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div class="d-flex align-items-center gap-3">
-                <div class="bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px; font-size: 1.5rem;">
+                <div class="sale-avatar shadow-sm">
                     <i class="bi bi-cart-check"></i>
                 </div>
                 <div>
@@ -48,10 +53,9 @@
             </div>
         </div>
 
-        @* --- INDICADORES (KPIs) --- *@
         <div class="row g-3 mb-4">
             <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="stat-icon bg-primary-subtle text-primary me-3">
@@ -67,7 +71,7 @@
             </div>
 
             <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="stat-icon bg-info-subtle text-info me-3">
@@ -82,7 +86,7 @@
             </div>
 
             <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="stat-icon bg-secondary-subtle text-secondary me-3">
@@ -98,7 +102,7 @@
             </div>
 
             <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card stat-card border-0 shadow-sm h-100 rounded-4">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="stat-icon bg-success-subtle text-success me-3">
@@ -112,13 +116,13 @@
             </div>
         </div>
 
-        @* --- CONTENIDO PRINCIPAL (2 COLUMNAS) --- *@
         <div class="row g-4">
-            @* COLUMNA IZQUIERDA: PRODUCTOS *@
-            <div class="col-12 col-lg-8">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-bottom py-3">
-                        <h6 class="mb-0 fw-bold text-muted"><i class="bi bi-box-seam me-2"></i>Productos Vendidos</h6>
+            <div class="col-12 col-xl-8">
+                <div class="d-none d-lg-block card shadow-sm border-0 rounded-4 overflow-hidden">
+                    <div class="card-header bg-white border-bottom-0 py-3 px-4">
+                        <h6 class="mb-0 fw-bold text-dark">
+                            <i class="bi bi-box-seam me-2 text-primary"></i>Productos Vendidos
+                        </h6>
                     </div>
 
                     @if (!venta.Detalles.Any())
@@ -131,8 +135,8 @@
                     {
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
-                                    <tr class="small text-uppercase text-muted">
+                                <thead style="background-color: #f8fafc;">
+                                    <tr>
                                         <th class="ps-4">Producto</th>
                                         <th class="text-center">Cant.</th>
                                         <th class="text-end">Precio Unit.</th>
@@ -145,7 +149,9 @@
                                         <tr>
                                             <td class="ps-4">
                                                 <div class="fw-bold text-dark">@detalle.Producto?.Nombre</div>
-                                                <div class="text-muted small"><i class="bi bi-upc-scan me-1"></i>@detalle.Producto?.Codigo</div>
+                                                <div class="text-muted small">
+                                                    <i class="bi bi-upc-scan me-1"></i>@detalle.Producto?.Codigo
+                                                </div>
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-light text-dark border px-2 py-1">@detalle.Cantidad</span>
@@ -159,70 +165,116 @@
                         </div>
                     }
                 </div>
+
+                <div class="d-lg-none">
+                    @if (!venta.Detalles.Any())
+                    {
+                        <div class="card shadow-sm border-0 text-center py-5 rounded-4">
+                            <p class="text-muted mb-0">No hay detalles registrados para esta venta.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var detalle in venta.Detalles)
+                        {
+                            <div class="card shadow-sm border-0 mb-3 detail-mobile-card">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div style="max-width: 70%;">
+                                            <h6 class="fw-bold mb-0 text-dark">@detalle.Producto?.Nombre</h6>
+                                            <span class="extra-small text-muted">
+                                                <i class="bi bi-upc-scan me-1"></i>@detalle.Producto?.Codigo
+                                            </span>
+                                        </div>
+                                        <div class="fw-bold text-dark">@detalle.Subtotal.ToString("C")</div>
+                                    </div>
+
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="text-muted extra-small">Cantidad</div>
+                                            <div class="small fw-semibold">@detalle.Cantidad</div>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <div class="text-muted extra-small">P. Unitario</div>
+                                            <div class="small text-muted">@detalle.PrecioUnitario.ToString("C")</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
             </div>
 
-            @* COLUMNA DERECHA: RESUMEN Y PAGOS *@
-            <div class="col-12 col-lg-4">
-
-                @* TARJETA RESUMEN FINANCIERO *@
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white border-bottom py-3">
-                        <h6 class="mb-0 fw-bold text-muted"><i class="bi bi-calculator me-2"></i>Resumen Financiero</h6>
+            <div class="col-12 col-xl-4">
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header text-white border-0 py-3 px-4" style="background-color: #1F2A44;">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="bi bi-calculator me-2"></i>Resumen Financiero
+                        </h6>
                     </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-muted">Subtotal</span>
-                            <span class="fw-semibold">@venta.Subtotal.ToString("C")</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-muted">Descuento</span>
-                            <span class="fw-semibold text-danger">@venta.Descuento.ToString("C")</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-muted">I.V.A.</span>
-                            <span class="fw-semibold">@venta.IVA.ToString("C")</span>
-                        </div>
-                        <hr class="text-muted" />
-                        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 border">
-                            <span class="fw-bold text-uppercase">Total</span>
-                            <span class="fw-bold text-success fs-4 mb-0">@venta.Total.ToString("C")</span>
-                        </div>
-                    </div>
-                </div>
-
-                @* TARJETA DATOS DE PAGO *@
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white border-bottom py-3">
-                        <h6 class="mb-0 fw-bold text-muted"><i class="bi bi-credit-card me-2"></i>Datos de Facturación y Pago</h6>
-                    </div>
-                    <div class="card-body g-3 row">
-                        <div class="col-6">
-                            <div class="p-2 bg-light rounded-3 h-100 border">
-                                <div class="text-muted small text-uppercase mb-1">Método de pago</div>
-                                <div class="fw-semibold fs-6">@((venta.MetodoPago) ?? "-")</div>
+                    <div class="card-body p-4">
+                        <div class="ticket-summary">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span>@venta.Subtotal.ToString("C")</span>
                             </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-2 bg-light rounded-3 h-100 border">
-                                <div class="text-muted small text-uppercase mb-1">Forma de pago</div>
-                                <div class="fw-semibold fs-6">@((venta.FormaPago) ?? "-")</div>
+                            <div class="summary-row">
+                                <span>Descuento</span>
+                                <span class="text-danger">@venta.Descuento.ToString("C")</span>
                             </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="p-2 bg-light rounded-3 border">
-                                <div class="text-muted small text-uppercase mb-1">Uso CFDI</div>
-                                <div class="fw-semibold fs-6">@((venta.UsoCFDI) ?? "-")</div>
+                            <div class="summary-row">
+                                <span>I.V.A.</span>
+                                <span>@venta.IVA.ToString("C")</span>
                             </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="p-3 bg-warning-subtle text-warning-emphasis rounded-3 border border-warning-subtle">
-                                <div class="small text-uppercase fw-bold mb-1"><i class="bi bi-journal-text me-1"></i>Notas internas</div>
-                                <div class="mb-0 small">@((venta.Notas) ?? "Sin notas adicionales en esta venta.")</div>
+                            <div class="summary-total">
+                                <span>Total</span>
+                                <span>@venta.Total.ToString("C")</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header text-white border-0 py-3 px-4" style="background-color: #2563eb;">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="bi bi-credit-card me-2"></i>Datos de Facturación y Pago
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 col-xl-12">
+                                <div class="detail-box">
+                                    <div class="detail-label">Método de pago</div>
+                                    <div class="detail-value">@((venta.MetodoPago) ?? "-")</div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-12">
+                                <div class="detail-box">
+                                    <div class="detail-label">Forma de pago</div>
+                                    <div class="detail-value">@((venta.FormaPago) ?? "-")</div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="detail-box">
+                                    <div class="detail-label">Uso CFDI</div>
+                                    <div class="detail-value">@((venta.UsoCFDI) ?? "-")</div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="notes-box">
+                                    <div class="detail-label text-warning-emphasis">
+                                        <i class="bi bi-journal-text me-1"></i>Notas internas
+                                    </div>
+                                    <div class="small text-dark">@((venta.Notas) ?? "Sin notas adicionales en esta venta.")</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     }
@@ -230,7 +282,20 @@
 
 <style>
     .pos-container {
-        padding: 1.5rem;
+        min-height: 100vh;
+        padding-bottom: 80px;
+    }
+
+    .sale-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: #ecfdf5;
+        color: #16a34a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
     }
 
     .stat-icon {
@@ -259,6 +324,64 @@
         padding-top: 1rem;
         padding-bottom: 1rem;
     }
+
+    .detail-mobile-card {
+        border-left: 4px solid #e2e8f0 !important;
+    }
+
+    .ticket-summary {
+        border-top: 1px solid #e5e7eb;
+        padding-top: 1rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.6rem;
+        color: #64748b;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.85rem;
+        padding-top: 0.85rem;
+        border-top: 1px dashed #cbd5e1;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #0f172a;
+    }
+
+    .detail-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1rem;
+    }
+
+    .detail-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #94a3b8;
+        margin-bottom: 0.35rem;
+    }
+
+    .detail-value {
+        color: #0f172a;
+        font-weight: 600;
+    }
+
+    .notes-box {
+        background: #fef3c7;
+        border: 1px solid #fde68a;
+        border-radius: 1rem;
+        padding: 1rem;
+    }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
 </style>
 
 @code {
@@ -267,11 +390,33 @@
     private Venta? venta;
     private bool cargando = true;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task LoadDataAsync()
+    {
+        await CargarVentaAsync();
+    }
+
+    protected override bool ShouldRetryInitialLoad() => venta is null;
+
+    private async Task CargarVentaAsync()
     {
         cargando = true;
-        venta = await VentaHttpService.GetVentaConDetallesAsync(Id);
-        cargando = false;
+
+        try
+        {
+            venta = await VentaHttpService.GetVentaConDetallesAsync(Id);
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsLoading)
+        {
+            await CargarVentaAsync();
+        }
     }
 
     private async Task DescargarPdf()

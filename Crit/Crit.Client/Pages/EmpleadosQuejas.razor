@@ -13,7 +13,7 @@
 
 <PageTitle>Gestión de Empleados y Quejas</PageTitle>
 
-<div class="container-fluid py-4">
+<div class="pos-container px-5 py-4">
     <h3 class="mb-4">Empleados y Asignación de Quejas</h3>
 
     @if (isLoading)
@@ -147,6 +147,11 @@
         </div>
     }
 </div>
+<style>
+    .pos-container {
+        min-height: 100vh;
+    }
+</style>
 
 @code {
     private List<EmpleadoDto> empleados = new();

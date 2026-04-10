@@ -1,23 +1,29 @@
 ﻿@page "/"
-
 <PageTitle>Sistema de Gestión - Polynex</PageTitle>
-
-<div class="home-wrapper">
-
+<div class="home-shell">
     <section class="hero-section text-white overflow-hidden">
-        <div class="container position-relative z-index-1">
+        <div class="hero-glow hero-glow-one"></div>
+        <div class="hero-glow hero-glow-two"></div>
+
+        <div class="container position-relative z-1">
             <div class="row align-items-center min-vh-75 py-5">
-                <div class="col-lg-6 mb-5 mb-lg-0 animate-fade-in">
-                    <span class="badge rounded-pill bg-primary-light text-primary mb-3 px-3 py-2">Versión 2.0</span>
-                    <h1 class="display-3 fw-bold mb-3">Polynex <br><span class="text-gradient">Gestión Total</span></h1>
-                    <p class="lead mb-5 opacity-75">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <span class="badge rounded-pill hero-badge mb-3 px-3 py-2">Versión 2.0</span>
+
+                    <h1 class="display-3 fw-bold mb-3">
+                        Polynex
+                        <br />
+                        <span class="text-gradient">Gestión Total</span>
+                    </h1>
+
+                    <p class="lead mb-5 hero-copy">
                         Administra clientes, productos, ventas y servicios en una plataforma unificada.
                         Toma decisiones basadas en datos con reportes en tiempo real.
                     </p>
 
                     <AuthorizeView>
                         <Authorized>
-                            <div class="d-flex justify-content: center; gap-3 flex-wrap">
+                            <div class="d-flex gap-3 flex-wrap">
                                 <a href="/dash" class="btn btn-main-action btn-lg px-4 shadow">
                                     <i class="bi bi-speedometer2 me-2"></i>Ir al Dashboard
                                 </a>
@@ -27,8 +33,7 @@
                             </div>
                         </Authorized>
                         <NotAuthorized>
-                            <div class="d-flex gap-3 flex-wrap justify-content:center;
-">
+                            <div class="d-flex gap-3 flex-wrap">
                                 <a href="/Account/Login" class="btn btn-main-action btn-lg px-5 shadow">
                                     <i class="bi bi-shield-lock me-2"></i>Acceder al Sistema
                                 </a>
@@ -38,48 +43,73 @@
                 </div>
 
                 <div class="col-lg-6">
-                    <div class="hero-image-container">
-                        <div class="abstract-shape"></div>
-                        <div class="glass-card shadow-lg p-4 animate-float">
-                            <div class="d-flex justify-content-between mb-4">
-                                <div class="bg-primary rounded-circle p-3 shadow-sm">
-                                    <i class="bi bi-graph-up text-white fs-3"></i>
+                    <div class="hero-panel-wrap">
+                        <div class="dashboard-preview shadow-lg">
+                            <div class="dashboard-preview-header">
+                                <div>
+                                    <div class="preview-eyebrow">Resumen Ejecutivo</div>
+                                    <h5 class="mb-0 fw-bold text-dark">Vista Operativa</h5>
                                 </div>
-                                <div class="text-end">
-                                    <h4 class="mb-0 fw-bold">+24%</h4>
-                                    <small class="text-muted">Crecimiento mensual</small>
+                                <span class="preview-pill">Live</span>
+                            </div>
+
+                            <div class="preview-stats">
+                                <div class="preview-stat-card">
+                                    <span class="preview-stat-label">Ventas hoy</span>
+                                    <strong>$18,450</strong>
+                                </div>
+                                <div class="preview-stat-card">
+                                    <span class="preview-stat-label">Cobranza</span>
+                                    <strong>$9,280</strong>
                                 </div>
                             </div>
-                            <div class="mock-chart mb-3">
-                                <div class="bar" style="height: 40%"></div>
-                                <div class="bar" style="height: 70%"></div>
-                                <div class="bar" style="height: 50%"></div>
-                                <div class="bar" style="height: 90%"></div>
-                                <div class="bar" style="height: 60%"></div>
+
+                            <div class="preview-chart mb-4">
+                                <div class="chart-bar" style="height: 42%"></div>
+                                <div class="chart-bar" style="height: 70%"></div>
+                                <div class="chart-bar" style="height: 58%"></div>
+                                <div class="chart-bar active" style="height: 92%"></div>
+                                <div class="chart-bar" style="height: 76%"></div>
+                                <div class="chart-bar" style="height: 64%"></div>
                             </div>
-                            <p class="mb-0 text-dark small fw-bold"><i class="bi bi-check-circle-fill text-success me-2"></i>Reportes listos para exportar</p>
+
+                            <div class="preview-list">
+                                <div class="preview-row">
+                                    <span><i class="bi bi-check-circle-fill text-success me-2"></i>Inventario sincronizado</span>
+                                    <strong>OK</strong>
+                                </div>
+                                <div class="preview-row">
+                                    <span><i class="bi bi-check-circle-fill text-success me-2"></i>Reporte listo para exportar</span>
+                                    <strong>PDF</strong>
+                                </div>
+                                <div class="preview-row">
+                                    <span><i class="bi bi-check-circle-fill text-success me-2"></i>Caja operando</span>
+                                    <strong>Activa</strong>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="hero-bg-accent"></div>
+
+        <div class="hero-wave"></div>
     </section>
 
     <section class="stats-overlay">
         <div class="container">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden stats-card">
                 <div class="row g-0 text-center">
                     <div class="col-md-3 border-end p-4">
-                        <h2 class="fw-bold mb-0" style="color: #1F2A44;">500+</h2>
+                        <h2 class="fw-bold mb-0 stat-number">500+</h2>
                         <span class="text-muted small text-uppercase fw-bold">Clientes Activos</span>
                     </div>
                     <div class="col-md-3 border-end p-4">
-                        <h2 class="fw-bold mb-0" style="color: #1F2A44;">200+</h2>
+                        <h2 class="fw-bold mb-0 stat-number">200+</h2>
                         <span class="text-muted small text-uppercase fw-bold">Productos</span>
                     </div>
                     <div class="col-md-3 border-end p-4">
-                        <h2 class="fw-bold mb-0" style="color: #1F2A44;">1k+</h2>
+                        <h2 class="fw-bold mb-0 stat-number">1k+</h2>
                         <span class="text-muted small text-uppercase fw-bold">Ventas Mes</span>
                     </div>
                     <div class="col-md-3 p-4">
@@ -91,11 +121,11 @@
         </div>
     </section>
 
-    <section class="py-5" style="background-color: #f8f9fa;">
+    <section class="features-section py-5">
         <div class="container py-5">
             <div class="text-center mb-5">
                 <h6 class="text-primary fw-bold text-uppercase ls-2">Ecosistema</h6>
-                <h2 class="display-5 fw-bold" style="color: #3c3c3c;">Todo bajo control</h2>
+                <h2 class="display-5 fw-bold section-title">Todo bajo control</h2>
                 <div class="separator mx-auto"></div>
             </div>
 
@@ -114,13 +144,15 @@
                 @foreach (var m in modulos)
                 {
                     <div class="col-lg-4 col-md-6">
-                        <div class="feature-card h-100 shadow-hover border-0 card p-4 rounded-4 transition-all">
+                        <div class="feature-card h-100 border-0 card p-4 rounded-4">
                             <div class="icon-box-@m.Color mb-4">
                                 <i class="bi bi-@m.Icon fs-2"></i>
                             </div>
-                            <h5 class="fw-bold" style="color: #3c3c3c;">@m.Title</h5>
-                            <p class="text-muted small">@m.Desc</p>
-                            <a href="#" class="text-decoration-none small fw-bold mt-auto text-primary">Saber más <i class="bi bi-chevron-right ms-1"></i></a>
+                            <h5 class="fw-bold feature-title">@m.Title</h5>
+                            <p class="text-muted small mb-4">@m.Desc</p>
+                            <a href="#" class="text-decoration-none small fw-bold mt-auto text-primary">
+                                Saber más <i class="bi bi-chevron-right ms-1"></i>
+                            </a>
                         </div>
                     </div>
                 }
@@ -128,13 +160,13 @@
         </div>
     </section>
 
-    <section class="py-5 bg-dark-custom text-white position-relative">
+    <section class="cta-section py-5 text-white position-relative">
         <div class="container text-center py-4">
             <h3 class="fw-bold mb-4">¿Listo para optimizar tu negocio?</h3>
-            <p class="text-white-50 mb-5 mx-auto" style="max-width: 600px;">
+            <p class="text-white-50 mb-5 mx-auto cta-copy">
                 Polynex es la herramienta diseñada para llevar la administración al siguiente nivel.
             </p>
-            <a href="Account/Register" class="btn btn-outline-light btn-lg px-5 rounded-pill">Empezar ahora</a>
+            <a href="/Account/Register" class="btn btn-outline-light btn-lg px-5 rounded-pill">Empezar ahora</a>
         </div>
     </section>
 </div>

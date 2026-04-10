@@ -1,0 +1,65 @@
+﻿.quejas-shell {
+    --polynex-navy: #1F2A44;
+    min-height: 100vh;
+    padding-bottom: 80px;
+}
+
+.hero-card {
+    background: radial-gradient(circle at top right, rgba(59,130,246,0.12), transparent 25%), linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.eyebrow {
+    display: inline-block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #2563eb;
+    font-weight: 800;
+}
+
+.saas-btn-primary {
+    background-color: var(--polynex-navy);
+    color: white;
+    border: none;
+    transition: all 0.2s;
+}
+
+    .saas-btn-primary:hover {
+        background-color: #2a3a5e;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+.search-box-container {
+    position: relative;
+}
+
+    .search-box-container i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        z-index: 2;
+    }
+
+    .search-box-container .form-control {
+        padding-left: 2.5rem;
+        border-radius: 0.85rem;
+        border: 1px solid #dbe2ea;
+        min-height: 46px;
+    }
+
+.filter-select {
+    border-radius: 0.85rem;
+    border: 1px solid #dbe2ea;
+    min-height: 46px;
+}
+
+.filter-pill {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+}

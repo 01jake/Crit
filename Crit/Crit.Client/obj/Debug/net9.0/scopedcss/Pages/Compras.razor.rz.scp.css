@@ -1,3 +1,6 @@
+.pos-container[b-ffap1g116b] {
+    min-height: 100vh;
+}
 :root[b-ffap1g116b] {
     --primary-color: #4f46e5;
     --sidebar-bg: #1a1642;
@@ -11,7 +14,6 @@
 }
 
 .page-title[b-ffap1g116b] {
-    font-weight: 800;
     color: var(--sidebar-bg);
 }
 

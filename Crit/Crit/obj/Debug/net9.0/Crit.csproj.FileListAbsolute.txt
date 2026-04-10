@@ -1,13 +1,3 @@
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.csproj.AssemblyReference.cache
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\rpswa.dswa.cache.json
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.AssemblyInfoInputs.cache
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.AssemblyInfo.cs
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.csproj.CoreCompileInputs.cache
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.MvcApplicationPartsAssemblyInfo.cache
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.RazorAssemblyInfo.cache
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.RazorAssemblyInfo.cs
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.sourcelink.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Crit.Client.staticwebassets.runtime.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Crit.Client.staticwebassets.endpoints.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\appsettings.Development.json
@@ -362,6 +352,16 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Crit.Client.dll
 C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Crit.Shared.dll
 C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Crit.Shared.pdb
 C:\Users\ang31\source\repos\Crit\Crit\Crit\bin\Debug\net9.0\Crit.Client.pdb
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.csproj.AssemblyReference.cache
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\rpswa.dswa.cache.json
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.AssemblyInfoInputs.cache
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.AssemblyInfo.cs
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.csproj.CoreCompileInputs.cache
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.RazorAssemblyInfo.cache
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.RazorAssemblyInfo.cs
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.sourcelink.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\rjimswa.dswa.cache.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
@@ -463,6 +463,7 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\cyizyyvg8
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\5onosyanv8-63fj8s7r0e.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\0fmjhhq0ks-0j3bgjxly4.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\2d3bpynw52-7vhap2rrw2.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\k5ck305ath-6kfwigv6u9.gz
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\staticwebassets.build.json
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\staticwebassets.build.json.cache
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\staticwebassets.development.json
@@ -474,6 +475,5 @@ C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\refint\Crit.dll
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.pdb
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\Crit.genruntimeconfig.cache
 C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\ref\Crit.dll
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\jpci2lxogt-x6g4zrvuv8.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\k5ck305ath-6kfwigv6u9.gz
-C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-rvx9w2ge23.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\jpci2lxogt-46th7mp1is.gz
+C:\Users\ang31\source\repos\Crit\Crit\Crit\obj\Debug\net9.0\compressed\fcp3sqs0uf-jmzq133n33.gz

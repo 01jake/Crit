@@ -7,7 +7,10 @@
 
 <div class="app-mobile-topbar d-lg-none">
     <a href="Dash" class="app-mobile-brand">
-        <img src="images/polynex.png" alt="Polynex" class="app-mobile-logo" />
+        <div class="app-mobile-logo-shell">
+            <img src="images/polynex.png" alt="Polynex" class="app-mobile-logo" />
+        </div>
+
         <div class="app-mobile-brand-copy">
             <span class="app-mobile-brand-title">Polynex</span>
             <span class="app-mobile-brand-subtitle">Panel de gestión</span>
@@ -24,145 +27,152 @@
     </button>
 </div>
 
-<aside class="saas-sidebar d-none d-lg-flex" aria-label="Navegación principal">
+<aside class="nav-sidebar d-none d-lg-flex" aria-label="Navegación principal">
     @SidebarContent
 </aside>
 
-<div class="offcanvas offcanvas-start saas-mobile-offcanvas d-lg-none"
+<div class="offcanvas offcanvas-start nav-mobile-offcanvas d-lg-none"
      tabindex="-1"
      id="mobileMenu"
      aria-labelledby="mobileMenuLabel">
-    <div class="offcanvas-header saas-mobile-offcanvas-header">
-        <div class="saas-mobile-offcanvas-brand" id="mobileMenuLabel">
-            <img src="images/polynex.png" alt="Polynex" class="saas-mobile-offcanvas-logo" />
-            <div class="saas-mobile-offcanvas-copy">
-                <span class="saas-mobile-offcanvas-title">Polynex</span>
-                <span class="saas-mobile-offcanvas-subtitle">Panel de gestión</span>
+    <div class="offcanvas-header nav-mobile-offcanvas-header">
+        <div class="nav-mobile-offcanvas-brand" id="mobileMenuLabel">
+            <div class="nav-mobile-offcanvas-logo-shell">
+                <img src="images/polynex.png" alt="Polynex" class="nav-mobile-offcanvas-logo" />
+            </div>
+
+            <div class="nav-mobile-offcanvas-copy">
+                <span class="nav-mobile-offcanvas-title">Polynex</span>
+                <span class="nav-mobile-offcanvas-subtitle">Panel de gestión</span>
             </div>
         </div>
 
         <button type="button"
-                class="btn-close saas-offcanvas-close"
+                class="btn-close shadow-none"
                 data-bs-dismiss="offcanvas"
                 aria-label="Cerrar">
         </button>
     </div>
 
-    <div class="offcanvas-body saas-mobile-offcanvas-body">
+    <div class="offcanvas-body nav-mobile-offcanvas-body">
         @SidebarContent
     </div>
 </div>
 
 @code {
     private string empresaNombre = "Cargando...";
-    private bool cargandoEmpresa = true;
     private string? currentUrl;
 
-    private RenderFragment SidebarContent => @<div class="saas-sidebar-shell">
-        <div class="saas-sidebar-header">
-            <a href="Dash" class="saas-brand" @onclick="CerrarMenu">
-                <div class="saas-brand-logo-wrap">
-                    <img src="images/polynex.png" alt="Polynex" class="saas-brand-logo" />
+    private RenderFragment SidebarContent => @<div class="nav-shell">
+        <div class="nav-header">
+            <a href="Dash" class="nav-brand" @onclick="CerrarMenu">
+                <div class="nav-brand-logo-shell">
+                    <img src="images/polynex.png" alt="Polynex" class="nav-brand-logo" />
                 </div>
 
-                <div class="saas-brand-copy">
-                    <span class="saas-brand-title">Polynex</span>
-                    <span class="saas-brand-subtitle">Panel de gestión</span>
+                <div class="nav-brand-copy">
+                    <span class="nav-brand-title">Polynex</span>
+                    <span class="nav-brand-subtitle">Panel de gestión</span>
                 </div>
             </a>
         </div>
 
-        <div class="saas-sidebar-scroll">
+        <div class="nav-scroll">
             <AuthorizeView>
-                <Authorized Context="context">
-                    <nav class="saas-nav-group" aria-label="Principal">
+                <Authorized Context="authContext">
+                    <nav class="nav-group" aria-label="Principal">
+                        <div class="nav-group-title">Principal</div>
 
                         <AuthorizeView Roles="Admin,Supervisor" Context="dashContext">
-                            <div class="saas-nav-group-title">Principal</div>
-                            <NavLink class="saas-nav-link" href="Dash" Match="NavLinkMatch.All" @onclick="CerrarMenu">
+                            <NavLink class="nav-link-item" href="Dash" Match="NavLinkMatch.All" @onclick="CerrarMenu">
                                 <i class="bi bi-grid-1x2-fill"></i>
                                 <span>Dashboard</span>
                             </NavLink>
                         </AuthorizeView>
 
-                        <AuthorizeView Roles="Admin" Context="adminContext">
-                            <NavLink class="saas-nav-link" href="usuarios" Match="NavLinkMatch.All" @onclick="CerrarMenu">
+                        <AuthorizeView Roles="Admin" Context="usersContext">
+                            <NavLink class="nav-link-item" href="usuarios" Match="NavLinkMatch.All" @onclick="CerrarMenu">
                                 <i class="bi bi-people"></i>
                                 <span>Usuarios</span>
                             </NavLink>
                         </AuthorizeView>
                     </nav>
 
-                    <nav class="saas-nav-group" aria-label="Operaciones">
-                        <div class="saas-nav-group-title">Operaciones</div>
+                    <nav class="nav-group" aria-label="Operaciones">
+                        <div class="nav-group-title">Operaciones</div>
 
-                        <NavLink class="saas-nav-link" href="clientes" @onclick="CerrarMenu">
+                        <NavLink class="nav-link-item" href="clientes" @onclick="CerrarMenu">
                             <i class="bi bi-people-fill"></i>
                             <span>Clientes</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="proveedores" @onclick="CerrarMenu">
+                        <NavLink class="nav-link-item" href="proveedores" @onclick="CerrarMenu">
                             <i class="bi bi-truck"></i>
                             <span>Proveedores</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="productos" @onclick="CerrarMenu">
+                        <NavLink class="nav-link-item" href="productos" @onclick="CerrarMenu">
                             <i class="bi bi-box-seam-fill"></i>
                             <span>Productos</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="ventas" @onclick="CerrarMenu">
+                        <NavLink class="nav-link-item" href="ventas" @onclick="CerrarMenu">
                             <i class="bi bi-cart-check-fill"></i>
                             <span>Ventas</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="cuentas-por-cobrar" @onclick="CerrarMenu">
+                        <NavLink class="nav-link-item" href="cuentas-por-cobrar" @onclick="CerrarMenu">
                             <i class="bi bi-cash-coin"></i>
                             <span>CxC</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="inventario-por-almacen" @onclick="CerrarMenu">
+                        <NavLink class="nav-link-item" href="inventario-por-almacen" @onclick="CerrarMenu">
                             <i class="bi bi-box-seam"></i>
-                            <span>Almacen</span>
+                            <span>Almacén</span>
                         </NavLink>
 
-                        <NavLink class="saas-nav-link" href="kardex" @onclick="CerrarMenu">
+                        <NavLink class="nav-link-item" href="kardex" @onclick="CerrarMenu">
                             <i class="bi bi-clipboard-data"></i>
                             <span>Kardex</span>
                         </NavLink>
 
                         <AuthorizeView Roles="Admin,Supervisor" Context="opsContext">
-                            <NavLink class="saas-nav-link" href="compras" @onclick="CerrarMenu">
+                            <NavLink class="nav-link-item" href="compras" @onclick="CerrarMenu">
                                 <i class="bi bi-bag-fill"></i>
                                 <span>Compras</span>
                             </NavLink>
 
-                            <NavLink class="saas-nav-link" href="cuentas-por-pagar" @onclick="CerrarMenu">
+                            <NavLink class="nav-link-item" href="cuentas-por-pagar" @onclick="CerrarMenu">
                                 <i class="bi bi-wallet2"></i>
                                 <span>CxP</span>
                             </NavLink>
 
-                            <NavLink class="saas-nav-link" href="caja" @onclick="CerrarMenu">
+                            <NavLink class="nav-link-item" href="caja" @onclick="CerrarMenu">
                                 <i class="bi bi-safe2-fill"></i>
                                 <span>Caja</span>
                             </NavLink>
 
-                            <NavLink class="saas-nav-link" href="traspasos" @onclick="CerrarMenu">
+                            <NavLink class="nav-link-item" href="traspasos" @onclick="CerrarMenu">
                                 <i class="bi bi-arrow-left-right"></i>
                                 <span>Traspaso</span>
                             </NavLink>
 
-                            <NavLink class="saas-nav-link" href="reabastecimiento" @onclick="CerrarMenu">
+                            <NavLink class="nav-link-item" href="reabastecimiento" @onclick="CerrarMenu">
                                 <i class="bi bi-box-arrow-in-down"></i>
                                 <span>Reabastecimiento</span>
+                            </NavLink>
+
+                            <NavLink class="nav-link-item" href="gastos" @onclick="CerrarMenu">
+                                <i class="bi bi-receipt-cutoff"></i>
+                                <span>Gastos</span>
                             </NavLink>
                         </AuthorizeView>
                     </nav>
 
-                    <nav class="saas-nav-group" aria-label="Soporte">
-                        <div class="saas-nav-group-title">Soporte</div>
+                    <nav class="nav-group" aria-label="Soporte">
+                        <div class="nav-group-title">Soporte</div>
 
-                        <NavLink class="saas-nav-link" href="quejas" @onclick="CerrarMenu">
+                        <NavLink class="nav-link-item" href="quejas" @onclick="CerrarMenu">
                             <i class="bi bi-chat-left-dots-fill"></i>
                             <span>Quejas</span>
                         </NavLink>
@@ -207,44 +217,47 @@
                         </div>
                     </div>
                 </NotAuthorized>
+
             </AuthorizeView>
         </div>
 
         <AuthorizeView>
-            <Authorized Context="context">
-                <div class="nav-footer-container p-3 border-top bg-light bg-opacity-10">
-                    <small class="text-uppercase fw-bold text-muted mb-2 d-block" style="font-size: 0.65rem; letter-spacing: 0.05rem;">Cuenta Activa</small>
+            <Authorized Context="footerContext">
+                <div class="nav-footer">
+                    <div class="nav-footer-title">Cuenta activa</div>
 
-                    <div class="saas-integrated-card shadow-sm border rounded-3 bg-white p-2">
-                        <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
-                            <div class="bg-primary bg-opacity-10 rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px;">
-                                <i class="bi bi-building text-primary" style="font-size: 0.9rem;"></i>
+                    <div class="nav-account-card">
+                        <div class="nav-company-row">
+                            <div class="nav-company-icon">
+                                <i class="bi bi-building"></i>
                             </div>
+
                             <div class="overflow-hidden">
-                                <div class="fw-bold text-dark text-truncate small" style="line-height: 1.2;">@empresaNombre</div>
+                                <div class="nav-company-name text-truncate">@empresaNombre</div>
+                                <div class="nav-company-caption">Empresa actual</div>
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="saas-user-avatar flex-shrink-0 shadow-sm" style="width: 35px; height: 35px; font-size: 0.8rem;">
-                                @GetInitials(context.User.Identity?.Name)
+                        <div class="nav-user-row">
+                            <div class="nav-user-avatar">
+                                @GetInitials(footerContext.User.Identity?.Name)
                             </div>
 
-                            <div class="flex-grow-1 overflow-hidden">
-                                <div class="fw-semibold text-dark text-truncate small" style="line-height: 1.2;">@GetDisplayName(context.User.Identity?.Name)</div>
-                                <div class="text-muted text-truncate" style="font-size: 0.7rem;">@context.User.Identity?.Name</div>
+                            <div class="nav-user-copy">
+                                <div class="nav-user-name text-truncate">@GetDisplayName(footerContext.User.Identity?.Name)</div>
+                                <div class="nav-user-email text-truncate">@footerContext.User.Identity?.Name</div>
                             </div>
 
-                            <div class="d-flex flex-column gap-1 border-start ps-2 flex-shrink-0">
-                                <NavLink href="Account/Manage" class="btn btn-link p-0 text-secondary" title="Ajustes" @onclick="CerrarMenu">
-                                    <i class="bi bi-gear" style="font-size: 0.9rem;"></i>
+                            <div class="nav-user-actions">
+                                <NavLink href="Account/Manage" class="nav-icon-button" title="Ajustes" @onclick="CerrarMenu">
+                                    <i class="bi bi-gear"></i>
                                 </NavLink>
 
-                                <form action="Account/Logout" method="post" class="m-0 p-0">
+                                <form action="Account/Logout" method="post" class="nav-logout-form">
                                     <AntiforgeryToken />
                                     <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                                    <button type="submit" class="btn btn-link p-0 text-danger" title="Salir">
-                                        <i class="bi bi-box-arrow-right" style="font-size: 0.9rem;"></i>
+                                    <button type="submit" class="nav-icon-button nav-icon-button-danger" title="Salir">
+                                        <i class="bi bi-box-arrow-right"></i>
                                     </button>
                                 </form>
                             </div>
@@ -267,25 +280,13 @@
         {
             var sesion = await SesionHttpService.GetEmpresaActualAsync();
 
-            if (sesion is not null)
-            {
-                empresaNombre = string.IsNullOrWhiteSpace(sesion.EmpresaNombre)
-                    ? "Sin empresa"
-                    : sesion.EmpresaNombre;
-            }
-            else
-            {
-                empresaNombre = "Sin empresa";
-            }
+            empresaNombre = sesion is not null && !string.IsNullOrWhiteSpace(sesion.EmpresaNombre)
+                ? sesion.EmpresaNombre
+                : "Sin empresa";
         }
         catch
         {
             empresaNombre = "Sin empresa";
-        }
-        finally
-        {
-            cargandoEmpresa = false;
-            StateHasChanged();
         }
     }
 

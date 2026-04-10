@@ -166,6 +166,9 @@ namespace Crit.Controllers
                 _context.InventarioPorAlmacen.Add(item);
                 await _context.SaveChangesAsync();
 
+                await SincronizarStockProductoAsync(item.ProductoId, empresaId);
+                await _context.SaveChangesAsync();
+
                 return CreatedAtAction(nameof(GetPorProducto), new { productoId = item.ProductoId }, item);
             }
             catch (Exception ex)
@@ -203,6 +206,9 @@ namespace Crit.Controllers
 
                 await _context.SaveChangesAsync();
 
+                await SincronizarStockProductoAsync(inventario.ProductoId, empresaId);
+                await _context.SaveChangesAsync();
+
                 return NoContent();
             }
             catch (Exception ex)
@@ -231,7 +237,12 @@ namespace Crit.Controllers
                 if (inventario.Stock > 0)
                     return BadRequest("No se puede eliminar un registro con stock mayor a cero");
 
+                var productoId = inventario.ProductoId;
+
                 _context.InventarioPorAlmacen.Remove(inventario);
+                await _context.SaveChangesAsync();
+
+                await SincronizarStockProductoAsync(productoId, empresaId);
                 await _context.SaveChangesAsync();
 
                 return NoContent();
@@ -240,6 +251,21 @@ namespace Crit.Controllers
             {
                 _logger.LogError(ex, "Error al eliminar inventario por almacen {Id}", id);
                 return StatusCode(500, "Error interno del servidor");
+            }
+        }
+
+        private async Task SincronizarStockProductoAsync(int productoId, int empresaId)
+        {
+            var stockTotal = await _context.InventarioPorAlmacen
+                .Where(x => x.ProductoId == productoId && x.EmpresaId == empresaId)
+                .SumAsync(x => (decimal?)x.Stock) ?? 0m;
+
+            var producto = await _context.Productos
+                .FirstOrDefaultAsync(p => p.Id == productoId && p.EmpresaId == empresaId);
+
+            if (producto is not null)
+            {
+                producto.Stock = (int)stockTotal;
             }
         }
     }

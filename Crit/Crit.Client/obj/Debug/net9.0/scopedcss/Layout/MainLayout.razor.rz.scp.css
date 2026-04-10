@@ -1,12 +1,12 @@
 .page[b-adzybd6foo] {
     display: flex;
-    flex-direction: row; /* Alineaci�n horizontal para escritorio */
+    flex-direction: row;
     min-height: 100vh;
 }
 
 main[b-adzybd6foo] {
     flex: 1;
-    background-color: #F1F5F9;
+    background-color: #F5F7FA;
 }
 
 .main-container[b-adzybd6foo] {
@@ -30,7 +30,6 @@ main[b-adzybd6foo] {
     transition: margin-left 0.3s ease-in-out;
 }
 
-/* Estados del sidebar */
 .sidebar-collapsed .main-content[b-adzybd6foo] {
     margin-left: 0;
 }
@@ -68,7 +67,6 @@ main[b-adzybd6foo] {
     background-color: #f8f9fa;
 }
 
-/* Error UI */
 #blazor-error-ui[b-adzybd6foo] {
     background: #ffebcd;
     bottom: 0;
@@ -89,7 +87,6 @@ main[b-adzybd6foo] {
         top: 0.5rem;
     }
 
-/* Responsive */
 @media (max-width: 768px) {
     .main-container[b-adzybd6foo] {
         flex-direction: column;
@@ -109,6 +106,7 @@ main[b-adzybd6foo] {
         padding: 1rem;
     }
 }
+
 @media (max-width: 991.98px) {
     .page[b-adzybd6foo] {
         flex-direction: column;
@@ -116,30 +114,23 @@ main[b-adzybd6foo] {
 
     main[b-adzybd6foo] {
         margin-left: 0;
-        /* Ajusta este valor seg�n la altura de tu mobile-top-bar */
     }
 }
+
 @media (min-width: 992px) {
     .page[b-adzybd6foo] {
-        display: flex; /* Asegura que sidebar y main est�n a la par */
+        display: flex;
     }
 
-    .sidebar-container[b-adzybd6foo] {
-        width: 260px;
-        position: fixed; /* Fija la barra a la izquierda */
-        height: 100vh;
-    }
-
-    main[b-adzybd6foo] {
-        margin-left: 220px; /* Desplaza el contenido exactamente el ancho de la barra */
-        width: calc(100% - 260px); /* Evita que el contenido se desborde */
-        padding: 2rem;
+    .main-content[b-adzybd6foo] {
+        margin-left: 252px;
+        width: calc(100% - 252px);
         min-height: 100vh;
     }
 }
-/* Asegura que la barra m�vil no flote sobre el contenido sin espacio */
+
 .mobile-top-bar[b-adzybd6foo] {
-    height: 80px; /* Define una altura fija */
+    height: 80px;
     display: flex;
     align-items: center;
 }

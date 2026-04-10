@@ -178,6 +178,12 @@ namespace Crit.Server.Data
                 .HasIndex(p => new { p.Codigo, p.EmpresaId })
                 .IsUnique();
 
+            builder.Entity<Producto>()
+                .HasOne(p => p.Proveedor)
+                .WithMany()
+                .HasForeignKey(p => p.ProveedorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             builder.Entity<Venta>()
                 .HasOne(v => v.Cliente)
                 .WithMany(c => c.Ventas)
@@ -212,6 +218,7 @@ namespace Crit.Server.Data
                 .HasForeignKey(c => c.AlmacenId)
                 .OnDelete(DeleteBehavior.NoAction);
         }
+
 
         private static void ConfigureServiciosYCotizaciones(ModelBuilder builder)
         {

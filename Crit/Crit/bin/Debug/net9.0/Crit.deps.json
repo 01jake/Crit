@@ -2838,7 +2838,8 @@
       },
       "Crit.Shared/1.0.0": {
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "9.0.6"
+          "Microsoft.AspNetCore.Components": "9.0.6",
+          "Microsoft.AspNetCore.Components.Authorization": "9.0.6"
         },
         "runtime": {
           "Crit.Shared.dll": {

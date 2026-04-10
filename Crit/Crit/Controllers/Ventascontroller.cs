@@ -136,7 +136,7 @@ namespace Crit.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateVenta(Venta venta)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
@@ -145,22 +145,93 @@ namespace Crit.Controllers
                 if (empresaId <= 0)
                     return Unauthorized("No se pudo determinar la empresa del usuario.");
 
+                if (venta is null)
+                    return BadRequest("La venta no contiene datos.");
+
+                if (venta.Detalles is null || !venta.Detalles.Any())
+                    return BadRequest("La venta debe contener al menos un producto.");
+
+                if (venta.EsCredito)
+                {
+                    if (venta.ClienteId <= 0)
+                        return BadRequest("Debes seleccionar un cliente para una venta a credito.");
+
+                    if (!venta.DiasCredito.HasValue || venta.DiasCredito.Value <= 0)
+                        return BadRequest("Debes indicar los dias de credito.");
+                }
+
+                var clienteIdFinal = await ResolverClienteVentaAsync(venta, empresaId);
+                if (clienteIdFinal <= 0)
+                    return BadRequest("No se pudo resolver el cliente de la venta.");
+
+                venta.ClienteId = clienteIdFinal;
                 venta.EmpresaId = empresaId;
                 venta.Fecha = DateTime.Now;
+                venta.AlmacenId = await ObtenerAlmacenPredeterminadoVentaAsync(empresaId);
+                venta.NumeroVenta = string.IsNullOrWhiteSpace(venta.NumeroVenta)
+                    ? await GenerarNumeroVentaAsync(empresaId)
+                    : venta.NumeroVenta.Trim();
+
+                venta.Estado = string.IsNullOrWhiteSpace(venta.Estado)
+                    ? "Completada"
+                    : venta.Estado.Trim();
+
+                venta.MetodoPago = string.IsNullOrWhiteSpace(venta.MetodoPago)
+                    ? "PUE - Pago en una sola exhibicion"
+                    : venta.MetodoPago.Trim();
+
+                venta.FormaPago = string.IsNullOrWhiteSpace(venta.FormaPago)
+                    ? "03 - Transferencia electronica"
+                    : venta.FormaPago.Trim();
+
+                venta.UsoCFDI = string.IsNullOrWhiteSpace(venta.UsoCFDI)
+                    ? "G03 - Gastos en general"
+                    : venta.UsoCFDI.Trim();
+
+                decimal subtotalCalculado = 0m;
 
                 foreach (var d in venta.Detalles)
                 {
+                    if (d.Cantidad <= 0)
+                        return BadRequest("La cantidad de cada producto debe ser mayor a cero.");
+
                     var producto = await _context.Productos
-                        .FirstOrDefaultAsync(p => p.Id == d.ProductoId && p.EmpresaId == empresaId);
+                        .FirstOrDefaultAsync(p => p.Id == d.ProductoId && p.EmpresaId == empresaId && p.Activo);
 
                     if (producto == null)
-                        return BadRequest($"Producto con ID {d.ProductoId} no encontrado");
+                        return BadRequest($"Producto con ID {d.ProductoId} no encontrado.");
 
-                    d.Subtotal = d.Cantidad * d.PrecioUnitario;
+                    if (d.PrecioUnitario <= 0)
+                        d.PrecioUnitario = producto.PrecioVenta;
+
+                    d.Descuento = d.Descuento < 0 ? 0 : d.Descuento;
+                    d.Subtotal = (d.Cantidad * d.PrecioUnitario) - d.Descuento;
+
+                    if (d.Subtotal < 0)
+                        d.Subtotal = 0;
+
+                    subtotalCalculado += d.Subtotal;
+                }
+
+                venta.Subtotal = subtotalCalculado;
+                venta.Descuento = venta.Descuento < 0 ? 0 : venta.Descuento;
+                venta.IVA = (venta.Subtotal - venta.Descuento) * 0.16m;
+                venta.Total = venta.Subtotal - venta.Descuento + venta.IVA;
+
+                venta.Cliente = null;
+                venta.Empresa = null;
+                venta.Almacen = null;
+                venta.CuentaPorCobrar = null;
+
+                foreach (var d in venta.Detalles)
+                {
+                    d.Venta = null;
+                    d.Producto = null;
                 }
 
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
+
 
                 if (venta.EsCredito)
                 {
@@ -178,15 +249,14 @@ namespace Crit.Controllers
                         Total = venta.Total,
                         TotalPagado = 0m,
                         Estado = "Pendiente",
-                        Observaciones = "Generada automáticamente desde venta a crédito",
+                        Observaciones = "Generada automaticamente desde venta a credito",
                         Activa = true
                     };
 
                     _context.CuentasPorCobrar.Add(cuentaPorCobrar);
                     await _context.SaveChangesAsync();
                 }
-
-                if (!venta.EsCredito)
+                else
                 {
                     var caja = await _context.CajaSesiones
                         .FirstOrDefaultAsync(x => x.Estado == "Abierta" && x.EmpresaId == empresaId);
@@ -230,6 +300,8 @@ namespace Crit.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
+
 
         [HttpGet("fecha")]
         public async Task<ActionResult<IEnumerable<Venta>>> GetVentasPorFecha(
@@ -478,5 +550,79 @@ namespace Crit.Controllers
 
             return document.GeneratePdf();
         }
+        private async Task<int> ResolverClienteVentaAsync(Venta venta, int empresaId)
+        {
+            if (venta.EsCredito)
+            {
+                var clienteCredito = await _context.Clientes
+                    .FirstOrDefaultAsync(c => c.Id == venta.ClienteId && c.EmpresaId == empresaId && c.Activo);
+
+                return clienteCredito?.Id ?? 0;
+            }
+
+            if (venta.ClienteId > 0)
+            {
+                var clienteSeleccionado = await _context.Clientes
+                    .FirstOrDefaultAsync(c => c.Id == venta.ClienteId && c.EmpresaId == empresaId && c.Activo);
+
+                if (clienteSeleccionado is not null)
+                    return clienteSeleccionado.Id;
+            }
+
+            var publicoGeneral = await _context.Clientes
+                .FirstOrDefaultAsync(c => c.EmpresaId == empresaId && c.Nombre == "PUBLICO GENERAL");
+
+            if (publicoGeneral is not null)
+                return publicoGeneral.Id;
+
+            publicoGeneral = new Cliente
+            {
+                EmpresaId = empresaId,
+                Nombre = "PUBLICO GENERAL",
+                Email = $"publicogeneral-{empresaId}@crit.local",
+                RFC = "XAXX010101000",
+                CodigoPostal = "83000",
+                RegimenFiscal = "616 - Sin obligaciones fiscales",
+                UsoCFDI = "S01 - Sin efectos fiscales",
+                Activo = true
+            };
+
+            _context.Clientes.Add(publicoGeneral);
+            await _context.SaveChangesAsync();
+
+            return publicoGeneral.Id;
+        }
+
+        private async Task<string> GenerarNumeroVentaAsync(int empresaId)
+        {
+            string numeroVenta;
+
+            do
+            {
+                numeroVenta = $"VTA-{DateTime.Now:yyyyMMddHHmmssfff}";
+            }
+            while (await _context.Ventas.AnyAsync(v => v.EmpresaId == empresaId && v.NumeroVenta == numeroVenta));
+
+            return numeroVenta;
+        }
+
+        private async Task<int?> ObtenerAlmacenPredeterminadoVentaAsync(int empresaId)
+        {
+            var principal = await _context.Almacenes
+                .Where(a => a.EmpresaId == empresaId && a.Activo && a.Nombre == "PRINCIPAL")
+                .Select(a => (int?)a.Id)
+                .FirstOrDefaultAsync();
+
+            if (principal.HasValue)
+                return principal;
+
+            return await _context.Almacenes
+                .Where(a => a.EmpresaId == empresaId && a.Activo)
+                .OrderBy(a => a.Nombre)
+                .Select(a => (int?)a.Id)
+                .FirstOrDefaultAsync();
+        }
+
+
     }
 }

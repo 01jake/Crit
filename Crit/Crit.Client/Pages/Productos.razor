@@ -2,78 +2,67 @@
 @using Crit.Client.Services
 @using Crit.Shared.Models
 @using Microsoft.AspNetCore.Authorization
+@inject ProveedorHttpService ProveedorHttpService
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor,Usuario")]
 @attribute [StreamRendering(true)]
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
-@inject ClienteHttpService ClienteHttpService
 @inject ProductoHttpService ProductoHttpService
-
 @inject IJSRuntime JSRuntime
 
+<PageTitle>Gestion de Productos</PageTitle>
 
-<PageTitle>Inventario de Productos</PageTitle>
-
-<div class="admin-container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="pos-container px-5 py-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
         <div>
-            <h2 class="page-title mb-0">Gestión de Inventario</h2>
-            <p class="text-muted small">Control de existencias, precios y categorías</p>
+            <h2 class="page-title mb-0" style="color: #1F2A44;">Gestion de Productos</h2>
+            <p class="text-muted small mb-0">Administra inventario, precios, proveedor y stock minimo</p>
         </div>
 
-        <button class="btn saas-btn-primary shadow-sm px-4" @onclick="MostrarModalNuevo">
-            <i class="bi bi-box-seam-fill me-2"></i> Nuevo Producto
+        <button class="btn saas-btn-primary shadow-sm px-4 py-2" @onclick="MostrarModalNuevo">
+            <i class="bi bi-plus-lg me-2"></i><span>Nuevo Producto</span>
         </button>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="stat-card p-3 shadow-sm border-0 card">
-                <span class="text-muted small fw-bold">TOTAL PRODUCTOS</span>
-                <h4 class="mb-0">@productos.Count</h4>
-            </div>
+    @if (!string.IsNullOrWhiteSpace(mensajeError))
+    {
+        <div class="alert alert-danger shadow-sm border-0 mb-4">
+            <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
         </div>
-        <div class="col-md-3">
-            <div class="stat-card p-3 shadow-sm border-0 card border-start border-warning border-4">
-                <span class="text-muted small fw-bold text-warning">STOCK BAJO</span>
-                <h4 class="mb-0">@productos.Count(p => p.Stock <= p.StockMinimo && p.Stock > 0)</h4>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card p-3 shadow-sm border-0 card border-start border-danger border-4">
-                <span class="text-muted small fw-bold text-danger">AGOTADOS</span>
-                <h4 class="mb-0">@productos.Count(p => p.Stock == 0)</h4>
-            </div>
-        </div>
-    </div>
+    }
 
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
             <div class="row g-3 align-items-center">
-                <div class="col-md-5">
+                <div class="col-12 col-md-5">
                     <div class="search-box-container">
-                        
-                        <input class="form-control" placeholder="Buscar por código o nombre..."
+                        <i class="bi bi-search"></i>
+                        <input class="form-control" placeholder="Buscar por codigo o nombre..."
                                @bind="terminoBusqueda" @bind:event="oninput" />
                     </div>
                 </div>
-                <div class="col-md-3">
+
+                <div class="col-12 col-md-3">
                     <select class="form-select border-light-subtle" @bind="filtroCategoria">
-                        <option value="todas">Todas las categorías</option>
+                        <option value="todas">Todas las categorias</option>
                         @foreach (var cat in categorias)
                         {
                             <option value="@cat">@cat</option>
                         }
                     </select>
                 </div>
-                <div class="col-md-2">
+
+                <div class="col-12 col-md-2">
                     <select class="form-select border-light-subtle" @bind="filtroStock">
                         <option value="todos">Existencia</option>
                         <option value="disponible">Disponibles</option>
-                        <option value="bajo">Stock Bajo</option>
+                        <option value="bajo">Stock bajo</option>
                         <option value="agotado">Agotados</option>
                     </select>
                 </div>
-                <div class="col-md-2 text-end">
-                    <span class="text-muted small">Filtrados: <strong>@ProductosFiltrados.Count()</strong></span>
+
+                <div class="col-12 col-md-2 text-md-end text-muted small">
+                    Mostrando: <strong>@ProductosFiltrados.Count()</strong> productos
                 </div>
             </div>
         </div>
@@ -82,21 +71,30 @@
     @if (loading)
     {
         <div class="d-flex justify-content-center py-5">
-            <div class="spinner-custom"></div>
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else if (!ProductosFiltrados.Any())
+    {
+        <div class="card shadow-sm border-0 text-center py-5">
+            <i class="bi bi-box-seam fs-1 text-muted mb-3"></i>
+            <h5 class="fw-bold text-dark">Sin resultados</h5>
+            <p class="text-muted mb-0">No hay productos con los filtros actuales.</p>
         </div>
     }
     else
     {
-        <div class="card shadow-sm border-0 overflow-hidden">
+        <div class="d-none d-lg-block card shadow-sm border-0 overflow-hidden">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                    <thead style="background-color: #f8fafc;">
                         <tr>
-                            <th class="ps-4">Código / Producto</th>
-                            <th>Categoría</th>
+                            <th class="ps-4">Producto / Codigo</th>
+                            <th>Categoria</th>
+                            <th>Proveedor</th>
                             <th>P. Compra</th>
                             <th>P. Venta</th>
-                            <th>Existencia</th>
+                            <th>Stock</th>
                             <th>Estado</th>
                             <th class="text-end pe-4">Acciones</th>
                         </tr>
@@ -104,24 +102,33 @@
                     <tbody>
                         @foreach (var p in ProductosFiltrados)
                         {
-                            <tr class="@(p.Stock <= p.StockMinimo ? "row-warning" : "")">
+                            <tr>
                                 <td class="ps-4">
                                     <div class="fw-bold text-dark">@p.Nombre</div>
-                                    <div class="text-muted extra-small">#@p.Codigo</div>
+                                    <div class="text-muted extra-small">@p.Codigo</div>
                                 </td>
-                                <td><span class="badge bg-light text-dark border">@p.Categoria</span></td>
-                                <td class="small text-muted">$@p.PrecioCompra.ToString("N2")</td>
-                                <td class="fw-bold text-primary">$@p.PrecioVenta.ToString("N2")</td>
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <span class="status-badge @GetBadgeStock(p) me-2">
-                                            @p.Stock @p.Unidad
-                                        </span>
-                                        @if (p.Stock <= p.StockMinimo && p.Stock > 0)
-                                        {
-                                            <i class="bi bi-exclamation-triangle-fill text-warning small" title="Reabastecer pronto"></i>
-                                        }
+                                    <span class="badge bg-light text-dark border fw-normal">
+                                        @(string.IsNullOrWhiteSpace(p.Categoria) ? "Sin categoria" : p.Categoria)
+                                    </span>
+                                </td>
+                                <td class="small text-muted">
+                                    @(string.IsNullOrWhiteSpace(p.Proveedor?.Nombre) ? "Sin proveedor" : p.Proveedor.Nombre)
+                                </td>
+                                <td class="small text-muted">@p.PrecioCompra.ToString("C")</td>
+                                <td class="fw-semibold text-success">@p.PrecioVenta.ToString("C")</td>
+                                <td>
+                                    <div class="fw-bold @(p.Stock == 0 ? "text-danger" : (p.Stock <= p.StockMinimo ? "text-warning" : "text-primary"))">
+                                        @p.Stock @p.Unidad
                                     </div>
+                                    @if (p.Stock <= p.StockMinimo && p.Stock > 0)
+                                    {
+                                        <div class="extra-small text-warning fw-semibold">Stock bajo</div>
+                                    }
+                                    else if (p.Stock == 0)
+                                    {
+                                        <div class="extra-small text-danger fw-semibold">Agotado</div>
+                                    }
                                 </td>
                                 <td>
                                     <span class="status-badge @(p.Activo ? "status-active" : "status-inactive")">
@@ -130,16 +137,15 @@
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="btn-group shadow-sm">
-                                        <button class="btn btn-white btn-sm" title="Editar" @onclick="() => EditarProducto(p)">
+                                        <button type="button" class="btn btn-white btn-sm" title="Editar" @onclick="() => EditarProducto(p)">
                                             <i class="bi bi-pencil-square text-primary"></i>
                                         </button>
-                                        <button class="btn btn-white btn-sm" title="Eliminar" @onclick="() => EliminarProducto(p.Id)">
+                                        <a class="btn btn-white btn-sm" href="/productos/@p.Id" title="Detalle">
+                                            <i class="bi bi-eye text-secondary"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-white btn-sm" title="Eliminar" @onclick="() => EliminarProducto(p.Id)">
                                             <i class="bi bi-trash3 text-danger"></i>
                                         </button>
-                                        <a class="btn btn-sm btn-outline-primary" href="/productos/@p.Id" title="Ver detalle">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-
                                     </div>
                                 </td>
                             </tr>
@@ -148,96 +154,174 @@
                 </table>
             </div>
         </div>
+
+        <div class="d-lg-none">
+            @foreach (var p in ProductosFiltrados)
+            {
+                <div class="card shadow-sm border-0 mb-3 product-mobile-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div style="max-width: 70%;">
+                                <h6 class="fw-bold mb-0 text-dark text-truncate">@p.Nombre</h6>
+                                <span class="extra-small text-muted text-uppercase">COD: @p.Codigo</span>
+                            </div>
+                            <span class="status-badge @(p.Activo ? "status-active" : "status-inactive")">
+                                @(p.Activo ? "Activo" : "Inactivo")
+                            </span>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="text-muted extra-small">Categoria</div>
+                                <div class="small text-dark text-truncate">@(string.IsNullOrWhiteSpace(p.Categoria) ? "Sin categoria" : p.Categoria)</div>
+                            </div>
+                            <div class="col-6 text-end">
+                                <div class="text-muted extra-small">Stock</div>
+                                <div class="fw-bold @(p.Stock == 0 ? "text-danger" : (p.Stock <= p.StockMinimo ? "text-warning" : "text-primary"))">
+                                    @p.Stock @p.Unidad
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted extra-small">Compra</div>
+                                <div class="small text-dark">@p.PrecioCompra.ToString("C")</div>
+                            </div>
+                            <div class="col-6 text-end">
+                                <div class="text-muted extra-small">Venta</div>
+                                <div class="small fw-bold text-success">@p.PrecioVenta.ToString("C")</div>
+                            </div>
+                            <div class="col-12">
+                                <div class="text-muted extra-small">Proveedor</div>
+                                <div class="small text-dark text-truncate">@(string.IsNullOrWhiteSpace(p.Proveedor?.Nombre) ? "Sin proveedor" : p.Proveedor.Nombre)</div>
+                            </div>
+                        </div>
+
+                        @if (p.Stock <= p.StockMinimo && p.Stock > 0)
+                        {
+                            <div class="extra-small text-warning fw-bold mb-3">STOCK BAJO</div>
+                        }
+                        else if (p.Stock == 0)
+                        {
+                            <div class="extra-small text-danger fw-bold mb-3">AGOTADO</div>
+                        }
+
+                        <div class="d-flex gap-2 border-top pt-3">
+                            <button type="button" class="btn btn-light-primary btn-sm flex-fill" @onclick="() => EditarProducto(p)">
+                                <i class="bi bi-pencil-square me-1"></i>Editar
+                            </button>
+                            <a class="btn btn-light-info btn-sm flex-fill text-center" href="/productos/@p.Id">
+                                <i class="bi bi-eye me-1"></i>Detalle
+                            </a>
+                            <button type="button" class="btn btn-light-danger btn-sm px-3" @onclick="() => EliminarProducto(p.Id)">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
 </div>
 
 @if (mostrarModal)
 {
-     <div class="modal-backdrop fade show"></div>
+    <div class="modal-backdrop fade show"></div>
     <div class="modal fade show d-block saas-modal-backdrop" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-3">
+            <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
                     <div>
                         <h5 class="modal-title fw-bold text-dark mb-1">
-                            <i class="bi @(productoActual.Id == 0 ? "bi-box-seam" : "bi-pencil-square") me-2"></i>
-                        @(productoActual.Id == 0 ? "Nuevo Producto" : "Editar Producto")
-                    </h5>
-                   </div>
-                    <button type="button" class="btn-close shadow-none " @onclick="CerrarModal"></button>
+                            <i class="bi @(productoActual.Id == 0 ? "bi-box-seam" : "bi-pencil-square") me-2 text-primary"></i>
+                            @(productoActual.Id == 0 ? "Nuevo Producto" : "Editar Producto")
+                        </h5>
+                        <p class="text-muted small mb-0">Actualiza la informacion comercial y de inventario.</p>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" @onclick="CerrarModal"></button>
                 </div>
 
                 <div class="modal-body px-4 py-4">
                     <EditForm Model="productoActual" OnValidSubmit="GuardarProducto">
                         <DataAnnotationsValidator />
-                         <div class="p-3 mb-4 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
-                            <h6 class="fw-bold mb-3" style="color: #334155;"><i class="bi bi-box-seam-fill me-2"></i>Información del Producto</h6>
-                          <div class="row g-3">
-                                <div class="col-md-4 mb-3">
-                                    <label class="saas-label">Código de Barras/SKU *</label>
+
+                        <div class="p-3 mb-4 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <h6 class="fw-bold mb-3" style="color: #334155;"><i class="bi bi-box-seam-fill me-2"></i>Informacion del Producto</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="saas-label">CODIGO <span class="text-danger">*</span></label>
                                     <InputText class="form-control saas-input" @bind-Value="productoActual.Codigo" />
-                                <ValidationMessage For="@(() => productoActual.Codigo)" class="text-danger small" />
-                            </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="saas-label">Nombre del Producto *</label>
-                                    <InputText class="form-control saas-input" @bind-Value="productoActual.Nombre" />
-                                <ValidationMessage For="@(() => productoActual.Nombre)" class="text-danger small" />
-                            </div>
-                            <div class="col-12 mb-3">
-                                    <label class="saas-label">Descripción Detallada</label>
-                                    <InputTextArea class="form-control saas-input" @bind-Value="productoActual.Descripcion" rows="2" />
-
-                            </div>
-                         </div>
-                        </div>
-
-
-                         <div class="p-3 mb-4 rounded-3" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                            <h6 class="section-title"><i class="bi bi-tags me-2"></i>Clasificación</h6>
-                                            <div class="mb-3">
-                                        <label class="saas-label">Categoría</label>
-                                        <InputText class="form-control saas-input" @bind-Value="productoActual.Categoria" />
-                                            </div>
-                                            <div class="mb-3">
-                                        <label class="saas-label">Unidad de Medida</label>
-                                        <InputText class="form-control saas-input" @bind-Value="productoActual.Unidad" placeholder="Pieza, Kg, Litro..." />
-                                            </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                            <h6 class="section-title"><i class="bi bi-currency-dollar me-2"></i>Precios e Inventario</h6>
-                                            <div class="row g-2">
-                                                <div class="col-6 mb-2">
-                                            <label class="saas-label">Costo Compra</label>
-                                            <InputNumber class="form-control saas-input" @bind-Value="productoActual.PrecioCompra" />
-                                                </div>
-                                                <div class="col-6 mb-2">
-                                            <label class="saas-label">Precio Venta</label>
-                                            <InputNumber class="form-control saas-input" @bind-Value="productoActual.PrecioVenta" />
-                                                </div>
-                                                <div class="col-6">
-                                            <label class="saas-label">Stock Actual</label>
-                                            <InputNumber class="form-control saas-input" @bind-Value="productoActual.Stock" />
-                                                </div>
-                                                <div class="col-6">
-                                            <label class="saas-label">Stock Mínimo</label>
-                                            <InputNumber class="form-control saas-input" @bind-Value="productoActual.StockMinimo" />
-                                                </div>
-                                            </div>
-                                    </div>
+                                    <ValidationMessage For="@(() => productoActual.Codigo)" class="saas-validation-message" />
                                 </div>
+
+                                <div class="col-md-6">
+                                    <label class="saas-label">NOMBRE <span class="text-danger">*</span></label>
+                                    <InputText class="form-control saas-input" @bind-Value="productoActual.Nombre" />
+                                    <ValidationMessage For="@(() => productoActual.Nombre)" class="saas-validation-message" />
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="saas-label">DESCRIPCION</label>
+                                    <InputTextArea class="form-control saas-input" @bind-Value="productoActual.Descripcion" rows="2" />
+                                </div>
+                            </div>
                         </div>
+
+                        <div class="p-3 mb-4 rounded-3" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+                            <h6 class="fw-bold mb-3" style="color: #166534;"><i class="bi bi-tags me-2"></i>Clasificacion e Inventario</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="saas-label">CATEGORIA</label>
+                                    <InputText class="form-control saas-input" @bind-Value="productoActual.Categoria" />
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="saas-label">UNIDAD</label>
+                                    <InputText class="form-control saas-input" @bind-Value="productoActual.Unidad" />
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="saas-label">PROVEEDOR</label>
+                                    <InputSelect class="form-select saas-input" @bind-Value="productoActual.ProveedorId">
+                                        <option value="">Sin proveedor</option>
+                                        @foreach (var proveedor in proveedores)
+                                        {
+                                            <option value="@proveedor.Id">@proveedor.Nombre</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="saas-label">STOCK MINIMO</label>
+                                    <InputNumber class="form-control saas-input" @bind-Value="productoActual.StockMinimo" />
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="saas-label">STOCK ACTUAL</label>
+                                    <InputNumber class="form-control saas-input" @bind-Value="productoActual.Stock" />
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="saas-label">PRECIO COMPRA</label>
+                                    <InputNumber class="form-control saas-input" @bind-Value="productoActual.PrecioCompra" />
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="saas-label">PRECIO VENTA</label>
+                                    <InputNumber class="form-control saas-input" @bind-Value="productoActual.PrecioVenta" />
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-flex align-items-center p-3 rounded-3 mb-3" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
                             <div class="form-check form-switch m-0 d-flex align-items-center p-0">
                                 <InputCheckbox class="form-check-input saas-switch m-0" @bind-Value="productoActual.Activo" id="chkProductoActivo" style="width: 2.5em; height: 1.25em; cursor: pointer;" />
                                 <label class="form-check-label ms-3 fw-bold text-dark" for="chkProductoActivo" style="cursor: pointer;">
-                                    Producto disponible para la venta
+                                    Producto habilitado para venta
+                                    <span class="d-block text-muted fw-normal small">Si se desactiva, no aparecera en operaciones comerciales.</span>
                                 </label>
                             </div>
                         </div>
-                        @if (!string.IsNullOrEmpty(mensajeError))
+
+                        @if (!string.IsNullOrWhiteSpace(mensajeError))
                         {
                             <div class="alert saas-alert-error py-2 small shadow-sm">
                                 <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
@@ -252,7 +336,10 @@
                                     <span class="spinner-border spinner-border-sm me-2"></span>
                                     <span>Guardando...</span>
                                 }
-                                <i class="bi bi-save me-2"></i> Guardar Producto
+                                else
+                                {
+                                    <span><i class="bi bi-save me-2"></i>Guardar Producto</span>
+                                }
                             </button>
                         </div>
                     </EditForm>
@@ -261,7 +348,126 @@
         </div>
     </div>
 }
+
+<style>
+    :root {
+        --polynex-navy: #1F2A44;
+    }
+
+    .saas-btn-primary {
+        background-color: var(--polynex-navy);
+        color: white;
+        border: none;
+        transition: all 0.2s;
+    }
+
+        .saas-btn-primary:hover {
+            background-color: #2a3a5e;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .product-mobile-card {
+        border-left: 4px solid #e2e8f0 !important;
+        transition: transform 0.2s;
+    }
+
+        .product-mobile-card:active {
+            transform: scale(0.98);
+        }
+
+    .btn-light-primary {
+        background: #eff6ff;
+        color: #2563eb;
+        border: none;
+    }
+
+        .btn-light-primary:hover {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+    .btn-light-warning {
+        background: #fffbeb;
+        color: #d97706;
+        border: none;
+    }
+
+        .btn-light-warning:hover {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+    .btn-light-danger {
+        background: #fef2f2;
+        color: #dc2626;
+        border: none;
+    }
+
+        .btn-light-danger:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+    .btn-light-info {
+        background: #ecfeff;
+        color: #0891b2;
+        border: none;
+    }
+
+        .btn-light-info:hover {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: 50rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-active {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .status-inactive {
+        background-color: #f1f5f9;
+        color: #475569;
+    }
+
+    .btn-white {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+    }
+
+        .btn-white:hover {
+            background: #f8fafc;
+        }
+
+    .pos-container {
+        padding-bottom: 80px;
+    }
+
+    .saas-switch:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .saas-switch:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+    }
+</style>
+
 @code {
+    private List<Proveedor> proveedores = new();
     private List<Producto> productos = new();
     private Producto productoActual = new();
     private bool loading = true;
@@ -273,43 +479,49 @@
     private string mensajeError = "";
     private List<string> categorias = new();
 
-    private IEnumerable<Producto> ProductosFiltrados
+    protected override async Task LoadDataAsync()
     {
-        get
+        loading = true;
+        mensajeError = "";
+        proveedores = await ProveedorHttpService.GetAsync() ?? new();
+
+        try
         {
-            return productos.Where(p =>
-                (string.IsNullOrEmpty(terminoBusqueda) ||
-                 p.Codigo.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase) ||
-                 p.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) &&
-                (filtroCategoria == "todas" || p.Categoria == filtroCategoria) &&
-                (filtroStock == "todos" ||
-                 (filtroStock == "disponible" && p.Stock > p.StockMinimo) ||
-                 (filtroStock == "bajo" && p.Stock <= p.StockMinimo && p.Stock > 0) ||
-                 (filtroStock == "agotado" && p.Stock == 0))
-            );
+            await CargarProductos();
+        }
+        finally
+        {
+            loading = false;
         }
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarProductos();
-        loading = false;
-    }
+    protected override bool ShouldRetryInitialLoad() => !productos.Any();
+
+    private IEnumerable<Producto> ProductosFiltrados => productos.Where(p =>
+        (string.IsNullOrEmpty(terminoBusqueda) ||
+         p.Codigo.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+         p.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) &&
+        (filtroCategoria == "todas" || p.Categoria == filtroCategoria) &&
+        (filtroStock == "todos" ||
+         (filtroStock == "disponible" && p.Stock > p.StockMinimo) ||
+         (filtroStock == "bajo" && p.Stock <= p.StockMinimo && p.Stock > 0) ||
+         (filtroStock == "agotado" && p.Stock == 0))
+    );
 
     private async Task CargarProductos()
     {
         try
         {
             productos = await ProductoHttpService.GetProductosAsync();
-            categorias = productos.Where(p => !string.IsNullOrEmpty(p.Categoria))
-                                 .Select(p => p.Categoria!)
-                                 .Distinct()
-                                 .OrderBy(c => c)
-                                 .ToList();
+            categorias = productos.Where(p => !string.IsNullOrWhiteSpace(p.Categoria))
+                .Select(p => p.Categoria!)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al cargar productos: {ex.Message}");
+            mensajeError = ex.Message;
         }
     }
 
@@ -319,8 +531,10 @@
         {
             Activo = true,
             StockMinimo = 5,
-            Unidad = "Pieza"
+            Unidad = "Pieza",
+            ProveedorId = null
         };
+
         mensajeError = "";
         mostrarModal = true;
     }
@@ -339,8 +553,11 @@
             StockMinimo = producto.StockMinimo,
             Categoria = producto.Categoria,
             Unidad = producto.Unidad,
-            Activo = producto.Activo
+            Activo = producto.Activo,
+            ProveedorId = producto.ProveedorId,
+            Proveedor = producto.Proveedor
         };
+
         mensajeError = "";
         mostrarModal = true;
     }
@@ -360,20 +577,16 @@
             mensajeError = "";
 
             if (productoActual.Id == 0)
-            {
                 await ProductoHttpService.CreateProductoAsync(productoActual);
-            }
             else
-            {
                 await ProductoHttpService.UpdateProductoAsync(productoActual);
-            }
 
             await CargarProductos();
             CerrarModal();
         }
         catch (Exception ex)
         {
-            mensajeError = $"Error: {ex.Message}";
+            mensajeError = ex.Message;
         }
         finally
         {
@@ -385,25 +598,16 @@
     {
         try
         {
-            var confirmado = await JSRuntime.InvokeAsync<bool>("confirm",
-                "¿Está seguro de eliminar este producto?");
+            var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", "¿Eliminar producto?");
+            if (!confirmado)
+                return;
 
-            if (confirmado)
-            {
-                await ProductoHttpService.DeleteProductoAsync(id);
-                await CargarProductos();
-            }
+            await ProductoHttpService.DeleteProductoAsync(id);
+            await CargarProductos();
         }
         catch (Exception ex)
         {
-            mensajeError = $"Error al eliminar: {ex.Message}";
+            mensajeError = ex.Message;
         }
-    }
-
-    private string GetBadgeStock(Producto producto)
-    {
-        if (producto.Stock == 0) return "bg-danger";
-        if (producto.Stock <= producto.StockMinimo) return "bg-warning text-dark";
-        return "bg-success";
     }
 }

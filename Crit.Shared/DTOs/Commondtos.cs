@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Crit.Shared.Models;
 
 namespace Crit.Shared.DTOs
 {
@@ -256,6 +257,7 @@ namespace Crit.Shared.DTOs
         public string? MetodoPago { get; set; }
         public string? Referencia { get; set; }
         public string? Observaciones { get; set; }
+        public Proveedor? Proveedor { get; set; }
         public int? ProveedorId { get; set; }
     }
 

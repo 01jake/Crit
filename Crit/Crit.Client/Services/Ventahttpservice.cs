@@ -1,11 +1,10 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using Crit.Shared.Models;
 
 namespace Crit.Client.Services
 {
-
-
-    public class VentaHttpService 
+    public class VentaHttpService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<VentaHttpService> _logger;
@@ -20,13 +19,28 @@ namespace Crit.Client.Services
         {
             try
             {
-                var ventas = await _httpClient.GetFromJsonAsync<List<Venta>>("api/ventas");
-                return ventas ?? new List<Venta>();
+                var response = await _httpClient.GetAsync("api/ventas");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener ventas");
+                    return new List<Venta>();
+                }
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("403 al obtener ventas");
+                    return new List<Venta>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<Venta>>() ?? new List<Venta>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener ventas");
-                throw;
+                return new List<Venta>();
             }
         }
 
@@ -34,41 +48,63 @@ namespace Crit.Client.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<Venta>($"api/ventas/{id}");
+                var response = await _httpClient.GetAsync($"api/ventas/{id}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener venta {Id}", id);
+                    return null;
+                }
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("403 al obtener venta {Id}", id);
+                    return null;
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                    return null;
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<Venta>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener venta {Id}", id);
-                throw;
+                return null;
             }
         }
 
-        public async Task<Venta?> GetVentaConDetallesAsync(int id)
-        {
-            try
-            {
-                // Llama al mismo endpoint que GetVentaAsync, 
-                // el controller ya retorna con detalles incluidos
-                return await _httpClient.GetFromJsonAsync<Venta>($"api/ventas/{id}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener venta con detalles {Id}", id);
-                throw;
-            }
-        }
+        public Task<Venta?> GetVentaConDetallesAsync(int id)
+            => GetVentaAsync(id);
 
         public async Task<List<Venta>> GetVentasPorClienteAsync(int clienteId)
         {
             try
             {
-                var ventas = await _httpClient.GetFromJsonAsync<List<Venta>>($"api/ventas/cliente/{clienteId}");
-                return ventas ?? new List<Venta>();
+                var response = await _httpClient.GetAsync($"api/ventas/cliente/{clienteId}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener ventas del cliente {ClienteId}", clienteId);
+                    return new List<Venta>();
+                }
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("403 al obtener ventas del cliente {ClienteId}", clienteId);
+                    return new List<Venta>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<Venta>>() ?? new List<Venta>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener ventas del cliente {ClienteId}", clienteId);
-                throw;
+                return new List<Venta>();
             }
         }
 
@@ -76,19 +112,32 @@ namespace Crit.Client.Services
         {
             try
             {
-                // ✅ Formatear las fechas correctamente
                 var desdeStr = desde.ToString("yyyy-MM-dd");
                 var hastaStr = hasta.ToString("yyyy-MM-dd");
 
-                var ventas = await _httpClient.GetFromJsonAsync<List<Venta>>(
+                var response = await _httpClient.GetAsync(
                     $"api/ventas/fecha?desde={desdeStr}&hasta={hastaStr}");
 
-                return ventas ?? new List<Venta>();
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener ventas por fecha");
+                    return new List<Venta>();
+                }
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("403 al obtener ventas por fecha");
+                    return new List<Venta>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<Venta>>() ?? new List<Venta>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener ventas por fecha");
-                throw;
+                return new List<Venta>();
             }
         }
 
@@ -96,30 +145,63 @@ namespace Crit.Client.Services
         {
             try
             {
-                var ventas = await _httpClient.GetFromJsonAsync<List<Venta>>(
-                    $"api/ventas/recientes?cantidad={cantidad}");
-                return ventas ?? new List<Venta>();
+                var response = await _httpClient.GetAsync($"api/ventas/recientes?cantidad={cantidad}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener ventas recientes");
+                    return new List<Venta>();
+                }
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("403 al obtener ventas recientes");
+                    return new List<Venta>();
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<List<Venta>>() ?? new List<Venta>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener ventas recientes");
-                throw;
+                return new List<Venta>();
             }
         }
 
-        public async Task<Venta> CreateVentaAsync(Venta venta)
+        public async Task<Venta?> CreateVentaAsync(Venta venta)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("api/ventas", venta);
-                response.EnsureSuccessStatusCode();
-                var ventaCreada = await response.Content.ReadFromJsonAsync<Venta>();
-                return ventaCreada ?? throw new Exception("Error al crear venta");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al crear venta");
+                    return null;
+                }
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("403 al crear venta");
+                    return null;
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("Error HTTP {StatusCode} al crear venta. Respuesta: {Error}", response.StatusCode, error);
+                    throw new Exception(string.IsNullOrWhiteSpace(error) ? "No se pudo crear la venta." : error);
+                }
+
+
+                return await response.Content.ReadFromJsonAsync<Venta>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear venta");
-                throw;
+                return null;
             }
         }
 
@@ -127,14 +209,28 @@ namespace Crit.Client.Services
         {
             try
             {
-                var total = await _httpClient.GetFromJsonAsync<decimal>(
-                    $"api/ventas/total-mes?mes={mes}&año={año}");
-                return total;
+                var response = await _httpClient.GetAsync($"api/ventas/total-mes?mes={mes}&año={año}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("401 al obtener total de ventas del mes");
+                    return 0m;
+                }
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning("403 al obtener total de ventas del mes");
+                    return 0m;
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<decimal>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener total de ventas del mes");
-                throw;
+                return 0m;
             }
         }
     }

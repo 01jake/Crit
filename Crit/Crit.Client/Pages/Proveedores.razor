@@ -1,44 +1,52 @@
 ﻿@page "/proveedores"
 @using Crit.Client.Services
 @using Crit.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@inherits ProtectedPageBase
+@attribute [Authorize(Roles = "Admin,Supervisor")]
 @inject ProveedorHttpService ProveedorHttpService
 @inject IJSRuntime JSRuntime
 @inject CuentaPorPagarHttpService CuentaPorPagarHttpService
 
 <PageTitle>Directorio de Proveedores</PageTitle>
 
-<div class="admin-container">
-    @* --- Cabecera y Botón Nuevo --- *@
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="pos-container px-5 py-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
         <div>
-            <h2 class="page-title mb-0">Gestión de Proveedores</h2>
-            <p class="text-muted small">Administra tu red de suministro y datos fiscales</p>
+            <h2 class="page-title mb-0" style="color: #1F2A44;">Gestion de Proveedores</h2>
+            <p class="text-muted small mb-0">Administra tu red de suministro y datos fiscales</p>
         </div>
 
-        <button class="btn saas-btn-primary shadow-sm px-4" @onclick="MostrarModalNuevo">
-            <i class="bi bi-plus-lg me-2"></i> Nuevo Proveedor
+        <button class="btn saas-btn-primary shadow-sm px-4 py-2" @onclick="MostrarModalNuevo">
+            <i class="bi bi-plus-lg me-2"></i><span>Nuevo Proveedor</span>
         </button>
     </div>
 
-    @* --- Filtros y Búsqueda --- *@
+    @if (!string.IsNullOrWhiteSpace(mensajeError))
+    {
+        <div class="alert alert-danger shadow-sm border-0 mb-4">
+            <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
+        </div>
+    }
+
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
             <div class="row g-3 align-items-center">
-                <div class="col-md-6">
+                <div class="col-12 col-md-6">
                     <div class="search-box-container">
                         <i class="bi bi-search"></i>
-                        <input class="form-control" placeholder="Buscar por nombre, RFC o contacto..."
+                        <input class="form-control" placeholder="Buscar por nombre o RFC..."
                                @bind="terminoBusqueda" @bind:event="oninput" />
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-3">
                     <select class="form-select border-light-subtle" @bind="filtroEstado">
                         <option value="todos">Todos los estados</option>
                         <option value="activos">Solo Activos</option>
                         <option value="inactivos">Inactivos</option>
                     </select>
                 </div>
-                <div class="col-md-3 text-end text-muted small">
+                <div class="col-12 col-md-3 text-md-end text-muted small">
                     Mostrando: <strong>@ProveedoresFiltrados.Count()</strong> proveedores
                 </div>
             </div>
@@ -48,22 +56,28 @@
     @if (loading)
     {
         <div class="d-flex justify-content-center py-5">
-            <div class="spinner-custom"></div>
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else if (!ProveedoresFiltrados.Any())
+    {
+        <div class="card shadow-sm border-0 text-center py-5">
+            <i class="bi bi-building fs-1 text-muted mb-3"></i>
+            <h5 class="fw-bold text-dark">Sin resultados</h5>
+            <p class="text-muted mb-0">No hay proveedores con los filtros actuales.</p>
         </div>
     }
     else
     {
-        @* --- Tabla de Proveedores --- *@
-        <div class="card shadow-sm border-0 overflow-hidden">
+        <div class="d-none d-lg-block card shadow-sm border-0 overflow-hidden">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                    <thead style="background-color: #f8fafc;">
                         <tr>
-                            <th class="ps-4">Proveedor / Razón Social</th>
-                            <th>DATOS FISCALES</th>
+                            <th class="ps-4">Proveedor / Razon Social</th>
                             <th>Contacto</th>
+                            <th>Datos Fiscales</th>
                             <th>Estado</th>
-                            <th>Registro</th>
                             <th>Saldo Pendiente</th>
                             <th class="text-end pe-4">Acciones</th>
                         </tr>
@@ -77,58 +91,41 @@
                                     <div class="text-muted extra-small">@p.RazonSocial</div>
                                 </td>
                                 <td>
-
-                                    <div class="text-dark" style="font-size: 0.85rem;">
-                                        <i class="bi bi-envelope me-1 text-muted"></i> @p.Email
-                                    </div>
-                                    <div class="text-muted" style="font-size: 0.85rem;">
-                                        <i class="bi bi-telephone me-1 text-muted"></i> @(p.Telefono ?? "S/N")
-                                    </div>
+                                    <div class="text-dark small"><i class="bi bi-envelope me-1"></i> @p.Email</div>
+                                    <div class="text-muted small"><i class="bi bi-telephone me-1"></i> @(p.Telefono ?? "S/N")</div>
                                 </td>
                                 <td>
-                                    <div class="fw-bold" style="font-size: 0.85rem; color: #475569;">
-                                        RFC: @(string.IsNullOrEmpty(p.RFC) ? "XAXX010101000" : p.RFC)
-                                    </div>
-                                    <div class="text-muted" style="font-size: 0.8rem;">CP: @(p.CodigoPostal ?? "S/N")</div>
-
+                                    <div class="fw-bold small text-secondary">RFC: @(p.RFC ?? "XAXX010101000")</div>
+                                    <div class="text-muted extra-small">CP: @(p.CodigoPostal ?? "S/N")</div>
                                 </td>
-                               
                                 <td>
                                     <span class="status-badge @(p.Activo ? "status-active" : "status-inactive")">
                                         @(p.Activo ? "Activo" : "Inactivo")
                                     </span>
                                 </td>
-                                <td class="text-muted small">@p.FechaRegistro.ToString("dd/MM/yyyy")</td>
                                 <td>
                                     @{
                                         var saldo = ObtenerSaldoProveedor(p.Id);
-                                        var pendientes = ObtenerPendientesProveedor(p.Id);
                                         var vencida = TieneVencidasProveedor(p.Id);
                                     }
-
-                                    @if (saldo > 0)
+                                    <div class="fw-bold @(vencida ? "text-danger" : "text-primary")">@saldo.ToString("C")</div>
+                                    @if (vencida)
                                     {
-                                        <div class="fw-bold @(vencida ? "text-danger" : "text-primary")">@saldo.ToString("C")</div>
-                                        <div class="extra-small text-muted">@pendientes cuenta(s)</div>
-                                        @if (vencida)
-                                        {
-                                            <div class="extra-small text-danger">Con vencidas</div>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted small">Sin deuda</span>
+                                        <div class="extra-small text-danger fw-semibold">Con vencidas</div>
                                     }
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="btn-group shadow-sm">
-                                        <button class="btn btn-white btn-sm" title="Editar" @onclick="() => Editar(p)">
+                                        <a class="btn btn-white btn-sm" href="/proveedores/@p.Id" title="Ver detalle">
+                                            <i class="bi bi-eye text-info"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-white btn-sm" title="Editar" @onclick="() => Editar(p)">
                                             <i class="bi bi-pencil-square text-primary"></i>
                                         </button>
-                                        <a class="btn btn-white btn-sm" href="/cuentas-por-pagar?proveedorId=@p.Id" title="Ver cuentas">
+                                        <a class="btn btn-white btn-sm" href="/cuentas-por-pagar?proveedorId=@p.Id" title="Cuentas por pagar">
                                             <i class="bi bi-wallet2 text-warning"></i>
                                         </a>
-                                        <button class="btn btn-white btn-sm" title="Eliminar" @onclick="() => Eliminar(p.Id)">
+                                        <button type="button" class="btn btn-white btn-sm" title="Eliminar" @onclick="() => Eliminar(p.Id)">
                                             <i class="bi bi-trash3 text-danger"></i>
                                         </button>
                                     </div>
@@ -139,23 +136,76 @@
                 </table>
             </div>
         </div>
+
+        <div class="d-lg-none">
+            @foreach (var p in ProveedoresFiltrados)
+            {
+                <div class="card shadow-sm border-0 mb-3 supplier-mobile-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div style="max-width: 70%;">
+                                <h6 class="fw-bold mb-0 text-dark text-truncate">@p.Nombre</h6>
+                                <span class="extra-small text-muted text-uppercase">RFC: @(p.RFC ?? "S/N")</span>
+                            </div>
+                            <span class="status-badge @(p.Activo ? "status-active" : "status-inactive")">
+                                @(p.Activo ? "Activo" : "Inactivo")
+                            </span>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="text-muted extra-small">Contacto</div>
+                                <div class="small text-dark text-truncate">@p.Email</div>
+                                <div class="small text-muted">@(p.Telefono ?? "S/N")</div>
+                            </div>
+                            <div class="col-6 text-end">
+                                <div class="text-muted extra-small">Saldo Pendiente</div>
+                                @{
+                                    var saldoM = ObtenerSaldoProveedor(p.Id);
+                                    var vencidaM = TieneVencidasProveedor(p.Id);
+                                }
+                                <div class="fw-bold @(vencidaM ? "text-danger" : "text-primary")">@saldoM.ToString("C")</div>
+                                @if (vencidaM)
+                                {
+                                    <div class="extra-small text-danger fw-bold">VENCIDO</div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 border-top pt-3">
+                            <a class="btn btn-light-info btn-sm flex-fill text-center" href="/proveedores/@p.Id">
+                                <i class="bi bi-eye me-1"></i>Detalle
+                            </a>
+                            <button type="button" class="btn btn-light-primary btn-sm flex-fill" @onclick="() => Editar(p)">
+                                <i class="bi bi-pencil-square me-1"></i>Editar
+                            </button>
+                            <a class="btn btn-light-warning btn-sm flex-fill text-center" href="/cuentas-por-pagar?proveedorId=@p.Id">
+                                <i class="bi bi-wallet2 me-1"></i>Cuentas
+                            </a>
+                            <button type="button" class="btn btn-light-danger btn-sm px-3" @onclick="() => Eliminar(p.Id)">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
 </div>
 
-@* --- Modal de Registro/Edición --- *@
 @if (mostrarModal)
 {
     <div class="modal-backdrop fade show"></div>
     <div class="modal fade show d-block saas-modal-backdrop" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-3">
+            <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
                     <div>
                         <h5 class="modal-title fw-bold text-dark mb-1">
-                            <i class="bi @(proveedorActual.Id == 0 ? "bi-person-plus" : "bi-person-gear") text-primary me-2"></i>
-                            @(proveedorActual.Id == 0 ? "Registrar Nuevo Cliente" : "Editar Cliente")
+                            <i class="bi @(proveedorActual.Id == 0 ? "bi-person-plus" : "bi-pencil-square") me-2 text-primary"></i>
+                            @(proveedorActual.Id == 0 ? "Nuevo Proveedor" : "Editar Proveedor")
                         </h5>
-                        <p class="text-muted small mb-0">Completa la información de contacto y fiscalización.</p>
+                        <p class="text-muted small mb-0">Actualiza la informacion fiscal y de contacto.</p>
                     </div>
                     <button type="button" class="btn-close shadow-none" @onclick="Cerrar"></button>
                 </div>
@@ -211,7 +261,7 @@
                                         <option value="605">605 - Sueldos y Salarios</option>
                                     </InputSelect>
                                 </div>
-                               
+
                                 <div class="col-12">
                                     <label class="saas-label">DIRECCIÓN FISCAL / ENTREGA</label>
                                     <InputTextArea class="form-control saas-input" @bind-Value="proveedorActual.Direccion" rows="2" placeholder="Calle, Número, Colonia..." />
@@ -223,8 +273,8 @@
                             <div class="form-check form-switch m-0 d-flex align-items-center p-0">
                                 <InputCheckbox class="form-check-input saas-switch m-0" @bind-Value="proveedorActual.Activo" id="chkActivo" style="width: 2.5em; height: 1.25em; cursor: pointer;" />
                                 <label class="form-check-label ms-3 fw-bold text-dark" for="chkActivo" style="cursor: pointer;">
-                                    Cliente habilitado para operaciones
-                                    <span class="d-block text-muted fw-normal small">Si se desactiva, no se podrán crear nuevas ventas.</span>
+                                    Proveedor habilitado para operaciones
+                                    <span class="d-block text-muted fw-normal small">Si se desactiva, no se podrán registrar nuevas compras.</span>
                                 </label>
                             </div>
                         </div>
@@ -256,38 +306,114 @@
         </div>
     </div>
 }
- <style>
-    .hover-bg-primary:hover {
-        background-color: #eff6ff !important;
-        color: #2563eb !important;
+
+<style>
+    :root {
+        --polynex-navy: #1F2A44;
     }
 
-    .hover-bg-danger:hover {
-        background-color: #fef2f2 !important;
-        color: #dc2626 !important;
+    .saas-btn-primary {
+        background-color: var(--polynex-navy);
+        color: white;
+        border: none;
+        transition: all 0.2s;
     }
 
-    .hover-bg-success:hover {
-        background-color: #f0fdf4 !important;
-        color: #16a34a !important;
+        .saas-btn-primary:hover {
+            background-color: #2a3a5e;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .supplier-mobile-card {
+        border-left: 4px solid #e2e8f0 !important;
+        transition: transform 0.2s;
     }
 
-    .hover-bg-dark:hover {
-        background-color: #f1f5f9 !important;
-        color: #0f172a !important;
+        .supplier-mobile-card:active {
+            transform: scale(0.98);
+        }
+
+    .btn-light-primary {
+        background: #eff6ff;
+        color: #2563eb;
+        border: none;
     }
 
-    /* Estilo para el switch/toggle en el modal */
-    .saas-switch:checked {
-        background-color: #3b82f6;
-        border-color: #3b82f6;
+        .btn-light-primary:hover {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+    .btn-light-info {
+        background: #ecfeff;
+        color: #0891b2;
+        border: none;
     }
 
-    .saas-switch:focus {
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+        .btn-light-info:hover {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+    .btn-light-warning {
+        background: #fffbeb;
+        color: #d97706;
+        border: none;
+    }
+
+        .btn-light-warning:hover {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+    .btn-light-danger {
+        background: #fef2f2;
+        color: #dc2626;
+        border: none;
+    }
+
+        .btn-light-danger:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: 50rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-active {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .status-inactive {
+        background-color: #f1f5f9;
+        color: #475569;
+    }
+
+    .btn-white {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+    }
+
+        .btn-white:hover {
+            background: #f8fafc;
+        }
+
+    .pos-container {
+        padding-bottom: 80px;
     }
 </style>
+
 @code {
     private List<Proveedor> proveedores = new();
     private Proveedor proveedorActual = new();
@@ -300,29 +426,34 @@
     private string filtroEstado = "todos";
     private string mensajeError = "";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task LoadDataAsync()
     {
-        await Cargar();
-        await CargarCuentasPorPagar();
-        loading = false;
+        loading = true;
+        mensajeError = "";
+
+        try
+        {
+            await Cargar();
+            await CargarCuentasPorPagar();
+        }
+        finally
+        {
+            loading = false;
+        }
     }
+
+    protected override bool ShouldRetryInitialLoad() => !proveedores.Any();
 
     private IEnumerable<Proveedor> ProveedoresFiltrados =>
         proveedores.Where(p =>
-            (
-                string.IsNullOrEmpty(terminoBusqueda) ||
-                p.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase) ||
-                (p.RFC ?? "").Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)
-            )
-            &&
-            (
-                filtroEstado == "todos" ||
-                (filtroEstado == "activos" && p.Activo) ||
-                (filtroEstado == "inactivos" && !p.Activo)
-            )
+            (string.IsNullOrEmpty(terminoBusqueda) ||
+             p.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+             (p.RFC ?? "").Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) &&
+            (filtroEstado == "todos" ||
+             (filtroEstado == "activos" && p.Activo) ||
+             (filtroEstado == "inactivos" && !p.Activo))
         );
 
-  
     private async Task Cargar()
     {
         try
@@ -344,14 +475,13 @@
 
     private void Editar(Proveedor p)
     {
-
         proveedorActual = new Proveedor
         {
             Id = p.Id,
             Nombre = p.Nombre,
             RazonSocial = p.RazonSocial,
             RFC = p.RFC,
-            RegimenFiscal = p.RegimenFiscal, 
+            RegimenFiscal = p.RegimenFiscal,
             Contacto = p.Contacto,
             Email = p.Email,
             Telefono = p.Telefono,
@@ -371,11 +501,13 @@
         proveedorActual = new();
         mensajeError = "";
     }
+
     private void NormalizarRFC()
     {
         if (!string.IsNullOrEmpty(proveedorActual.RFC))
             proveedorActual.RFC = proveedorActual.RFC.ToUpper().Trim();
     }
+
     private async Task Guardar()
     {
         try
@@ -406,7 +538,8 @@
         try
         {
             var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "¿Eliminar proveedor?");
-            if (!confirm) return;
+            if (!confirm)
+                return;
 
             await ProveedorHttpService.DeleteAsync(id);
             await Cargar();
@@ -416,6 +549,7 @@
             mensajeError = ex.Message;
         }
     }
+
     private async Task CargarCuentasPorPagar()
     {
         cuentasPorPagar = await CuentaPorPagarHttpService.GetAsync();
@@ -425,6 +559,7 @@
             .GroupBy(x => x.ProveedorId)
             .ToDictionary(g => g.Key, g => g.ToList());
     }
+
     private decimal ObtenerSaldoProveedor(int proveedorId)
     {
         if (!cuentasPorProveedor.TryGetValue(proveedorId, out var cuentas))
